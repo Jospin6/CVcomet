@@ -21,7 +21,7 @@ const userSchema = z.object({
 
 type UserFormValues = z.infer<typeof userSchema>;
 
-export default function EditUserForm({ user }: { user: User }) {
+export default function EditUserForm({ user }: { user?: User }) {
   const {
     register,
     handleSubmit,
@@ -55,7 +55,7 @@ export default function EditUserForm({ user }: { user: User }) {
   }, [user, reset]);
 
   const onSubmit = (data: UserFormValues) => {
-    dispatch(updateUser({ id: user.id ?? "", data }))
+    dispatch(updateUser({ id: user?.id ?? "", data }))
     reset()
   };
 

@@ -16,10 +16,10 @@ export async function GET(req: Request) {
 export async function PUT(req: Request) {
     const url = new URL(req.url)
     const id = url.pathname.split('/').pop() as string
-    const { degree, school, location, start, end, description, userId } = await req.json()
+    const { degree, school, start, end, userId } = await req.json()
     const education = await prisma.education.update({
         where: {id,},
-        data: { degree, school, location, start, end, description, userId }
+        data: { degree, school, start, end, userId }
     })
     return NextResponse.json(education)
 }

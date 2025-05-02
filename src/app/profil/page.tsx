@@ -4,7 +4,8 @@ import EducationForm from "@/components/forms/educationForm";
 import ExperienceForm from "@/components/forms/experienceForm";
 import ProjectForm from "@/components/forms/projectForm";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { AppDispatch } from "@/redux/store";
+import { formatDateToMonthYear } from "@/lib/utils";
+import { AppDispatch, RootState } from "@/redux/store";
 import { fetchUser } from "@/redux/user/userSlice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,8 +14,12 @@ import { useDispatch, useSelector } from "react-redux";
 export default function Profil() {
     const dispatch = useDispatch<AppDispatch>()
     const currentUser = useCurrentUser()
-    const user = useSelector((state: any) => state.user.user)
-    const loading = useSelector((state: any) => state.user.loading)
+    const user = useSelector((state: RootState) => state.user.user)
+    const userStatus = useSelector((state: RootState) => state.user.status)
+
+    const experiences = user?.Experience || []
+    const educations = user?.Education || []
+    const projects = user?.Project || []
 
     useEffect(() => {
         if (currentUser?.id) {
@@ -24,16 +29,34 @@ export default function Profil() {
 
     return <div className="w-full text-gray-800">
         <div className="mt-3">
-            <EditUserForm user={user} />
+            <EditUserForm user={user || undefined} />
         </div>
         <div className="mt-3">
-            <ExperienceForm user={user}  />
+            <div className="text-lg font-bold">Experiences</div>
+            <div className="space-y-4 mb-4">
+                {experiences && experiences.map((exp) => (<div key={exp.id} className="p-2 border-b border-gray-300">
+                    {formatDateToMonthYear(exp.start)} {exp.end && ` - ${formatDateToMonthYear(exp.end)}`}, {exp.title} {exp.company} 
+                </div>))}
+            </div>
+            <ExperienceForm user={user || undefined} />
         </div>
         <div className="mt-3">
-            <EducationForm user={user} />
+            <div className="text-lg font-bold">Educations</div>
+            <div className="space-y-4 mb-4">
+                {educations && educations.map((edu) => (<div key={edu.id} className="p-2 border-b border-gray-300">
+                    {formatDateToMonthYear(edu.start)} {edu.end && ` - ${formatDateToMonthYear(edu.end)}`}, {edu.school} {edu.degree}
+                </div>))}
+            </div>
+            <EducationForm user={user || undefined} />
         </div>
-        <div className="mt-3">
-            <ProjectForm user={user}  />
+        <div className="mt-3 mb-6">
+            <div className="text-lg font-bold">Projects</div>
+            <div className="space-y-4 mb-4">
+                {projects && projects.map((proj) => (<div key={proj.id} className="p-2 border-b border-gray-300">
+                    {formatDateToMonthYear(proj.start)} {proj.end && ` - ${formatDateToMonthYear(proj.end)}`}, {proj.title} {proj.url}
+                </div>))}
+            </div>
+            <ProjectForm user={user || undefined} />
         </div>
     </div>
 }

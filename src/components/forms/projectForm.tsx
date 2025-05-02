@@ -11,13 +11,15 @@ import { AppDispatch } from "@/redux/store";
 import { addProject } from "@/redux/project/projectSlice";
 
 const projectSchema = z.object({
+  start: z.string().min(1, "Start date is required"),
+  end: z.string().optional(),
   title: z.string().min(1, "Project title is required"),
   url: z.string().url("Enter a valid URL").min(1, "Project URL is required"),
 });
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
-export default function ProjectForm({ user }: { user: User }) {
+export default function ProjectForm({ user }: { user?: User }) {
   const dispatch = useDispatch<AppDispatch>()
   const { register, reset, handleSubmit, formState: { errors } } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
@@ -27,7 +29,7 @@ export default function ProjectForm({ user }: { user: User }) {
   const onSubmit = async (data: ProjectFormValues) => {
     console.log("Form Data:", data);
     try {
-      if (!user.id) {
+      if (!user?.id) {
         console.log("User ID is missing");
         return;
       }
@@ -47,7 +49,25 @@ export default function ProjectForm({ user }: { user: User }) {
           {successMessage}
         </div>
       )}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-8 gap-4">
+        <InputField
+          label="Start Date"
+          className="col-span-2"
+          name="start"
+          placeholder="YYYY-MM-DD"
+          type="date"
+          register={register}
+          errors={errors}
+        />
+        <InputField
+          label="End Date"
+          className="col-span-2"
+          name="end"
+          placeholder="YYYY-MM-DD (optional)"
+          type="date"
+          register={register}
+          errors={errors}
+        />
         <InputField
           label="Project Title"
           className="col-span-2"

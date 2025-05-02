@@ -12,14 +12,13 @@ import { addEducation } from "@/redux/education/educationSlice";
 const educationSchema = z.object({
   degree: z.string().min(1, "Degree is required"),
   school: z.string().min(1, "School is required"),
-  location: z.string().min(1, "Location is required"),
   start: z.string().min(1, "Start date is required"),
   end: z.string().optional()
 });
 
 type EducationFormValues = z.infer<typeof educationSchema>;
 
-export default function EducationForm({ user }: { user: User }) {
+export default function EducationForm({ user }: { user?: User }) {
   const dispatch = useDispatch<AppDispatch>()
   const {
     register,
@@ -32,7 +31,7 @@ export default function EducationForm({ user }: { user: User }) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const onSubmit = async (data: EducationFormValues) => {
     try {
-      if (!user.id) {
+      if (!user?.id) {
         console.log("User ID is missing");
         return;
       }

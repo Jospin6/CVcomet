@@ -7,7 +7,12 @@ export async function GET(req: Request) {
   const url = new URL(req.url)
   const id = url.pathname.split('/').pop() as string
   const user = await prisma.user.findUnique({
-    where: { id, }
+    where: { id, },
+    include: {
+      Experience: true,
+      Education: true,
+      Project: true,
+    },
   })
   if (!user) {
     return NextResponse.json({ message: "User not found" })
@@ -27,9 +32,7 @@ export async function PUT(req: Request) {
     address,
     linkedin,
     portfolio,
-    summary,
     skills,
-    hobbies,
   } = body;
 
   let user = await prisma.user.findUnique({
@@ -45,9 +48,7 @@ export async function PUT(req: Request) {
         address,
         linkedin,
         portfolio,
-        summary,
         skills,
-        hobbies,
       },
     });
 
@@ -71,9 +72,7 @@ export async function PUT(req: Request) {
       address,
       linkedin,
       portfolio,
-      summary,
       skills,
-      hobbies,
     },
   });
 
@@ -83,5 +82,7 @@ export async function PUT(req: Request) {
 export async function DELETE(req: Request) {
   const url = new URL(req.url)
   const id = url.pathname.split('/').pop() as string
-  await prisma.user.delete({ where: { id, } })
+  await prisma.user.delete({ 
+    where: { id, }, 
+  })
 }

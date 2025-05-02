@@ -3,8 +3,10 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store'; // Assure-toi que tu as bien configuré le store
 import axios from 'axios';
 
-type Project = {
+export type Project = {
   id: string;
+  start: string;
+  end?: string;
   title: string;
   url: string;
   userId: string;

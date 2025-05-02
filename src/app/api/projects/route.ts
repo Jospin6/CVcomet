@@ -3,14 +3,15 @@ import prisma from "../../../../prisma/prisma"
 
 
 export async function POST(req: Request) {
-    const { title, url, description, userId } = await req.json()
+    const { title, url, start, end, userId } = await req.json()
 
     try {
         const projects = await prisma.project.create({
             data: {
-                title, 
+                title,
+                start, 
+                end, 
                 url, 
-                description, 
                 userId 
             }
         })

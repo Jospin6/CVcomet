@@ -27,15 +27,13 @@ model User {
   skills         String?
   hobbies        String?
   certifications Certification[]
-  education      Education[]
-  experiences    Experience[]
+  Education      Education[]
+  Experience    Experience[]
 
   createdAt DateTime @default(now())
 
   Project Project[]
-
   Cv Cv[]
-
   CoverLetter CoverLetter[]
 }
 
@@ -54,7 +52,6 @@ model Education {
   id          String  @id @default(uuid())
   degree      String
   school      String
-  location    String
   start       String
   end         String?
   userId      String
@@ -72,8 +69,10 @@ model Certification {
 
 model Project {
   id          String @id @default(uuid())
+  start       String?
+  end         String?
   title       String
-  url         String
+  url         String?
   userId      String
   user        User   @relation(fields: [userId], references: [id])
 }

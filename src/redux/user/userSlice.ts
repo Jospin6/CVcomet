@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store'; // Assure-toi que tu as bien configuré le store
 import axios from 'axios';
+import { Project } from '../project/projectSlice';
 
 type Certification = {
   id: string;
@@ -19,13 +20,6 @@ type Education = {
   end?: string;
   description: string;
 };
-
-type Project = {
-  id: string;
-  title: string;
-  url: string;
-  description: string
-}
 
 type Experience = {
   id: string;
@@ -49,7 +43,6 @@ export interface User {
   skills?: string;
   hobbies?: string;
   languages?: string;
-  Certification?: Certification[];
   Education?: Education[];
   Project?: Project[]
   Experience?: Experience[];

@@ -20,7 +20,7 @@ const experienceSchema = z.object({
 
 type ExperienceFormValues = z.infer<typeof experienceSchema>;
 
-export default function ExperienceForm({ user }: { user: User }) {
+export default function ExperienceForm({ user }: { user?: User }) {
   const dispatch = useDispatch<AppDispatch>()
   const {
     register,
@@ -35,7 +35,7 @@ export default function ExperienceForm({ user }: { user: User }) {
 
   const onSubmit = async (data: ExperienceFormValues) => {
     try {
-      if (!user.id) {
+      if (!user?.id) {
         console.log("User ID is missing");
         return;
       }

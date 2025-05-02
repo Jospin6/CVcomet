@@ -7,7 +7,6 @@ type Education = {
   id: string;
   degree: string;
   school: string;
-  location: string;
   start: string;
   end?: string;
   userId: string;
@@ -30,7 +29,7 @@ const initialState: EducationState = {
 export const fetchEducation = createAsyncThunk<Education[], string>(
   'education/fetchEducation',
   async (userId: string) => {
-    const response = await axios.get(`/api/education?userId=${userId}`);
+    const response = await axios.get(`/api/educations?userId=${userId}`);
     return response.data;
   }
 );
@@ -38,7 +37,7 @@ export const fetchEducation = createAsyncThunk<Education[], string>(
 export const addEducation = createAsyncThunk<Education, Omit<Education, 'id'>>(
   'education/addEducation',
   async (newEducation) => {
-    const response = await axios.post('/api/education', newEducation);
+    const response = await axios.post('/api/educations', newEducation);
     return response.data;
   }
 );
@@ -46,7 +45,7 @@ export const addEducation = createAsyncThunk<Education, Omit<Education, 'id'>>(
 export const updateEducation = createAsyncThunk<Education, Education>(
   'education/updateEducation',
   async (updatedEducation) => {
-    const response = await axios.put(`/api/education/${updatedEducation.id}`, updatedEducation);
+    const response = await axios.put(`/api/educations/${updatedEducation.id}`, updatedEducation);
     return response.data;
   }
 );
@@ -54,7 +53,7 @@ export const updateEducation = createAsyncThunk<Education, Education>(
 export const deleteEducation = createAsyncThunk<string, string>(
   'education/deleteEducation',
   async (educationId: string) => {
-    await axios.delete(`/api/education/${educationId}`);
+    await axios.delete(`/api/educations/${educationId}`);
     return educationId;
   }
 );

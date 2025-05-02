@@ -3,7 +3,7 @@ import prisma from "../../../../prisma/prisma"
 
 
 export async function POST(req: Request) {
-    const { title, company, location, start, end, description, userId } = await req.json()
+    const { title, company, location, start, end, userId } = await req.json()
 
     try {
         const experiences = await prisma.experience.create({
@@ -12,8 +12,7 @@ export async function POST(req: Request) {
                 company, 
                 location, 
                 start, 
-                end, 
-                description, 
+                end,  
                 userId
             }
         })
