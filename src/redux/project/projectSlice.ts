@@ -7,7 +7,6 @@ type Project = {
   id: string;
   title: string;
   url: string;
-  description: string;
   userId: string;
 };
 

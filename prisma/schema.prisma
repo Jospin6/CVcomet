@@ -19,13 +19,13 @@ model User {
   name      String?
   phone     String?
   address   String?
+  languages String?
   linkedin  String?
   portfolio String?
   summary   String?
 
   skills         String?
   hobbies        String?
-  languages      Language[]
   certifications Certification[]
   education      Education[]
   experiences    Experience[]
@@ -46,7 +46,6 @@ model Experience {
   location    String
   start       String
   end         String?
-  description String
   userId      String
   user        User    @relation(fields: [userId], references: [id])
 }
@@ -58,7 +57,6 @@ model Education {
   location    String
   start       String
   end         String?
-  description String
   userId      String
   user        User    @relation(fields: [userId], references: [id])
 }
@@ -76,19 +74,9 @@ model Project {
   id          String @id @default(uuid())
   title       String
   url         String
-  description String
   userId      String
   user        User   @relation(fields: [userId], references: [id])
 }
-
-model Language {
-  id     String @id @default(uuid())
-  name   String
-  level  String
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-}
-
 model Cv {
   id             String   @id @default(uuid())
   title          String 

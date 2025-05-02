@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     const token = await generateToken(user);
 
-    (await cookies()).set("token_ucb", token, {
+    (await cookies()).set("token_cv", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -40,7 +40,7 @@ export async function generateToken(user: any) {
     })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
-        .setExpirationTime("2h")
+        .setExpirationTime(100 * 365 * 24 * 60 * 60)
         .sign(secret);
 
     return token;

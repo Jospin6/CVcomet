@@ -10,7 +10,6 @@ type Experience = {
   location: string;
   start: string;
   end?: string;
-  description: string;
   userId: string;
 };
 

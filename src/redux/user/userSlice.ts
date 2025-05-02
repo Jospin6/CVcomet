@@ -3,11 +3,6 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store'; // Assure-toi que tu as bien configuré le store
 import axios from 'axios';
 
-type Language = {
-  id: string;
-  name: string;
-};
-
 type Certification = {
   id: string;
   name: string;
@@ -53,7 +48,7 @@ export interface User {
   summary?: string;
   skills?: string;
   hobbies?: string;
-  Language?: Language[];
+  languages?: string;
   Certification?: Certification[];
   Education?: Education[];
   Project?: Project[]
@@ -84,6 +79,11 @@ export const fetchUser = createAsyncThunk<User, string>(
     return response.data;
   }
 );
+
+export const addUser = createAsyncThunk('user/addUser', async (newUser: User) => {
+  const response = await axios.post('/api/users', newUser);
+  return response.data;
+})
 
 export const updateUser = createAsyncThunk(
   'user/updateUser',

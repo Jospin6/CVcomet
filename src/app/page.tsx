@@ -1,6 +1,6 @@
 "use client"
 
-import { Navbar } from "@/components/navibar/navbar";
+import { Navbar } from "@/components/navbar/navbar";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";// Adjust the path based on your project structure
 import { ArrowUpIcon } from "lucide-react";

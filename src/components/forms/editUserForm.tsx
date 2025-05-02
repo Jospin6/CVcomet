@@ -6,7 +6,8 @@ import { TextAreaField } from "../ui/textAreaField";
 import { Button } from "../ui/button";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
-import { updateUser } from "@/redux/user/userSlice";
+import { updateUser, User } from "@/redux/user/userSlice";
+import { useEffect } from "react";
 
 const userSchema = z.object({
   email: z.string().email(),
@@ -15,14 +16,12 @@ const userSchema = z.object({
   address: z.string().optional(),
   linkedin: z.string().optional(),
   portfolio: z.string().optional(),
-  summary: z.string().optional(),
   skills: z.string().optional(),
-  hobbies: z.string().optional(),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
 
-export default function EditUserForm() {
+export default function EditUserForm({ user }: { user: User }) {
   const {
     register,
     handleSubmit,
@@ -30,13 +29,33 @@ export default function EditUserForm() {
     formState: { errors, isSubmitting },
   } = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
-    // defaultValues,
+    defaultValues: {
+      email: "",
+      name: "",
+      phone: "",
+      address: "",
+      linkedin: "",
+      portfolio: "",
+      skills: "",
+    }
   });
   const dispatch = useDispatch<AppDispatch>()
-  const id = "dfsds-jhehze-dsd"
+  useEffect(() => {
+    if (user) {
+      reset({
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        address: user.address,
+        linkedin: user.linkedin,
+        portfolio: user.portfolio,
+        skills: user.skills,
+      });
+    }
+  }, [user, reset]);
 
   const onSubmit = (data: UserFormValues) => {
-    dispatch(updateUser({id, data}))
+    dispatch(updateUser({ id: user.id ?? "", data }))
     reset()
   };
 
