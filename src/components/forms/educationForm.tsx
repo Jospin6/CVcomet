@@ -32,50 +32,51 @@ export default function EducationForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="border border-gray-700 p-4 rounded-xl space-y-4">
-      <InputField
-        label="Degree"
-        name="degree"
-        placeholder="ex: Bachelor of Science in Computer Science"
-        register={register}
-        errors={errors}
-      />
-      <InputField
-        label="School"
-        name="school"
-        placeholder="ex: Harvard University"
-        register={register}
-        errors={errors}
-      />
-      <InputField
-        label="Location"
-        name="location"
-        placeholder="ex: Cambridge, USA"
-        register={register}
-        errors={errors}
-      />
-      <InputField
-        label="Start Date"
-        name="start"
-        placeholder="YYYY-MM-DD"
-        type="date"
-        register={register}
-        errors={errors}
-      />
-      <InputField
-        label="End Date"
-        name="end"
-        placeholder="YYYY-MM-DD (optional)"
-        type="date"
-        register={register}
-        errors={errors}
-      />
-      <TextAreaField
-        label="Description"
-        name="description"
-        placeholder="Brief description of your studies, projects, or achievements"
-        register={register}
-        errors={errors}
-      />
+      <div className="grid grid-cols-10 gap-4">
+        <InputField
+          label="Start Date"
+          className="col-span-2"
+          name="start"
+          placeholder="YYYY-MM-DD"
+          type="date"
+          register={register}
+          errors={errors}
+        />
+        <InputField
+          label="End Date"
+          className="col-span-2"
+          name="end"
+          placeholder="YYYY-MM-DD (optional)"
+          type="date"
+          register={register}
+          errors={errors}
+        />
+        <InputField
+          label="Degree"
+          className="col-span-2"
+          name="degree"
+          placeholder="ex: Bachelor of Science in Computer Science"
+          register={register}
+          errors={errors}
+        />
+        <InputField
+          label="School"
+          className="col-span-2"
+          name="school"
+          placeholder="ex: Harvard University"
+          register={register}
+          errors={errors}
+        />
+        <InputField
+          label="Location"
+          className="col-span-2"
+          name="location"
+          placeholder="ex: Cambridge, USA"
+          register={register}
+          errors={errors}
+        />
+      </div>
+
       <div className="flex justify-end">
         <Button type="submit">{isSubmitting ? "Saving..." : "Add Education"}</Button>
       </div>

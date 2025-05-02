@@ -32,50 +32,57 @@ export default function ExperienceForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="border border-gray-700 p-4 rounded-xl space-y-4">
+      <div className="grid grid-cols-10 gap-4">
       <InputField
-        label="Job Title"
-        name="title"
-        placeholder="ex: Software Engineer"
-        register={register}
-        errors={errors}
-      />
-      <InputField
-        label="Company"
-        name="company"
-        placeholder="ex: Google"
-        register={register}
-        errors={errors}
-      />
-      <InputField
-        label="Location"
-        name="location"
-        placeholder="ex: San Francisco, USA"
-        register={register}
-        errors={errors}
-      />
-      <InputField
-        label="Start Date"
-        name="start"
-        placeholder="YYYY-MM-DD"
-        type="date"
-        register={register}
-        errors={errors}
-      />
-      <InputField
-        label="End Date"
-        name="end"
-        placeholder="YYYY-MM-DD (optional)"
-        type="date"
-        register={register}
-        errors={errors}
-      />
-      <TextAreaField
+          label="Start Date"
+          className="col-span-2"
+          name="start"
+          placeholder="YYYY-MM-DD"
+          type="date"
+          register={register}
+          errors={errors}
+        />
+        <InputField
+          label="End Date"
+          className="col-span-2"
+          name="end"
+          placeholder="YYYY-MM-DD (optional)"
+          type="date"
+          register={register}
+          errors={errors}
+        />
+        <InputField
+          label="Job Title"
+          className="col-span-2"
+          name="title"
+          placeholder="ex: Software Engineer"
+          register={register}
+          errors={errors}
+        />
+        <InputField
+          label="Company"
+          className="col-span-2"
+          name="company"
+          placeholder="ex: Google"
+          register={register}
+          errors={errors}
+        />
+        <InputField
+          label="Location"
+          className="col-span-2"
+          name="location"
+          placeholder="ex: San Francisco, USA"
+          register={register}
+          errors={errors}
+        />
+      </div>
+      {/* <TextAreaField
         label="Description"
         name="description"
         placeholder="Brief description of your responsibilities and achievements"
         register={register}
         errors={errors}
-      />
+      /> */}
       <div className="flex justify-end">
         <Button type="submit">{isSubmitting ? "Saving..." : "Add Experience"}</Button>
       </div>

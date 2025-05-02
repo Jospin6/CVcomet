@@ -26,8 +26,10 @@ export default function ProjectForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="border border-gray-700 p-3 rounded-2xl">
+      <div className="grid grid-cols-4 gap-4">
       <InputField
         label="Project Title"
+        className="col-span-2"
         name="title"
         placeholder="Enter project title"
         register={register}
@@ -36,19 +38,15 @@ export default function ProjectForm() {
 
       <InputField
         label="Project URL"
+        className="col-span-2"
+        type="url"
         name="url"
         placeholder="Enter project URL"
         register={register}
         errors={errors}
       />
+      </div>
 
-      <TextAreaField
-        label="Project Description"
-        name="description"
-        placeholder="Enter project description"
-        register={register}
-        errors={errors}
-      />
 
       <div className="flex justify-end my-4">
         <Button type="submit">Save Project</Button>

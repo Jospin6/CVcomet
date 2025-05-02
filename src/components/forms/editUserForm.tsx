@@ -93,15 +93,6 @@ export default function EditUserForm() {
       />
 
       <TextAreaField
-        label="Professional Summary"
-        name="summary"
-        className="text-gray-800"
-        placeholder="Brief summary about your experience and goals..."
-        register={register}
-        errors={errors}
-      />
-
-      <TextAreaField
         label="Skills"
         name="skills"
         className="text-gray-800"
@@ -109,16 +100,6 @@ export default function EditUserForm() {
         register={register}
         errors={errors}
       />
-
-      <TextAreaField
-        label="Hobbies"
-        name="hobbies"
-        className="text-gray-800"
-        placeholder="What do you enjoy doing outside of work?"
-        register={register}
-        errors={errors}
-      />
-
       <div className="flex justify-end">
         <Button type="submit">{isSubmitting ? "Saving..." : "Save Profile"}</Button>
       </div>
