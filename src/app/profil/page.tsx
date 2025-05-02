@@ -29,6 +29,7 @@ export default function Profil() {
 
     return <div className="w-full text-gray-800">
         <div className="mt-3">
+            <div className="text-lg font-bold mb-3">User Infos</div>
             <EditUserForm user={user || undefined} />
         </div>
         <div className="mt-3">

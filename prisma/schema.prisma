@@ -22,40 +22,41 @@ model User {
   languages String?
   linkedin  String?
   portfolio String?
+  github    String?
   summary   String?
 
   skills         String?
   hobbies        String?
   certifications Certification[]
   Education      Education[]
-  Experience    Experience[]
+  Experience     Experience[]
 
   createdAt DateTime @default(now())
 
-  Project Project[]
-  Cv Cv[]
+  Project     Project[]
+  Cv          Cv[]
   CoverLetter CoverLetter[]
 }
 
 model Experience {
-  id          String  @id @default(uuid())
-  title       String
-  company     String
-  location    String
-  start       String
-  end         String?
-  userId      String
-  user        User    @relation(fields: [userId], references: [id])
+  id       String  @id @default(uuid())
+  title    String
+  company  String
+  location String
+  start    String
+  end      String?
+  userId   String
+  user     User    @relation(fields: [userId], references: [id])
 }
 
 model Education {
-  id          String  @id @default(uuid())
-  degree      String
-  school      String
-  start       String
-  end         String?
-  userId      String
-  user        User    @relation(fields: [userId], references: [id])
+  id     String  @id @default(uuid())
+  degree String
+  school String
+  start  String
+  end    String?
+  userId String
+  user   User    @relation(fields: [userId], references: [id])
 }
 
 model Certification {
@@ -68,19 +69,20 @@ model Certification {
 }
 
 model Project {
-  id          String @id @default(uuid())
-  start       String?
-  end         String?
-  title       String
-  url         String?
-  userId      String
-  user        User   @relation(fields: [userId], references: [id])
+  id     String  @id @default(uuid())
+  start  String?
+  end    String?
+  title  String
+  url    String?
+  userId String
+  user   User    @relation(fields: [userId], references: [id])
 }
+
 model Cv {
   id             String   @id @default(uuid())
-  title          String 
-  summary        String[] 
-  skills         Json? 
+  title          String
+  summary        String[]
+  skills         Json?
   experiences    Json?
   educations     Json?
   certifications Json?
@@ -95,16 +97,16 @@ model Cv {
 }
 
 model CoverLetter {
-  id         String   @id @default(uuid())
-  title      String   // ex: "Cover Letter for Frontend Role at Stripe"
-  content    String   // texte complet généré (markdown ou texte brut)
-  company    String?   // ex: "Stripe"
-  jobTitle   String?   // ex: "Frontend Software Engineer"
-  location   String?  // optionnel
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  cvId       String?  // optionnel, si liée à un CV précis
-  cv         Cv?      @relation(fields: [cvId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(uuid())
+  title     String // ex: "Cover Letter for Frontend Role at Stripe"
+  content   String // texte complet généré (markdown ou texte brut)
+  company   String? // ex: "Stripe"
+  jobTitle  String? // ex: "Frontend Software Engineer"
+  location  String? // optionnel
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  cvId      String? // optionnel, si liée à un CV précis
+  cv        Cv?      @relation(fields: [cvId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

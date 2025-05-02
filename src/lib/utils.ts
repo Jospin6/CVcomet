@@ -12,3 +12,10 @@ export function formatDateToMonthYear(dateString: string): string {
     month: "long",
   });
 }
+
+export const transformStringToArray = (input: string): string[] => {
+  return input
+    .split(",")
+    .map(item => item.trim())
+    .filter(item => item !== "");
+};

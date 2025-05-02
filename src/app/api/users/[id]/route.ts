@@ -32,6 +32,7 @@ export async function PUT(req: Request) {
     address,
     linkedin,
     portfolio,
+    github,
     skills,
   } = body;
 
@@ -46,6 +47,7 @@ export async function PUT(req: Request) {
         email,
         phone,
         address,
+        github,
         linkedin,
         portfolio,
         skills,
@@ -70,6 +72,8 @@ export async function PUT(req: Request) {
       name,
       phone,
       address,
+      github,
+      email,
       linkedin,
       portfolio,
       skills,

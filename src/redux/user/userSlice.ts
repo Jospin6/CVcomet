@@ -43,6 +43,7 @@ export interface User {
   skills?: string;
   hobbies?: string;
   languages?: string;
+  github?: string;
   Education?: Education[];
   Project?: Project[]
   Experience?: Experience[];
