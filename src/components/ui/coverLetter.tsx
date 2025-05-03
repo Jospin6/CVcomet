@@ -1,5 +1,12 @@
+import { CoverLetterProps } from "@/helpers/schema"
+import { User } from "@/redux/user/userSlice"
 
-export const CoverLetter = () => {
+export const CoverLetter = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
+    const date = new Date(Date.now());
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
     return (
         <div
             className="mx-auto bg-white flex flex-col justify-start shadow-lg"
@@ -12,42 +19,37 @@ export const CoverLetter = () => {
             }}
         >
             <div className="text-sm leading-relaxed">
-                <p>John Doe</p>
-                <p>123 Main Street</p>
-                <p>New York, NY 10001</p>
-                <p>johndoe@email.com</p>
-                <p>+1 234 567 890</p>
+                <p>{user?.name}</p>
+                <p>{user?.address}</p>
+                <p>{user?.email}</p>
+                <p>{user?.phone}</p>
 
-                <p className="mt-8">[Hiring Manager's Name]</p>
-                <p>XYZ Company</p>
-                <p>456 Business Rd</p>
-                <p>New York, NY 10002</p>
+                <div className="mt-8">
+                    {coverLetter.recipientName && <p>{coverLetter.recipientName}</p>}
+                    {coverLetter.recipientTitle && <p>{coverLetter.recipientTitle}</p>}
+                    {coverLetter.companyName && <p>{coverLetter.companyName}</p>}
+                    {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
+                </div>
 
-                <p className="mt-8">May 3, 2025</p>
+                <p className="mt-8">{`${day}/${month}/${year}`}</p>
 
-                <p className="mt-8">Dear [Hiring Manager's Name],</p>
+                {coverLetter.recipientName && (
+                    <p className="mt-8">Dear {coverLetter.recipientName},</p>
+                )}
 
-                <p className="mt-4">
-                    I am writing to express my interest in the Software Engineer position at XYZ Company. With over five years of
-                    experience developing scalable web applications and a passion for delivering high-quality software, I believe I
-                    would be an excellent fit for your team.
-                </p>
+                {coverLetter.introduction && (
+                    <p className="mt-4">{coverLetter.introduction}</p>
+                )}
 
-                <p className="mt-4">
-                    In my current role at ABC Inc., I have led the development of several React-based applications, collaborating
-                    closely with designers and product managers to deliver user-centric features. I also improved CI/CD pipelines,
-                    reducing deployment times by 30%. I am excited about XYZ Company's mission to innovate in the tech industry,
-                    and I am eager to contribute my skills to your projects.
-                </p>
+                {coverLetter.body && (
+                    <p className="mt-4">{coverLetter.body}</p>
+                )}
 
-                <p className="mt-4">
-                    I would welcome the opportunity to discuss how my experience aligns with your needs. Thank you for considering
-                    my application.
-                </p>
+                {coverLetter.conclusion && (
+                    <p className="mt-4">{coverLetter.conclusion}</p>
+                )}
 
-                <p className="mt-4">Sincerely,</p>
-
-                <p className="mt-8">John Doe</p>
+                <p className="mt-4">{user?.name}</p>
             </div>
         </div>
     )

@@ -10,8 +10,8 @@ import { cvSchema } from "@/helpers/schema";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const context = await req.json();
-  const prompt = generateCvPrompt({ description: context })
+  const { description, user } = await req.json();
+  const prompt = generateCvPrompt({ description, user })
   const system = generateCvSystemPrompt()
   try {
     const result = streamObject({
@@ -19,8 +19,10 @@ export async function POST(req: Request) {
       output: 'object',
       schema: cvSchema,
       system: system,
-      prompt: prompt,
+      prompt: prompt
     });
+
+    
 
     return result.toTextStreamResponse();
   } catch (error) {

@@ -10,10 +10,12 @@ import { generateCv, selectCvState } from "@/redux/cv/cvSlice";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppDispatch } from "@/redux/store";
 import { experimental_useObject as useObject } from '@ai-sdk/react';
-import { cvSchema } from "@/helpers/schema";
+import { coverLetterSchema, cvSchema } from "@/helpers/schema";
 import { Cv } from "@/components/ui/cv";
 import { CoverLetter } from "@/components/ui/coverLetter";
 import { Button } from "@/components/ui/button";
+import { fetchUser, selectUser } from "@/redux/user/userSlice";
+import { generateCvPrompt } from "@/helpers/helpers";
 
 export default function Home() {
     const inputRef = useRef<HTMLDivElement>(null);
@@ -21,21 +23,45 @@ export default function Home() {
     const dispatch = useDispatch<AppDispatch>();
     const cv = useSelector(selectCvState)
     const user = useCurrentUser();
+    const currentUser = useSelector(selectUser)
 
-    const { object, submit, isLoading } = useObject({
+    const { object: cvObject, submit: cvSubmit, isLoading: isLoadingCv } = useObject({
         api: '/api/generate-cv',
         schema: cvSchema,
     });
 
+    const { object: coverLetterObject, submit: submitCoverLetter, isLoading: isLoadingCoverLetter } = useObject({
+        api: '/api/generate-cover-letter',
+        schema: coverLetterSchema,
+    });
+
     const handleSend = () => {
         if (!input.trim()) return;
-        submit(input)
-        // dispatch(generateCv({ description: input }));
+        cvSubmit({ description: input, user: currentUser });
         setInput("");
         if (inputRef.current) {
             inputRef.current.innerText = "";
         }
     };
+
+    const handleCoverLetter = () => {
+        if (!input.trim()) return;
+        submitCoverLetter({ description: input, user: currentUser });
+        setInput("");
+        if (inputRef.current) {
+            inputRef.current.innerText = "";
+        }
+    };
+
+    useEffect(() => {
+        if (user?.id) {
+            dispatch(fetchUser(user.id));
+        }
+    }, [user?.id, dispatch]);
+
+
+    console.log("cvObject", cvObject);
+    
 
 
     return (
@@ -71,71 +97,98 @@ export default function Home() {
                         />
                         <div className="flex gap-2">
                             <Button className="cursor-pointer" onClick={handleSend}>Cv</Button>
-                            <Button className="cursor-pointer" onClick={handleSend}>Cover letter</Button>
+                            <Button className="cursor-pointer" onClick={handleCoverLetter}>Cover letter</Button>
                         </div>
                     </motion.div>
                 </div>
             </motion.div>
 
-            <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold">Curriculum Vitae</h2>
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => console.log("Regenerate CV")}
-                            className="p-2 rounded hover:bg-gray-100 cursor-pointer"
-                            aria-label="Regenerate CV"
-                        >
-                            <RefreshCcw className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={() => console.log("Download CV")}
-                            className="p-2 rounded hover:bg-gray-100 cursor-pointer"
-                            aria-label="Download CV"
-                        >
-                            <Download className="w-5 h-5" />
-                        </button>
+            {(isLoadingCv || isLoadingCoverLetter) && <div>Loading...</div>}
+
+            {cvObject?.cvs && (
+                <div className="mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold">Curriculum Vitae</h2>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => console.log("Regenerate CV")}
+                                className="p-2 rounded hover:bg-gray-100 cursor-pointer"
+                                aria-label="Regenerate CV"
+                            >
+                                <RefreshCcw className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => console.log("Download CV")}
+                                className="p-2 rounded hover:bg-gray-100 cursor-pointer"
+                                aria-label="Download CV"
+                            >
+                                <Download className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
+                    <Cv
+                        cv={{
+                            ...cvObject.cvs,
+                            skills: (cvObject.cvs.skills ?? []).filter((skill): skill is NonNullable<typeof skill> => skill !== undefined), // Ensure no undefined values
+                            educations: (cvObject.cvs.educations ?? []).filter((education): education is {
+                                degree: string;
+                                school: string;
+                                location: string;
+                                start: string;
+                                end?: string;
+                                description?: string[];
+                            } => education !== undefined && education.degree !== undefined && education.school !== undefined && education.location !== undefined && education.start !== undefined),
+                            projects: (cvObject.cvs.projects ?? []).filter((project): project is {
+                                title: string;
+                                description: string;
+                                technologies: string;
+                                link?: string;
+                            } => project !== undefined && project.title !== undefined && project.description !== undefined && project.technologies !== undefined),
+                            experiences: (cvObject.cvs.experiences ?? []).filter((experience): experience is {
+                                title: string;
+                                company: string;
+                                location: string;
+                                start: string;
+                                end?: string;
+                                description?: string[];
+                            } => experience !== undefined && experience.title !== undefined && experience.company !== undefined && experience.location !== undefined && experience.start !== undefined),
+                            certifications: (cvObject.cvs.certifications ?? []).filter((certification): certification is {
+                                title: string;
+                                issuer: string;
+                                date: string;
+                                description?: string;
+                            } => certification !== undefined && certification.title !== undefined && certification.issuer !== undefined && certification.date !== undefined),
+                            languages: (cvObject.cvs.languages ?? []).filter((language): language is { language: string; level: "Basic" | "Professional" | "Fluent" | "Native"; } => language !== undefined && language.language !== undefined && language.level !== undefined),
+                        }}
+                        user={currentUser ?? undefined}
+                    />
                 </div>
-                <Cv />
-            </div>
+            )}
 
-            <div>
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold">Cover Letter</h2>
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => console.log("Regenerate Cover Letter")}
-                            className="p-2 rounded hover:bg-gray-100 cursor-pointer"
-                            aria-label="Regenerate Cover Letter"
-                        >
-                            <RefreshCcw className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={() => console.log("Download Cover Letter")}
-                            className="p-2 rounded hover:bg-gray-100 cursor-pointer"
-                            aria-label="Download Cover Letter"
-                        >
-                            <Download className="w-5 h-5" />
-                        </button>
+            {(coverLetterObject?.coverLetter) && (
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold">Cover Letter</h2>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => console.log("Regenerate Cover Letter")}
+                                className="p-2 rounded hover:bg-gray-100 cursor-pointer"
+                                aria-label="Regenerate Cover Letter"
+                            >
+                                <RefreshCcw className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => console.log("Download Cover Letter")}
+                                className="p-2 rounded hover:bg-gray-100 cursor-pointer"
+                                aria-label="Download Cover Letter"
+                            >
+                                <Download className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
+                    <CoverLetter coverLetter={{ ...coverLetterObject.coverLetter }} user={currentUser ?? undefined} />
                 </div>
-                <CoverLetter />
-            </div>
-
-            {isLoading && <div>Loading...</div>}
-
-            <div>
-                {object?.cvs?.map((cv, index) => (
-                    <div key={index}>
-                        <p><span className="font-bold">Title</span>{cv!.title}</p>
-                        <p><span className="font-bold">Exprience</span>{cv!.experiences}</p>
-                        <p><span className="font-bold">Languages</span>{cv!.languages}</p>
-                        <p><span className="font-bold">Projects</span>{cv!.projects}</p>
-                        <p><span className="font-bold">Summary</span>{cv!.summary}</p>
-                    </div>
-                ))}
-            </div>
+            )}
         </div>
     );
 }
