@@ -3,7 +3,7 @@
 import { Navbar } from "@/components/navbar/navbar";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";// Adjust the path based on your project structure
-import { ArrowUpIcon } from "lucide-react";
+import { ArrowDown, ArrowUpIcon, Download, RefreshCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { generateCv, selectCvState } from "@/redux/cv/cvSlice";
@@ -11,6 +11,9 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppDispatch } from "@/redux/store";
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { cvSchema } from "@/helpers/schema";
+import { Cv } from "@/components/ui/cv";
+import { CoverLetter } from "@/components/ui/coverLetter";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
     const inputRef = useRef<HTMLDivElement>(null);
@@ -36,7 +39,7 @@ export default function Home() {
 
 
     return (
-        <div>
+        <div className="pb-20">
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -61,21 +64,64 @@ export default function Home() {
                                     handleSend();
                                 }
                             }}
-                            data-placeholder="Create a script..."
+                            data-placeholder="Enter the Job description..."
                             className="flex-1 text-gray-200 bg-gray-800 min-h-[36px] max-h-[350px] overflow-y-auto px-3 py-2 focus:outline-none 
                   text-sm rounded-md empty:before:text-gray-300 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
                             ref={inputRef}
                         />
-                        <button
-                            onClick={handleSend}
-                            className="rounded-full shrink-0 mb-0.5 p-1 bg-black text-white"
-                        >
-                            <ArrowUpIcon strokeWidth={2.5} className="size-5" />
-                        </button>
+                        <div className="flex gap-2">
+                            <Button className="cursor-pointer" onClick={handleSend}>Cv</Button>
+                            <Button className="cursor-pointer" onClick={handleSend}>Cover letter</Button>
+                        </div>
                     </motion.div>
                 </div>
             </motion.div>
 
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold">Curriculum Vitae</h2>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => console.log("Regenerate CV")}
+                            className="p-2 rounded hover:bg-gray-100 cursor-pointer"
+                            aria-label="Regenerate CV"
+                        >
+                            <RefreshCcw className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => console.log("Download CV")}
+                            className="p-2 rounded hover:bg-gray-100 cursor-pointer"
+                            aria-label="Download CV"
+                        >
+                            <Download className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+                <Cv />
+            </div>
+
+            <div>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold">Cover Letter</h2>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => console.log("Regenerate Cover Letter")}
+                            className="p-2 rounded hover:bg-gray-100 cursor-pointer"
+                            aria-label="Regenerate Cover Letter"
+                        >
+                            <RefreshCcw className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => console.log("Download Cover Letter")}
+                            className="p-2 rounded hover:bg-gray-100 cursor-pointer"
+                            aria-label="Download Cover Letter"
+                        >
+                            <Download className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+                <CoverLetter />
+            </div>
 
             {isLoading && <div>Loading...</div>}
 
