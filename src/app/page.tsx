@@ -107,25 +107,6 @@ export default function Home() {
 
             {cvObject?.cvs && (
                 <div className="mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold">Curriculum Vitae</h2>
-                        <div className="flex gap-4">
-                            <button
-                                onClick={() => console.log("Regenerate CV")}
-                                className="p-2 rounded hover:bg-gray-100 cursor-pointer"
-                                aria-label="Regenerate CV"
-                            >
-                                <RefreshCcw className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={() => console.log("Download CV")}
-                                className="p-2 rounded hover:bg-gray-100 cursor-pointer"
-                                aria-label="Download CV"
-                            >
-                                <Download className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
                     <Cv
                         cv={{
                             ...cvObject.cvs,
@@ -167,25 +148,6 @@ export default function Home() {
 
             {(coverLetterObject?.coverLetter) && (
                 <div>
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold">Cover Letter</h2>
-                        <div className="flex gap-4">
-                            <button
-                                onClick={() => console.log("Regenerate Cover Letter")}
-                                className="p-2 rounded hover:bg-gray-100 cursor-pointer"
-                                aria-label="Regenerate Cover Letter"
-                            >
-                                <RefreshCcw className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={() => console.log("Download Cover Letter")}
-                                className="p-2 rounded hover:bg-gray-100 cursor-pointer"
-                                aria-label="Download Cover Letter"
-                            >
-                                <Download className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
                     <CoverLetter coverLetter={{ ...coverLetterObject.coverLetter }} user={currentUser ?? undefined} />
                 </div>
             )}
