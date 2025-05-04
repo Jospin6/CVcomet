@@ -19,7 +19,26 @@ export async function POST(req: Request) {
       output: 'object',
       schema: cvSchema,
       system: system,
-      prompt: prompt
+      prompt: prompt,
+      async onFinish({ object, error }) {
+        if (object === undefined) {
+          console.error('Error:', error);
+          return;
+        }
+        await prisma.cv.create({
+          data: {
+            title: object.cvs.title,
+            summary: Array.isArray(object.cvs.summary) ? object.cvs.summary : [object.cvs.summary ?? ""],
+            skills: object.cvs.skills,
+            experiences: object.cvs.experiences,
+            educations: object.cvs.educations,
+            certifications: object.cvs.certifications,
+            projects: object.cvs.projects,
+            languages: object.cvs.languages,
+            userId: user.id
+          }
+        })
+      },
     });
 
     

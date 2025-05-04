@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { streamObject } from "ai";
 import { gemini } from "@/lib/gemini";
-import { z } from "zod";
+import prisma from "../../../../prisma/prisma"
 import { generateCoverLetterPrompt, generateCoverLetterSystemPrompt } from "@/helpers/helpers";
 import { coverLetterSchema } from "@/helpers/schema";
 export async function POST(req: Request) {
@@ -15,8 +15,32 @@ export async function POST(req: Request) {
             schema: coverLetterSchema,
             system: system,
             prompt: prompt,
+            async onFinish({ object, error }) {
+                if (object === undefined) {
+                    console.error('Error:', error);
+                    return;
+                }
+                await prisma.coverLetter.create({
+                    data: {
+                        recipientName: object.coverLetter.recipientName,
+                        companyAddress: object.coverLetter.companyAddress,
+                        recipientTitle: object.coverLetter.positionTitle,
+                        companyName: object.coverLetter.companyName,
+                        positionTitle: object.coverLetter.positionTitle,
+
+                        introduction: object.coverLetter.introduction,
+                        body: object.coverLetter.body,
+                        conclusion: object.coverLetter.conclusion,
+                        senderName: object.coverLetter.senderName,
+                        senderAddress: object.coverLetter.senderAddress,
+                        senderEmail: object.coverLetter.senderEmail,
+                        senderPhone: object.coverLetter.senderPhone,
+                        userId: user.id,
+                    }
+                })
+            },
         });
-    
+
         return result.toTextStreamResponse();
     } catch (error) {
         console.error("Error while generating the cover letter:", error);

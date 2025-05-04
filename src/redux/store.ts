@@ -7,6 +7,7 @@ import certificationReducer from './certification/certificationSlice';
 import projectReducer from './project/projectSlice';
 import cvReducer from './cv/cvSlice'
 import coverLetterReducer from './coverLetter/coverLetterSlice'
+import conversationReducer from './conversation/conversationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +18,7 @@ export const store = configureStore({
     project: projectReducer,
     cv: cvReducer,
     coverLetter: coverLetterReducer,
+    conversation: conversationReducer,
   },
 });
 

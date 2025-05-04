@@ -97,7 +97,7 @@ export const Cv = ({ cv, user }: { cv: CvProps, user?: User }) => {
                     <h2 className="text-xl font-semibold border-b pb-1 mb-2">Skills</h2>
                     <div className="text-sm">
                         {cv.skills && cv.skills.map((skill, index) => (
-                            <div key={index} className="inline-block rounded-full px-3 py-1 text-sm text-gray-700 mr-2 mb-2">
+                            <div key={index} className="inline-block rounded-full py-1 text-sm text-gray-700 mr-2 mb-2">
                                 <p> <span className="font-semibold">Technical: </span> {skill.hardskills}</p>
                                 <p><span className="font-semibold">Soft: </span>  {skill.softskills}</p>
                                 <p><span className="font-semibold">Tools: </span> {skill.tools}</p>

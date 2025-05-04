@@ -30,12 +30,22 @@ model User {
   certifications Certification[]
   Education      Education[]
   Experience     Experience[]
+  Project     Project[]
+  Conversation Conversation[]
 
   createdAt DateTime @default(now())
+}
 
-  Project     Project[]
-  Cv          Cv[]
+model Conversation {
+  id        String   @id @default(uuid())
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   CoverLetter CoverLetter[]
+  Cv Cv[]
 }
 
 model Experience {
@@ -90,23 +100,30 @@ model Cv {
   languages      Json?
   createdAt      DateTime @default(now())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  CoverLetter CoverLetter[]
+  conversationId String
+  conversation  Conversation @relation(fields: [conversationId], references: [id])
 }
 
 model CoverLetter {
-  id        String   @id @default(uuid())
-  title     String // ex: "Cover Letter for Frontend Role at Stripe"
-  content   String // texte complet généré (markdown ou texte brut)
-  company   String? // ex: "Stripe"
-  jobTitle  String? // ex: "Frontend Software Engineer"
-  location  String? // optionnel
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  cvId      String? // optionnel, si liée à un CV précis
-  cv        Cv?      @relation(fields: [cvId], references: [id])
+  id             String  @id @default(uuid())
+  recipientName  String
+  recipientTitle String
+  companyName    String?
+  companyAddress String?
+  positionTitle  String?
+
+  introduction String
+  body         String
+  conclusion   String?
+
+  senderName    String?
+  senderAddress String?
+  senderEmail   String?
+  senderPhone   String?
+
+  conversationId String
+  conversation  Conversation @relation(fields: [conversationId], references: [id])
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
