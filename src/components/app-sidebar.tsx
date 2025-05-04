@@ -10,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { ConversationList } from "./ui/conversationList"
  
 // Menu items.
 const items = [
@@ -43,6 +44,7 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <ConversationList/>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

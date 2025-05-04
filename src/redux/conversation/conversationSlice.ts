@@ -31,11 +31,17 @@ const initialState: ConversationState = {
 };
 
 // ✅ GET /api/conversation
-export const fetchConversations = createAsyncThunk<Conversation[], void, { rejectValue: string }>(
+export const fetchConversations = createAsyncThunk<Conversation[], { userId: string }, { rejectValue: string }>(
     'conversation/fetchConversations',
-    async (_, { rejectWithValue }) => {
+    async ({ userId }, { rejectWithValue }) => {
         try {
-            const res = await axios.get('/api/conversation')
+            let url = "/api/conversation";
+            const params = new URLSearchParams();
+            if (userId) params.append("userId", String(userId));
+            if (params.toString()) {
+                url += `?${params.toString()}`;
+            }
+            const res = await axios.get(url)
             return await res.data;
         } catch (err: any) {
             return rejectWithValue(err.message || 'Unknown error');
@@ -150,5 +156,5 @@ export const selectConversation = (state: RootState) => state.conversation.curre
 export const selectConversationId = (state: RootState) => state.conversation.currentConversationId;
 export const selectTypeGeneration = (state: RootState) => state.conversation.typeGeneration;
 
-export const {setCurrentConversation, setTypeGeneration} = conversationSlice.actions
+export const { setCurrentConversation, setTypeGeneration } = conversationSlice.actions
 export default conversationSlice.reducer;
