@@ -17,8 +17,10 @@ import { CvSkeleton } from "@/components/ui/cvSkeleton";
 import { getConversation, selectConversation, selectTypeGeneration, clearConversationId, selectConversationId } from "@/redux/conversation/conversationSlice";
 import { CvItems } from "@/components/ui/cvItems";
 import { CoverLetterItems } from "@/components/ui/coverLetterItems";
+import { useTranslation } from 'react-i18next';
 
 export default function Home() {
+    const { t } = useTranslation('common')
     const params = useParams()
     const id = params.id
     const conversation = useSelector(selectConversation)

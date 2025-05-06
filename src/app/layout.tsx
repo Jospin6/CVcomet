@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import "./globals.css";
 import { ReduxProvider } from "@/redux/provider";
 import { AccountNav } from "@/components/navbar/accountNav";
+import { LanguageProviderWrapper } from "@/components/LanguageProviderWrapper";
 
 export const metadata: Metadata = {
   title: "My cv",
@@ -19,18 +20,20 @@ export default function RootLayout({
     <html>
       <body className="overflow-x-hidden">
         <ReduxProvider>
-          <SidebarProvider className="">
-            <AppSidebar />
-            <main className="w-full">
-              <div className="w-full flex justify-between items-center h-10 px-3">
-              <SidebarTrigger />
-                <AccountNav />
-              </div>
-              <div className="w-10/12 m-auto">
-                {children}
-              </div>
-            </main>
-          </SidebarProvider>
+          <LanguageProviderWrapper>
+            <SidebarProvider className="">
+              <AppSidebar />
+              <main className="w-full">
+                <div className="w-full flex justify-between items-center h-10 px-3">
+                  <SidebarTrigger />
+                  <AccountNav />
+                </div>
+                <div className="w-10/12 m-auto">
+                  {children}
+                </div>
+              </main>
+            </SidebarProvider>
+          </LanguageProviderWrapper>
         </ReduxProvider>
       </body>
     </html>
