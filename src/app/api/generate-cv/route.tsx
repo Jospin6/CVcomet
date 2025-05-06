@@ -10,9 +10,31 @@ import { cvSchema } from "@/helpers/schema";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { description, user } = await req.json();
+  const { description, user, conversationId } = await req.json();
+
+  if (!user.isSubscribed) {
+    const today = new Date();
+    const isSameDay =
+      user.lastGeneratedAt &&
+      today.toDateString() === user.lastGeneratedAt.toDateString();
+  
+    if (isSameDay && user.generationCount >= 6) {
+      throw new Error("Limite gratuite de 6 CV par jour atteinte. Abonnez-vous pour génération illimitée.");
+    }
+  
+    // mettre à jour le compteur
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        generationCount: isSameDay ? { increment: 1 } : 1,
+        lastGeneratedAt: today,
+      },
+    });
+  }
+  
   const prompt = generateCvPrompt({ description, user })
   const system = generateCvSystemPrompt()
+
   try {
     const result = streamObject({
       model: gemini("gemini-1.5-flash"),
@@ -35,13 +57,13 @@ export async function POST(req: Request) {
             certifications: object.cvs.certifications,
             projects: object.cvs.projects,
             languages: object.cvs.languages,
-            userId: user.id
+            conversationId: conversationId // Provide a default or appropriate value
           }
         })
       },
     });
 
-    
+
 
     return result.toTextStreamResponse();
   } catch (error) {

@@ -25,13 +25,17 @@ model User {
   github    String?
   summary   String?
 
-  skills         String?
-  hobbies        String?
-  certifications Certification[]
-  Education      Education[]
-  Experience     Experience[]
-  Project     Project[]
-  Conversation Conversation[]
+  skills          String?
+  hobbies         String?
+  isSubscribed    Boolean         @default(false)
+  lastGeneratedAt DateTime?
+  subscriptionId  String?
+  generationCount Int             @default(0)
+  certifications  Certification[]
+  Education       Education[]
+  Experience      Experience[]
+  Project         Project[]
+  Conversation    Conversation[]
 
   createdAt DateTime @default(now())
 }
@@ -45,7 +49,7 @@ model Conversation {
   updatedAt DateTime @updatedAt
 
   CoverLetter CoverLetter[]
-  Cv Cv[]
+  Cv          Cv[]
 }
 
 model Experience {
@@ -101,7 +105,7 @@ model Cv {
   createdAt      DateTime @default(now())
 
   conversationId String
-  conversation  Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
 }
 
 model CoverLetter {
@@ -122,8 +126,8 @@ model CoverLetter {
   senderPhone   String?
 
   conversationId String
-  conversation  Conversation @relation(fields: [conversationId], references: [id])
-  
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
