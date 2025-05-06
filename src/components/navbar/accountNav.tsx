@@ -20,7 +20,7 @@ export const AccountNav = () => {
 
 
     return currentUser ? (
-        <Avatar asChild className="cursor-pointer size-[40px] rounded-full bg-black/50">
+        <Avatar asChild className="cursor-pointer size-[30px] rounded-full bg-black/50">
             <Link href="/profil">
                 <AvatarFallback className="font-bold w-full h-full flex items-center justify-center text-white">
                     {currentUser.email.charAt(0).toUpperCase()}
@@ -30,7 +30,7 @@ export const AccountNav = () => {
         : (
             <AlertDialog>
                 <AlertDialogTrigger>
-                    <Avatar className="cursor-pointer size-[40px] rounded-full bg-black/50">
+                    <Avatar className="cursor-pointer size-[30px] rounded-full bg-black/50">
                         <AvatarFallback className="font-bold w-full h-full flex items-center justify-center text-white">
                             <User size={18} />
                         </AvatarFallback>

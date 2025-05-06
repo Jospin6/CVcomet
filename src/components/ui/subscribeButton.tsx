@@ -3,7 +3,6 @@ import { Button } from "./button";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-const price = process.env.NEXT_PUBLIC_PRICE_ID
 
 export const SubscribeButton = () => {
     const user = useCurrentUser(); 

@@ -16,13 +16,11 @@ export async function POST(req: Request) {
     const today = new Date();
     const isSameDay =
       user.lastGeneratedAt &&
-      today.toDateString() === user.lastGeneratedAt.toDateString();
+      today.toDateString() === new Date(user.lastGeneratedAt).toDateString();
   
     if (isSameDay && user.generationCount >= 6) {
       throw new Error("Limite gratuite de 6 CV par jour atteinte. Abonnez-vous pour génération illimitée.");
     }
-  
-    // mettre à jour le compteur
     await prisma.user.update({
       where: { id: user.id },
       data: {

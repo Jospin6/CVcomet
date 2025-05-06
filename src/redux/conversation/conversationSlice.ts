@@ -1,13 +1,14 @@
-// src/redux/slices/conversationSlice.ts
-
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../store';
+import { CoverLetterProps, CvProps } from '@/helpers/schema';
 
 export interface Conversation {
     id?: string;
     content: string;
     userId: string;
+    Cv?: CvProps[];
+    CoverLetter?: CoverLetterProps[];
     createdAt?: string;
     updatedAt?: string;
 }
@@ -35,7 +36,7 @@ export const fetchConversations = createAsyncThunk<Conversation[], { userId: str
     'conversation/fetchConversations',
     async ({ userId }, { rejectWithValue }) => {
         try {
-            let url = "/api/conversation";
+            let url = "/api/conversations";
             const params = new URLSearchParams();
             if (userId) params.append("userId", String(userId));
             if (params.toString()) {
@@ -54,7 +55,20 @@ export const addConversation = createAsyncThunk<Conversation, Partial<Conversati
     'conversation/addConversation',
     async (newConversation, { rejectWithValue }) => {
         try {
-            const res = await axios.post('/api/conversation', newConversation)
+            const res = await axios.post('/api/conversations', newConversation)
+            return await res.data;
+        } catch (err: any) {
+            return rejectWithValue(err.message || 'Unknown error');
+        }
+    }
+);
+
+// ✅ POST /api/conversations/:id
+export const getConversation = createAsyncThunk<Conversation, { id: string }, { rejectValue: string }>(
+    'conversation/getConversation',
+    async ({ id }: { id: string }, { rejectWithValue }) => {
+        try {
+            const res = await axios.get(`/api/conversations/${id}`);
             return await res.data;
         } catch (err: any) {
             return rejectWithValue(err.message || 'Unknown error');
@@ -85,7 +99,7 @@ export const deleteConversation = createAsyncThunk<string, string, { rejectValue
     'conversation/deleteConversation',
     async (id, { rejectWithValue }) => {
         try {
-            const res = await axios.delete(`/api/conversation/${id}`)
+            const res = await axios.delete(`/api/conversations/${id}`)
             return res.data.id;
         } catch (err: any) {
             return rejectWithValue(err.message || 'Unknown error');
@@ -109,6 +123,9 @@ const conversationSlice = createSlice({
             state.currentConversation = null;
             state.currentConversationId = null;
         },
+        clearConversationId: (state) => {
+            state.currentConversationId = null;
+        },
         clearError: (state) => {
             state.error = null;
         },
@@ -127,6 +144,20 @@ const conversationSlice = createSlice({
             state.loading = false;
         });
         builder.addCase(fetchConversations.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || 'Failed to fetch conversations';
+        });
+
+        // get
+        builder.addCase(getConversation.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(getConversation.fulfilled, (state, action: PayloadAction<Conversation>) => {
+            state.currentConversation = action.payload;
+            state.loading = false;
+        });
+        builder.addCase(getConversation.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload || 'Failed to fetch conversations';
         });
@@ -156,5 +187,5 @@ export const selectConversation = (state: RootState) => state.conversation.curre
 export const selectConversationId = (state: RootState) => state.conversation.currentConversationId;
 export const selectTypeGeneration = (state: RootState) => state.conversation.typeGeneration;
 
-export const { setCurrentConversation, setTypeGeneration } = conversationSlice.actions
+export const { setCurrentConversation, setTypeGeneration, clearConversationId } = conversationSlice.actions
 export default conversationSlice.reducer;

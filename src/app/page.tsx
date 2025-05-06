@@ -19,27 +19,25 @@ export default function Home() {
     const user = useCurrentUser();
     const currentUser = useSelector(selectUser)
     const currentConversationId = useSelector(selectConversationId);
+    console.log("currentConversation Id: ", currentConversationId)
 
 
     const handleSend = () => {
         dispatch(addConversation({content: input, userId: user?.id}))
         dispatch(setTypeGeneration("cv"))
-        if (currentConversationId) {
-            redirect(`/g/${currentConversationId}`);
-        } else {
-            redirect("/");
-        }
     };
 
     const handleCoverLetter = () => {
         dispatch(addConversation({content: input, userId: user?.id}))
         dispatch(setTypeGeneration("coverLetter"))
-        if (currentConversationId) {
-            redirect(`/g/${currentConversationId}`);
-        } else {
-            redirect("/");
-        }
+        
     };
+
+    useEffect(() => {
+        if (currentConversationId != null) {
+            redirect(`/g/${currentConversationId}`);
+        }
+    }, [currentConversationId])
 
     useEffect(() => {
         if (user?.id) {
@@ -76,8 +74,8 @@ export default function Home() {
                                 }
                             }}
                             data-placeholder="Enter the Job description..."
-                            className="flex-1 text-gray-200 bg-gray-800 min-h-[36px] max-h-[350px] overflow-y-auto px-3 py-2 focus:outline-none 
-                  text-sm rounded-md empty:before:text-gray-300 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
+                            className="flex-1 text-gray-600 bg-gray-300 min-h-[100px] max-h-[350px] overflow-y-auto px-3 py-2 focus:outline-none 
+                  text-sm rounded-md empty:before:text-gray-600 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
                             ref={inputRef}
                         />
                         <div className="flex gap-2">

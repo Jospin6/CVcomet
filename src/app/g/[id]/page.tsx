@@ -14,19 +14,22 @@ import { Button } from "@/components/ui/button";
 import { fetchUser, selectUser } from "@/redux/user/userSlice";
 import { useParams } from "next/navigation"
 import { CvSkeleton } from "@/components/ui/cvSkeleton";
-import { selectConversation, selectTypeGeneration } from "@/redux/conversation/conversationSlice";
+import { getConversation, selectConversation, selectTypeGeneration, clearConversationId, selectConversationId } from "@/redux/conversation/conversationSlice";
+import { CvItems } from "@/components/ui/cvItems";
+import { CoverLetterItems } from "@/components/ui/coverLetterItems";
 
 export default function Home() {
     const params = useParams()
     const id = params.id
+    const conversation = useSelector(selectConversation)
     const inputRef = useRef<HTMLDivElement>(null);
-    const [input, setInput] = useState("");
+    const [input, setInput] = useState(conversation?.content ?? "");
     const dispatch = useDispatch<AppDispatch>();
-    const cv = useSelector(selectCvState)
+    const convId = useSelector(selectConversationId)
     const user = useCurrentUser();
     const currentUser = useSelector(selectUser)
-    const conversation = useSelector(selectConversation)
     const typeGeneration = useSelector(selectTypeGeneration)
+    const [hasGenerated, setHasGenerated] = useState(false);
 
     const { object: cvObject, submit: cvSubmit, isLoading: isLoadingCv } = useObject({
         api: '/api/generate-cv',
@@ -39,16 +42,26 @@ export default function Home() {
     });
 
     useEffect(() => {
-        if (typeGeneration === "cv") {
-            cvSubmit({ description: conversation?.content, user: currentUser });
-        } else if (typeGeneration === "coverLetter") {
-            submitCoverLetter({ description: conversation?.content, user: currentUser });
+        if (!hasGenerated && conversation && convId) {
+            if (typeGeneration === "cv") {
+                cvSubmit({ description: conversation.content, user: currentUser, conversationId: convId });
+            } else if (typeGeneration === "coverLetter") {
+                submitCoverLetter({ description: conversation.content, user: currentUser, conversationId: convId });
+            }
+            setHasGenerated(true);
+            dispatch(clearConversationId());
         }
-    }, [])
+    }, [conversation, convId, hasGenerated, typeGeneration, currentUser, dispatch]);
+
+    useEffect(() => {
+        if (typeof id === "string") {
+            dispatch(getConversation({ id }));
+        }
+    }, [dispatch, id]);
 
     const handleSend = () => {
         if (!input.trim()) return;
-        cvSubmit({ description: input, user: currentUser });
+        cvSubmit({ description: input, user: currentUser, conversationId: id });
         setInput("");
         if (inputRef.current) {
             inputRef.current.innerText = "";
@@ -57,7 +70,7 @@ export default function Home() {
 
     const handleCoverLetter = () => {
         if (!input.trim()) return;
-        submitCoverLetter({ description: input, user: currentUser });
+        submitCoverLetter({ description: input, user: currentUser, conversationId: id });
         setInput("");
         if (inputRef.current) {
             inputRef.current.innerText = "";
@@ -71,8 +84,6 @@ export default function Home() {
     }, [user?.id, dispatch]);
 
 
-    console.log("cvObject", cvObject);
-    
 
 
     return (
@@ -114,7 +125,7 @@ export default function Home() {
                 </div>
             </motion.div>
 
-            {(isLoadingCv || isLoadingCoverLetter) && <CvSkeleton/>}
+            {(isLoadingCv || isLoadingCoverLetter) && <CvSkeleton />}
 
             {cvObject?.cvs && (
                 <div className="mb-6">
@@ -162,6 +173,17 @@ export default function Home() {
                     <CoverLetter coverLetter={{ ...coverLetterObject.coverLetter }} user={currentUser ?? undefined} />
                 </div>
             )}
+
+            <div>
+                {
+                    conversation?.Cv && (<CvItems cv={conversation.Cv} user={currentUser!} />)
+                }
+            </div>
+            <div>
+                {
+                    conversation?.CoverLetter && (<CoverLetterItems coverLetters={conversation.CoverLetter} user={currentUser!} />)
+                }
+            </div>
         </div>
     );
 }
