@@ -35,11 +35,11 @@ const items = [
   }
 ]
   return (
-    <Sidebar>
-      <SidebarContent>
+    <Sidebar className="border-none">
+      <SidebarContent className="bg-[#1a1a1a] text-white">
         <SidebarGroup>
           <div className="h-16 flex items-center ">
-          <SidebarGroupLabel className="text-2xl text-black font-bold">My Cv</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-2xl text-white font-bold">My Cv</SidebarGroupLabel>
           </div>
           <SidebarGroupContent>
             <SidebarMenu>

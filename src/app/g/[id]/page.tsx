@@ -18,6 +18,7 @@ import { getConversation, selectConversation, selectTypeGeneration, clearConvers
 import { CvItems } from "@/components/ui/cvItems";
 import { CoverLetterItems } from "@/components/ui/coverLetterItems";
 import { useTranslation } from 'react-i18next';
+import { Brain, Sparkles, Bot, Wand2 } from 'lucide-react';
 
 export default function Home() {
     const { t, i18n } = useTranslation('common')
@@ -91,7 +92,7 @@ export default function Home() {
 
     return (
         <div className="pb-20">
-            <motion.div
+            {/* <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full pb-4 pt-2 mt-auto"
@@ -126,7 +127,50 @@ export default function Home() {
                         </div>
                     </motion.div>
                 </div>
+            </motion.div> */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full pb-4 pt-2 mt-auto"
+            >
+                <div className="max-w-3xl mx-auto px-4">
+                    <motion.div
+                        animate={{ height: "auto" }}
+                        whileFocus={{ scale: 1.01 }}
+                        transition={{ duration: 0.2 }}
+                        className="relative rounded-2xl border-[1px] border-gray-500 p-2.5 bg-[#2F2F2F]"
+                    >
+                        <div
+                            contentEditable
+                            role="textbox"
+                            onInput={(e) => {
+                                setInput(e.currentTarget.textContent || "");
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSend();
+                                }
+                            }}
+                            data-placeholder="Enter the Job description..."
+                            className="flex-1 text-gray-200 min-h-[36px] max-h-[300px] overflow-y-auto pt-2 pb-4 focus:outline-none 
+                  text-sm rounded-md empty:before:text-gray-300 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
+                            ref={inputRef}
+                        />
+                        <div className="flex gap-2 justify-end">
+                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
+                                <Sparkles className="w-4 h-4" />
+                                <span>Cv</span>
+                            </Button>
+                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
+                                <Wand2 className="w-4 h-4" />
+                                <span>Cover letter</span>
+                            </Button>
+                        </div>
+                    </motion.div>
+                </div>
             </motion.div>
+
 
             {(isLoadingCv || isLoadingCoverLetter) && <CvSkeleton />}
 

@@ -18,11 +18,11 @@ export const InputField: React.FC<InputFieldProps> = ({ label, onChange, onClick
     const imgStyle = "h-[100px] w-[100px] rounded-full border border-gray-700 flex justify-center items-center text-sm mb-2 font-medium"
 
     return <div className={`mb-4 ${className}`} onClick={onClick}>
-        <div className={type !== "file" ? "hidden": "text-[12px] text-gray-800 font-semibold mb-2 mt-4"}>{label.toLocaleUpperCase()}</div>
+        <div className={type !== "file" ? "hidden": "text-[12px] text-gray-200 font-semibold mb-2 mt-4"}>{label.toLocaleUpperCase()}</div>
         <Label htmlFor={name} className={type !== "file" 
-            ? "block text-[12px] text-gray-800 mb-1 font-medium"
+            ? "block text-[12px] text-gray-200 mb-1 font-medium"
             : imgStyle}>{type !== "file" ? label.toLocaleUpperCase() : <Camera size={40} className="text-gray-600" />}</Label>
-        <Input {...register(name)} name={name} onChange={onChange} className={type !== "file" ? className : "hidden"} id={name} placeholder={placeholder} type={type} />
+        <Input {...register(name)} name={name} onChange={onChange} className={type !== "file" ? `border-[1px] border-gray-500 ${className}` : "hidden"} id={name} placeholder={placeholder} type={type} />
         {errors[name] && <span className="text-red-600">{errors[name]?.message}</span>}
     </div>
 }

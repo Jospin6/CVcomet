@@ -27,7 +27,7 @@ export default function Profil() {
         }
     }, [currentUser?.id, dispatch])
 
-    return <div className="w-full text-gray-800">
+    return <div className="w-full text-gray-200">
         <div className="mt-3">
             <div className="text-lg font-bold mb-3">{t("userInfos")}</div>
             <EditUserForm user={user || undefined} />
@@ -35,7 +35,7 @@ export default function Profil() {
         <div className="mt-3">
             <div className="text-lg font-bold">{t("experience")}</div>
             <div className="space-y-4 mb-4">
-                {experiences && experiences.map((exp) => (<div key={exp.id} className="p-2 border-b border-gray-300">
+                {experiences && experiences.map((exp) => (<div key={exp.id} className="p-2 border-b-[1px] border-gray-500">
                     {formatDateToMonthYear(exp.start)} {exp.end && ` - ${formatDateToMonthYear(exp.end)}`}, {exp.title} {exp.company} 
                 </div>))}
             </div>
@@ -44,7 +44,7 @@ export default function Profil() {
         <div className="mt-3">
             <div className="text-lg font-bold">{t("education")}</div>
             <div className="space-y-4 mb-4">
-                {educations && educations.map((edu) => (<div key={edu.id} className="p-2 border-b border-gray-300">
+                {educations && educations.map((edu) => (<div key={edu.id} className="p-2 border-b-[1px] border-gray-500">
                     {formatDateToMonthYear(edu.start)} {edu.end && ` - ${formatDateToMonthYear(edu.end)}`}, {edu.school} {edu.degree}
                 </div>))}
             </div>
@@ -53,7 +53,7 @@ export default function Profil() {
         <div className="mt-3 mb-6">
             <div className="text-lg font-bold">{t("projects")}</div>
             <div className="space-y-4 mb-4">
-                {projects && projects.map((proj) => (<div key={proj.id} className="p-2 border-b border-gray-300">
+                {projects && projects.map((proj) => (<div key={proj.id} className="p-2 border-b-[1px] border-gray-500">
                     {formatDateToMonthYear(proj.start)} {proj.end && ` - ${formatDateToMonthYear(proj.end)}`}, {proj.title} {proj.url}
                 </div>))}
             </div>

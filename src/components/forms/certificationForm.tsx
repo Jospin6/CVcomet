@@ -27,7 +27,7 @@ export default function CertificationForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="border border-gray-700 p-3 rounded-2xl">
+    <form onSubmit={handleSubmit(onSubmit)} className="border border-gray-500 p-3 rounded-2xl">
       <InputField
         label={`${t("certificatName")}`}
         name="name"

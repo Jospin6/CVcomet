@@ -70,13 +70,12 @@ export default function EditUserForm({ user }: { user?: User }) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="border shadow border-gray-300 p-4 rounded-xl w-full">
+    <form onSubmit={handleSubmit(onSubmit)} className="shadow border-[1px] border-gray-500 p-4 rounded-xl w-full">
       <UserProfilItem 
       subTitle={`${t("emailDescription")}`}
       title={`✉️ ${t("email")}`} >
         <InputField
           label=""
-          className="text-gray-800"
           name="email"
           placeholder="example@email.com"
           type="email"
@@ -91,7 +90,6 @@ export default function EditUserForm({ user }: { user?: User }) {
         <InputField
           label=""
           name="name"
-          className="text-gray-800"
           placeholder="Your full name"
           register={register}
           errors={errors}
@@ -105,7 +103,6 @@ export default function EditUserForm({ user }: { user?: User }) {
           label=""
           name="phone"
           placeholder="+243..."
-          className="text-gray-800"
           register={register}
           errors={errors}
         />
@@ -117,7 +114,6 @@ export default function EditUserForm({ user }: { user?: User }) {
         <InputField
           label=""
           name="address"
-          className="text-gray-800"
           placeholder="City, Country"
           register={register}
           errors={errors}
@@ -129,13 +125,12 @@ export default function EditUserForm({ user }: { user?: User }) {
       title={`🌐 ${t("languages")}`} >
         <div className="flex flex-wrap gap-2 mb-2">
           {transformStringToArray(user?.languages ?? "").map((language, index) => (
-            <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border">{language}</div>
+            <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border-[1px] border-gray-500">{language}</div>
           ))}
         </div>
         <InputField
           label=""
           name="languages"
-          className="text-gray-800"
           placeholder="Ex: English, French"
           register={register}
           errors={errors}
@@ -149,7 +144,6 @@ export default function EditUserForm({ user }: { user?: User }) {
         <InputField
           label=""
           name="linkedin"
-          className="text-gray-800"
           placeholder="https://linkedin.com/in/..."
           register={register}
           errors={errors}
@@ -162,7 +156,6 @@ export default function EditUserForm({ user }: { user?: User }) {
         <InputField
           label=""
           name="github"
-          className="text-gray-800"
           placeholder="jospin6"
           register={register}
           errors={errors}
@@ -175,7 +168,6 @@ export default function EditUserForm({ user }: { user?: User }) {
         <InputField
           label=""
           name="portfolio"
-          className="text-gray-800"
           placeholder="https://yourportfolio.com"
           register={register}
           errors={errors}
@@ -187,13 +179,13 @@ export default function EditUserForm({ user }: { user?: User }) {
       title={`🛠️ ${t("skills")}`} >
         <div className="flex flex-wrap gap-2 mb-2">
           {transformStringToArray(user?.skills ?? "").map((skill, index) => (
-            <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border">{skill}</div>
+            <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border-[1px] border-gray-500">{skill}</div>
           ))}
         </div>
         <TextAreaField
           label=""
           name="skills"
-          className="text-gray-800"
+          className="border-[1px] border-gray-500"
           placeholder="List your technical and soft skills"
           register={register}
           errors={errors}

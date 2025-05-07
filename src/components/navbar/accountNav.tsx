@@ -20,11 +20,11 @@ export const AccountNav = () => {
     const currentUser = useCurrentUser()
 
 
-    return <div className="flex items-center gap-2">
+    return <div className="flex items-center gap-4">
         <LanguageSwitcher />
         {
             currentUser ? (
-                <Avatar asChild className="cursor-pointer size-[30px] rounded-full bg-black/50">
+                <Avatar asChild className="cursor-pointer size-[30px] bg-yellow-800 rounded-full">
                     <Link href="/profil">
                         <AvatarFallback className="font-bold w-full h-full flex items-center justify-center text-white">
                             {currentUser.email.charAt(0).toUpperCase()}

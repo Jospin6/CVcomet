@@ -32,12 +32,12 @@ export const CoverLetter = ({ coverLetter, user }: { coverLetter: CoverLetterPro
     const year = date.getFullYear();
     return (
         <>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center text-white justify-between mb-4">
                 <h2 className="text-xl font-bold">{t("coverLetter")}</h2>
                 <div className="flex gap-4">
                     <button
                         onClick={handleDownload}
-                        className="p-2 rounded hover:bg-gray-100 cursor-pointer"
+                        className="p-1 rounded hover:border-[1px] cursor-pointer"
                         aria-label="Download Cover Letter"
                     >
                         <Download className="w-5 h-5" />

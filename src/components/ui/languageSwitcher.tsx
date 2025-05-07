@@ -30,7 +30,7 @@ export default function LanguageSwitcher() {
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger className="size-[30px] border rounded-md bg-white text-sm font-medium">
+            <DropdownMenuTrigger className="size-[25px] cursor-pointer rounded-md border-[1px] text-white text-[12px] font-medium">
                 {i18n.language === 'fr' ? 'FR' : 'EN'}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

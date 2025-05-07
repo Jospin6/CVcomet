@@ -23,9 +23,9 @@ export default function RootLayout({
           <LanguageProviderWrapper>
             <SidebarProvider className="">
               <AppSidebar />
-              <main className="w-full">
+              <main className="w-full bg-[#282828]">
                 <div className="w-full flex justify-between items-center h-10 px-3">
-                  <SidebarTrigger />
+                  <SidebarTrigger className="text-white" />
                   <AccountNav />
                 </div>
                 <div className="w-10/12 m-auto">
