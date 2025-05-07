@@ -50,9 +50,9 @@ export const Cv = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         {cv.title}
                     </p>
                     <p className="text-sm">
-                        {user?.linkedin && `LinkedIn `}
-                        {user?.email && (<a href={`mailto:${user.email}`} className="text-blue-500"> {user?.email}</a>)}
-                        {user?.github && ` GitHub`}
+                        {user?.linkedin && `LinkedIn | `}
+                        {user?.email && (<a href={`mailto:${user.email}`}> {user?.email}</a>)}
+                        {user?.github && ` | GitHub`}
                     </p>
                 </header>
 
