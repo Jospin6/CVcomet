@@ -9,14 +9,14 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { fetchUser } from "@/redux/user/userSlice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from 'react-i18next';
 
 
 export default function Profil() {
+    const { t } = useTranslation();
     const dispatch = useDispatch<AppDispatch>()
     const currentUser = useCurrentUser()
     const user = useSelector((state: RootState) => state.user.user)
-    const userStatus = useSelector((state: RootState) => state.user.status)
-
     const experiences = user?.Experience || []
     const educations = user?.Education || []
     const projects = user?.Project || []
@@ -29,11 +29,11 @@ export default function Profil() {
 
     return <div className="w-full text-gray-800">
         <div className="mt-3">
-            <div className="text-lg font-bold mb-3">User Infos</div>
+            <div className="text-lg font-bold mb-3">{t("userInfos")}</div>
             <EditUserForm user={user || undefined} />
         </div>
         <div className="mt-3">
-            <div className="text-lg font-bold">Experiences</div>
+            <div className="text-lg font-bold">{t("experience")}</div>
             <div className="space-y-4 mb-4">
                 {experiences && experiences.map((exp) => (<div key={exp.id} className="p-2 border-b border-gray-300">
                     {formatDateToMonthYear(exp.start)} {exp.end && ` - ${formatDateToMonthYear(exp.end)}`}, {exp.title} {exp.company} 
@@ -42,7 +42,7 @@ export default function Profil() {
             <ExperienceForm user={user || undefined} />
         </div>
         <div className="mt-3">
-            <div className="text-lg font-bold">Educations</div>
+            <div className="text-lg font-bold">{t("education")}</div>
             <div className="space-y-4 mb-4">
                 {educations && educations.map((edu) => (<div key={edu.id} className="p-2 border-b border-gray-300">
                     {formatDateToMonthYear(edu.start)} {edu.end && ` - ${formatDateToMonthYear(edu.end)}`}, {edu.school} {edu.degree}
@@ -51,7 +51,7 @@ export default function Profil() {
             <EducationForm user={user || undefined} />
         </div>
         <div className="mt-3 mb-6">
-            <div className="text-lg font-bold">Projects</div>
+            <div className="text-lg font-bold">{t("projects")}</div>
             <div className="space-y-4 mb-4">
                 {projects && projects.map((proj) => (<div key={proj.id} className="p-2 border-b border-gray-300">
                     {formatDateToMonthYear(proj.start)} {proj.end && ` - ${formatDateToMonthYear(proj.end)}`}, {proj.title} {proj.url}

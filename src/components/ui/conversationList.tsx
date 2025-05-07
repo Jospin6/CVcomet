@@ -19,10 +19,7 @@ export const ConversationList = () => {
     dispatch(fetchConversations({ userId: user.id }));
   }, [user?.id])
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Conversations</h2>
-      </div>
+    <div className="flex flex-col gap-2 border-t border-gray-300 pt-2 mt-6">
       {conversations.map((item) => (
         <SidebarMenuItem key={item.id}>
           <SidebarMenuButton asChild>

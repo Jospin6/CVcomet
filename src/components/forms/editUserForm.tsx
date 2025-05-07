@@ -10,6 +10,7 @@ import { updateUser, User } from "@/redux/user/userSlice";
 import { useEffect } from "react";
 import { transformStringToArray } from "@/lib/utils";
 import { UserProfilItem } from "../ui/userProfilItem";
+import { useTranslation } from 'react-i18next';
 
 const userSchema = z.object({
   email: z.string().email(),
@@ -26,6 +27,7 @@ const userSchema = z.object({
 type UserFormValues = z.infer<typeof userSchema>;
 
 export default function EditUserForm({ user }: { user?: User }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -70,8 +72,8 @@ export default function EditUserForm({ user }: { user?: User }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="border shadow border-gray-300 p-4 rounded-xl w-full">
       <UserProfilItem 
-      subTitle="Your email address allows employers to contact you easily. Make sure it’s professional and up-to-date"
-      title={"✉️ Email"} >
+      subTitle={`${t("emailDescription")}`}
+      title={`✉️ ${t("email")}`} >
         <InputField
           label=""
           className="text-gray-800"
@@ -84,8 +86,8 @@ export default function EditUserForm({ user }: { user?: User }) {
       </UserProfilItem>
 
       <UserProfilItem 
-      subTitle="Your full name is important for employers to know who you are. Make sure it’s professional and up-to-date"
-      title={"👤 Name"} >
+      subTitle={`${t("nameDescription")}`}
+      title={`👤 ${t("name")}`} >
         <InputField
           label=""
           name="name"
@@ -97,8 +99,8 @@ export default function EditUserForm({ user }: { user?: User }) {
       </UserProfilItem>
 
       <UserProfilItem 
-      subTitle="Providing your phone number ensures recruiters can quickly reach you for interviews or job offers"
-      title={"📞 Phone"} >
+      subTitle={`${t("phoneDescription")}`}
+      title={`📞 ${t("phone")}`} >
         <InputField
           label=""
           name="phone"
@@ -110,8 +112,8 @@ export default function EditUserForm({ user }: { user?: User }) {
       </UserProfilItem>
 
       <UserProfilItem 
-      subTitle="Your address helps indicate your location for job opportunities and relocation considerations."
-      title={"🏠 Address"} >
+      subTitle={`${t("addressDescription")}`}
+      title={`🏠 ${t("address")}`} >
         <InputField
           label=""
           name="address"
@@ -123,8 +125,8 @@ export default function EditUserForm({ user }: { user?: User }) {
       </UserProfilItem>
 
       <UserProfilItem 
-      subTitle="Specifying your preferred language ensures your CV and cover letter are tailored to the correct audience."
-      title={"🌐 Languages"} >
+      subTitle={`${t("languageDescription")}`}
+      title={`🌐 ${t("languages")}`} >
         <div className="flex flex-wrap gap-2 mb-2">
           {transformStringToArray(user?.languages ?? "").map((language, index) => (
             <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border">{language}</div>
@@ -142,8 +144,8 @@ export default function EditUserForm({ user }: { user?: User }) {
 
 
       <UserProfilItem 
-      subTitle="Including your LinkedIn profile adds credibility and gives recruiters a deeper insight into your professional background."
-      title={"🔗 LinkedIn"} >
+      subTitle={`${t("linkedinDescription")}`}
+      title={`🔗 ${t("linkedin")}`} >
         <InputField
           label=""
           name="linkedin"
@@ -155,8 +157,8 @@ export default function EditUserForm({ user }: { user?: User }) {
       </UserProfilItem>
 
       <UserProfilItem 
-      subTitle="Sharing your GitHub allows employers to view your coding projects and contributions, showcasing your technical skills."
-      title={"🐙 Github"} >
+      subTitle={`${t("githubDescription")}`}
+      title={`🐙 ${t("github")}`} >
         <InputField
           label=""
           name="github"
@@ -168,8 +170,8 @@ export default function EditUserForm({ user }: { user?: User }) {
       </UserProfilItem>
 
       <UserProfilItem 
-      subTitle="A portfolio link provides quick access to your work samples, which can strengthen your application."
-      title={"🖼️ Portfolio"} >
+      subTitle={`${t("websiteDescription")}`}
+      title={`🖼️ ${t("website")}`} >
         <InputField
           label=""
           name="portfolio"
@@ -181,8 +183,8 @@ export default function EditUserForm({ user }: { user?: User }) {
       </UserProfilItem>
 
       <UserProfilItem 
-      subTitle="Listing your key skills is crucial to highlight your strengths and match you with relevant job opportunities."
-      title={"🛠️ Skills"} >
+      subTitle={`${t("skillDescription")}`}
+      title={`🛠️ ${t("skills")}`} >
         <div className="flex flex-wrap gap-2 mb-2">
           {transformStringToArray(user?.skills ?? "").map((skill, index) => (
             <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border">{skill}</div>
@@ -200,7 +202,7 @@ export default function EditUserForm({ user }: { user?: User }) {
 
 
       <div className="flex justify-end">
-        <Button type="submit">{isSubmitting ? "Saving..." : "Save Profile"}</Button>
+        <Button type="submit">{isSubmitting ? `${t("loading")}` : `${t("saveProfile")}`}</Button>
       </div>
     </form>
   );

@@ -1,6 +1,6 @@
 "use client"
 
-import {  motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { selectCvState } from "@/redux/cv/cvSlice";
@@ -10,27 +10,29 @@ import { Button } from "@/components/ui/button";
 import { fetchUser, selectUser } from "@/redux/user/userSlice";
 import { addConversation, selectConversationId, setTypeGeneration } from "@/redux/conversation/conversationSlice";
 import { redirect } from "next/navigation";
+import { useTranslation } from 'react-i18next';
 
 export default function Home() {
+    const { t } = useTranslation();
     const inputRef = useRef<HTMLDivElement>(null);
     const [input, setInput] = useState("");
     const dispatch = useDispatch<AppDispatch>();
     const cv = useSelector(selectCvState)
     const user = useCurrentUser();
     const currentUser = useSelector(selectUser)
-    const currentConversationId = useSelector(selectConversationId);
-    console.log("currentConversation Id: ", currentConversationId)
+    const currentConversationId = useSelector(selectConversationId)
+    
 
 
     const handleSend = () => {
-        dispatch(addConversation({content: input, userId: user?.id}))
+        dispatch(addConversation({ content: input, userId: user?.id }))
         dispatch(setTypeGeneration("cv"))
     };
 
     const handleCoverLetter = () => {
-        dispatch(addConversation({content: input, userId: user?.id}))
+        dispatch(addConversation({ content: input, userId: user?.id }))
         dispatch(setTypeGeneration("coverLetter"))
-        
+
     };
 
     useEffect(() => {
@@ -44,17 +46,24 @@ export default function Home() {
             dispatch(fetchUser(user.id));
         }
     }, [user?.id, dispatch]);
-    
+
 
 
     return (
-        <div className="flex h-[93vh] items-center justify-center">
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full pb-4 pt-2"
-            >
-                <div className="max-w-3xl mx-auto px-4">
+        <>
+            <div className="flex flex-col items-center justify-center min-h-[90vh] gap-4">
+                {/* Première partie : titre et description */}
+                <div className="text-center">
+                    <div>{t("bigTitle")}</div>
+                    <div>{t("bigDescription")}</div>
+                </div>
+
+                {/* Deuxième partie : input + boutons */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full max-w-3xl px-4 pb-4 pt-2"
+                >
                     <motion.div
                         animate={{ height: "auto" }}
                         whileFocus={{ scale: 1.01 }}
@@ -75,16 +84,21 @@ export default function Home() {
                             }}
                             data-placeholder="Enter the Job description..."
                             className="flex-1 text-gray-600 bg-gray-300 min-h-[100px] max-h-[350px] overflow-y-auto px-3 py-2 focus:outline-none 
-                  text-sm rounded-md empty:before:text-gray-600 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
+            text-sm rounded-md empty:before:text-gray-600 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
                             ref={inputRef}
                         />
-                        <div className="flex gap-2">
-                            <Button className="cursor-pointer" onClick={handleSend}>Cv</Button>
-                            <Button className="cursor-pointer" onClick={handleCoverLetter}>Cover letter</Button>
+                        <div className="flex flex-col gap-2">
+                            <Button className="cursor-pointer" onClick={handleSend}>
+                                Cv
+                            </Button>
+                            <Button className="cursor-pointer" onClick={handleCoverLetter}>
+                                Cover letter
+                            </Button>
                         </div>
                     </motion.div>
-                </div>
-            </motion.div>
-        </div>
+                </motion.div>
+            </div>
+        </>
+
     );
 }

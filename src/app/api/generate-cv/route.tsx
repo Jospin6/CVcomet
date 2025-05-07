@@ -4,13 +4,14 @@ import axios from "axios";
 import { generateObject, streamObject } from "ai";
 import { gemini } from "@/lib/gemini";
 import { z } from "zod";
-import { generateCvPrompt, generateCvSystemPrompt } from "@/helpers/helpers";
+import { generateCvPrompt, generateCvSystemPrompt, generatedLanguagePrompt } from "@/helpers/helpers";
 import { cvSchema } from "@/helpers/schema";
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { description, user, conversationId } = await req.json();
+  const { description, user, conversationId, language } = await req.json();
+  const curentLanguage = generatedLanguagePrompt(language)
 
   if (!user.isSubscribed) {
     const today = new Date();
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     });
   }
   
-  const prompt = generateCvPrompt({ description, user })
+  const prompt = generateCvPrompt({ description, user, curentLanguage })
   const system = generateCvSystemPrompt()
 
   try {

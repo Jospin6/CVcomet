@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { streamObject } from "ai";
 import { gemini } from "@/lib/gemini";
 import prisma from "../../../../prisma/prisma"
-import { generateCoverLetterPrompt, generateCoverLetterSystemPrompt } from "@/helpers/helpers";
+import { generateCoverLetterPrompt, generateCoverLetterSystemPrompt, generatedLanguagePrompt } from "@/helpers/helpers";
 import { coverLetterSchema } from "@/helpers/schema";
 export async function POST(req: Request) {
-    const { description, user, conversationId } = await req.json()
+    const { description, user, conversationId, language } = await req.json()
+    const curentLanguage = generatedLanguagePrompt(language)
     if (!user.isSubscribed) {
         const today = new Date();
         const isSameDay =
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
           },
         });
       }
-    const prompt = generateCoverLetterPrompt({ description, user })
+    const prompt = generateCoverLetterPrompt({ description, user, curentLanguage })
     const system = generateCoverLetterSystemPrompt()
     try {
         const result = await streamObject({

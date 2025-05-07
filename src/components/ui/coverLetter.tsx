@@ -4,8 +4,10 @@ import { Download, RefreshCcw } from "lucide-react";
 import html2canvas from "html2canvas-pro"
 import jsPDF from "jspdf"
 import { useRef } from "react"
+import { useTranslation } from 'react-i18next'
 
 export const CoverLetter = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
+    const { t } = useTranslation();
     const date = new Date(Date.now());
     const cvRef = useRef<HTMLDivElement>(null);
 
@@ -31,7 +33,7 @@ export const CoverLetter = ({ coverLetter, user }: { coverLetter: CoverLetterPro
     return (
         <>
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Cover Letter</h2>
+                <h2 className="text-xl font-bold">{t("coverLetter")}</h2>
                 <div className="flex gap-4">
                     <button
                         onClick={handleDownload}
@@ -69,7 +71,7 @@ export const CoverLetter = ({ coverLetter, user }: { coverLetter: CoverLetterPro
                     <p className="mt-8">{`${day}/${month}/${year}`}</p>
 
                     {coverLetter.recipientName && (
-                        <p className="mt-8">Dear {coverLetter.recipientName},</p>
+                        <p className="mt-8">{coverLetter.recipientName},</p>
                     )}
 
                     {coverLetter.introduction && (

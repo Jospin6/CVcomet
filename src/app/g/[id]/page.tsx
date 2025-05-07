@@ -20,7 +20,7 @@ import { CoverLetterItems } from "@/components/ui/coverLetterItems";
 import { useTranslation } from 'react-i18next';
 
 export default function Home() {
-    const { t } = useTranslation('common')
+    const { t, i18n } = useTranslation('common')
     const params = useParams()
     const id = params.id
     const conversation = useSelector(selectConversation)
@@ -32,6 +32,7 @@ export default function Home() {
     const currentUser = useSelector(selectUser)
     const typeGeneration = useSelector(selectTypeGeneration)
     const [hasGenerated, setHasGenerated] = useState(false);
+    let language = i18n.language === 'fr' ? 'French' : 'English'
 
     const { object: cvObject, submit: cvSubmit, isLoading: isLoadingCv } = useObject({
         api: '/api/generate-cv',
@@ -46,9 +47,9 @@ export default function Home() {
     useEffect(() => {
         if (!hasGenerated && conversation && convId) {
             if (typeGeneration === "cv") {
-                cvSubmit({ description: conversation.content, user: currentUser, conversationId: convId });
+                cvSubmit({ description: conversation.content, user: currentUser, conversationId: convId, language });
             } else if (typeGeneration === "coverLetter") {
-                submitCoverLetter({ description: conversation.content, user: currentUser, conversationId: convId });
+                submitCoverLetter({ description: conversation.content, user: currentUser, conversationId: convId, language });
             }
             setHasGenerated(true);
             dispatch(clearConversationId());
@@ -63,7 +64,7 @@ export default function Home() {
 
     const handleSend = () => {
         if (!input.trim()) return;
-        cvSubmit({ description: input, user: currentUser, conversationId: id });
+        cvSubmit({ description: input, user: currentUser, conversationId: id, language });
         setInput("");
         if (inputRef.current) {
             inputRef.current.innerText = "";
@@ -72,7 +73,7 @@ export default function Home() {
 
     const handleCoverLetter = () => {
         if (!input.trim()) return;
-        submitCoverLetter({ description: input, user: currentUser, conversationId: id });
+        submitCoverLetter({ description: input, user: currentUser, conversationId: id, language });
         setInput("");
         if (inputRef.current) {
             inputRef.current.innerText = "";

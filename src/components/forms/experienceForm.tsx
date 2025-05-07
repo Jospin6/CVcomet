@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { addExperience } from "@/redux/experience/experienceSlice";
+import { useTranslation } from 'react-i18next';
 
 const experienceSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -21,6 +22,7 @@ const experienceSchema = z.object({
 type ExperienceFormValues = z.infer<typeof experienceSchema>;
 
 export default function ExperienceForm({ user }: { user?: User }) {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>()
   const {
     register,
@@ -57,7 +59,7 @@ export default function ExperienceForm({ user }: { user?: User }) {
       )}
       <div className="grid grid-cols-10 gap-4">
         <InputField
-          label="Start Date"
+          label={`${t("start")}`}
           className="col-span-2"
           name="start"
           placeholder="YYYY-MM-DD"
@@ -66,7 +68,7 @@ export default function ExperienceForm({ user }: { user?: User }) {
           errors={errors}
         />
         <InputField
-          label="End Date"
+          label={`${t("end")}`}
           className="col-span-2"
           name="end"
           placeholder="YYYY-MM-DD (optional)"
@@ -75,7 +77,7 @@ export default function ExperienceForm({ user }: { user?: User }) {
           errors={errors}
         />
         <InputField
-          label="Job Title"
+          label={`${t("jobTile")}`}
           className="col-span-2"
           name="title"
           placeholder="ex: Software Engineer"
@@ -83,7 +85,7 @@ export default function ExperienceForm({ user }: { user?: User }) {
           errors={errors}
         />
         <InputField
-          label="Company"
+          label={`${t("company")}`}
           className="col-span-2"
           name="company"
           placeholder="ex: Google"
@@ -91,7 +93,7 @@ export default function ExperienceForm({ user }: { user?: User }) {
           errors={errors}
         />
         <InputField
-          label="Location"
+          label={`${t("location")}`}
           className="col-span-2"
           name="location"
           placeholder="ex: San Francisco, USA"
@@ -107,7 +109,7 @@ export default function ExperienceForm({ user }: { user?: User }) {
         errors={errors}
       /> */}
       <div className="flex justify-end">
-        <Button type="submit">{isSubmitting ? "Saving..." : "Add Experience"}</Button>
+        <Button type="submit">{isSubmitting ? `${t("loading")}` : `${t("addExperience")}`}</Button>
       </div>
     </form>
   );

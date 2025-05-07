@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { addUser } from "@/redux/user/userSlice";
+import { useTranslation } from 'react-i18next';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email invalide" }),
@@ -15,6 +16,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const {
     register,
@@ -48,9 +50,8 @@ export default function LoginPage() {
           id="email"
           type="email"
           {...register("email")}
-          className={`w-full border rounded-lg px-3 py-2 mb-1 focus:outline-none focus:ring-2 ${
-            errors.email ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
-          }`}
+          className={`w-full border rounded-lg px-3 py-2 mb-1 focus:outline-none focus:ring-2 ${errors.email ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+            }`}
         />
         {errors.email && (
           <p className="text-red-500 text-sm mb-4">{errors.email.message}</p>

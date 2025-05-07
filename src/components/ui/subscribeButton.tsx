@@ -1,10 +1,12 @@
 import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "./button";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useTranslation } from 'react-i18next';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export const SubscribeButton = () => {
+  const { t } = useTranslation();
     const user = useCurrentUser(); 
   const handleSubscribe = async () => {
     const res = await fetch("/api/stripe/checkout", {
@@ -40,6 +42,6 @@ export const SubscribeButton = () => {
   };
 
   return <Button onClick={handleSubscribe} className="w-full bg-yellow-500 text-white hover:bg-yellow-600 text-lg py-6">
-    Upgrade to Premium
+    {t("upgradePlan")}
     </Button>
 };

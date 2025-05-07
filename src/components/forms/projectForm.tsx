@@ -8,6 +8,7 @@ import { User } from "@/redux/user/userSlice";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
+import { useTranslation } from 'react-i18next';
 import { addProject } from "@/redux/project/projectSlice";
 
 const projectSchema = z.object({
@@ -20,6 +21,7 @@ const projectSchema = z.object({
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
 export default function ProjectForm({ user }: { user?: User }) {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>()
   const { register, reset, handleSubmit, formState: { errors } } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
@@ -51,7 +53,7 @@ export default function ProjectForm({ user }: { user?: User }) {
       )}
       <div className="grid grid-cols-8 gap-4">
         <InputField
-          label="Start Date"
+          label={`${t("start")}`}
           className="col-span-2"
           name="start"
           placeholder="YYYY-MM-DD"
@@ -60,7 +62,7 @@ export default function ProjectForm({ user }: { user?: User }) {
           errors={errors}
         />
         <InputField
-          label="End Date"
+          label={`${t("end")}`}
           className="col-span-2"
           name="end"
           placeholder="YYYY-MM-DD (optional)"
@@ -69,7 +71,7 @@ export default function ProjectForm({ user }: { user?: User }) {
           errors={errors}
         />
         <InputField
-          label="Project Title"
+          label={`${t("projectName")}`}
           className="col-span-2"
           name="title"
           placeholder="Enter project title"
@@ -78,7 +80,7 @@ export default function ProjectForm({ user }: { user?: User }) {
         />
 
         <InputField
-          label="Project URL"
+          label={`${t("url")}`}
           className="col-span-2"
           type="url"
           name="url"
@@ -88,7 +90,7 @@ export default function ProjectForm({ user }: { user?: User }) {
         />
       </div>
       <div className="flex justify-end my-4">
-        <Button type="submit">Save Project</Button>
+        <Button type="submit">{`${t("addProject")}`}</Button>
       </div>
     </form>
   );

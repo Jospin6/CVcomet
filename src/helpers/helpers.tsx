@@ -1,9 +1,10 @@
 import { User } from "@/redux/user/userSlice";
 
 export const generateCvPrompt = (
-    { description, user }: { description: string, user: User }) => {
+    { description, user, curentLanguage }: { description: string, user: User, curentLanguage: string }) => {
 
         return `
+        First of all: ${curentLanguage}
         You are a professional resume writer and career strategist specialized in creating modern, ATS-optimized resumes tailored to specific job descriptions.
 
 Your task is to generate a personalized, impactful, and cleanly structured resume based on the job description and candidate profile below. The resume must align precisely with the tone, keywords, and expectations of the job posting, and be ready for direct submission.
@@ -200,8 +201,9 @@ export const generateCvSystemPrompt = () => {
 }
 
 export const generateCoverLetterPrompt = (
-    { description, user }: { description: string, user: User }) => {
+    { description, user, curentLanguage }: { description: string, user: User, curentLanguage: string }) => {
     return `
+        First of all: ${curentLanguage}
        Using the job description below and the user's profile, write a highly professional, personalized, and ATS-optimized cover letter for a job application.
 
 Job Description:
@@ -272,5 +274,11 @@ export const generateCoverLetterSystemPrompt = () => {
     Your goal is to **persuade, not just inform**—the reader must feel this letter was written uniquely for this job.
 
     Only generate the cover letter—do not include metadata, schema, or extra commentary.
+    `
+}
+
+export const generatedLanguagePrompt = (language: string) => {
+    return `
+    Generate all content exclusively in ${language}, using a professional and clear style.
     `
 }

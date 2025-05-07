@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { TextAreaField } from "../ui/textAreaField";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from 'react-i18next';
 
 // Définir le schéma de validation
 const certificationSchema = z.object({
@@ -15,6 +16,7 @@ const certificationSchema = z.object({
 type CertificationFormValues = z.infer<typeof certificationSchema>;
 
 export default function CertificationForm() {
+  const { t } = useTranslation();
   const { register, handleSubmit, formState: { errors } } = useForm<CertificationFormValues>({
     resolver: zodResolver(certificationSchema),
   });
@@ -27,7 +29,7 @@ export default function CertificationForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="border border-gray-700 p-3 rounded-2xl">
       <InputField
-        label="Certification Name"
+        label={`${t("certificatName")}`}
         name="name"
         placeholder="Enter certification name"
         register={register}
@@ -52,7 +54,7 @@ export default function CertificationForm() {
       />
 
       <div className="flex justify-end my-4">
-        <Button type="submit">Save Certification</Button>
+        <Button type="submit">{`${t("addCertificat")}`}</Button>
       </div>
     </form>
   );

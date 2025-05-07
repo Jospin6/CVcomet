@@ -1,4 +1,6 @@
+"use client"
 import { Home, User, ArrowUpCircle } from "lucide-react"
+import { useTranslation } from 'react-i18next';
  
 import {
   Sidebar,
@@ -12,31 +14,33 @@ import {
 } from "@/components/ui/sidebar"
 import { ConversationList } from "./ui/conversationList"
  
-// Menu items.
+export function AppSidebar() {
+  const { t } = useTranslation();
+  // Menu items.
 const items = [
   {
-    title: "Home",
+    title: `${t("home")}`,
     url: "/",
     icon: Home,
   },
   {
-    title: "Profil",
+    title: `${t("profil")}`,
     url: "/profil",
     icon: User,
   },
   {
-    title: "Upgrade",
+    title: `${t("upgrade")}`,
     url: "/upgrade",
     icon: ArrowUpCircle,
   }
 ]
- 
-export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
+          <div className="h-16 flex items-center ">
           <SidebarGroupLabel className="text-2xl text-black font-bold">My Cv</SidebarGroupLabel>
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
