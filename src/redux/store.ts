@@ -8,9 +8,11 @@ import projectReducer from './project/projectSlice';
 import cvReducer from './cv/cvSlice'
 import coverLetterReducer from './coverLetter/coverLetterSlice'
 import conversationReducer from './conversation/conversationSlice';
+import authReducer from './auth/authSlice'
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     user: userReducer,
     experience: experienceReducer,
     education: educationReducer,

@@ -24,10 +24,12 @@ model User {
   portfolio String?
   github    String?
   summary   String?
+  password  String?
 
   skills          String?
   hobbies         String?
   isSubscribed    Boolean         @default(false)
+  role            UserRole        @default(USER)
   lastGeneratedAt DateTime?
   subscriptionId  String?
   generationCount Int             @default(0)
@@ -38,6 +40,11 @@ model User {
   Conversation    Conversation[]
 
   createdAt DateTime @default(now())
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 model Conversation {
