@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../../prisma/prisma"
-import { generateToken } from "../route";
 import { cookies } from "next/headers";
+import { SignJWT } from "jose";
+
+const secret = new TextEncoder().encode("secret_key");
 
 export async function GET(req: Request) {
   const url = new URL(req.url)
@@ -89,4 +91,17 @@ export async function DELETE(req: Request) {
   await prisma.user.delete({ 
     where: { id, }, 
   })
+}
+
+export async function generateToken(user: any) {
+  const token = await new SignJWT({
+      id: user.id,
+      email: user.email
+  })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime(100 * 365 * 24 * 60 * 60)
+      .sign(secret);
+
+  return token;
 }

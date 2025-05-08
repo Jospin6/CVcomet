@@ -31,19 +31,14 @@ export const generateCoverLetter = createAsyncThunk(
 
 export const fetchCoverLetter = createAsyncThunk(
     "coverLetter/fetchCoverLetter", 
-    async ({userId}: {userId: string}, {rejectWithValue}) => {
+    async () => {
     let url = "/api/coverLetter";
-    const params = new URLSearchParams();
-    if (userId) params.append("userId", String(userId));
-    if (params.toString()) {
-        url += `?${params.toString()}`;
-    }
     try {
         const res = await axios.get(url)
 
         return res.data
     } catch (error: any) {
-        return rejectWithValue(error.message || 'Erreur inconnue')
+        throw new Error(error.message || 'Erreur inconnue')
     }
 })
 

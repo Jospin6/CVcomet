@@ -39,6 +39,7 @@ export interface User {
   address?: string;
   linkedin?: string;
   portfolio?: string;
+  isSubscribed: boolean;
   summary?: string;
   skills?: string;
   hobbies?: string;
@@ -52,6 +53,7 @@ export interface User {
 
 interface UserState {
   user: User | null;
+  users: User[];
   currentUser: User | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
@@ -61,6 +63,7 @@ interface UserState {
 const initialState: UserState = {
   user: null,
   currentUser: null,
+  users: [],
   status: 'idle',
   error: null,
 };
@@ -70,6 +73,15 @@ export const fetchUser = createAsyncThunk<User, string>(
   'user/fetchUser',
   async (userId: string) => {
     const response = await axios.get(`/api/users/${userId}`);
+    return response.data;
+  }
+);
+
+// Thunks pour appeler l'API
+export const fetchUsers = createAsyncThunk<User>(
+  'user/fetchUsers',
+  async () => {
+    const response = await axios.get(`/api/users`);
     return response.data;
   }
 );
@@ -143,11 +155,24 @@ const userSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message || 'Failed to update user data';
       });
+
+      builder.addCase(fetchUsers.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<any>) => {
+        state.status = 'succeeded';
+        state.users = action.payload;
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message || 'Failed to fetch user data';
+      })
   },
 });
 
 // Selectors
 export const selectUser = (state: RootState) => state.user.user;
+export const selectUsers = (state: RootState) => state.user.users;
 export const selectUserStatus = (state: RootState) => state.user.status;
 export const selectUserError = (state: RootState) => state.user.error;
 export const selectCurrentUser = (state: RootState) => state.user.currentUser

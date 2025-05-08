@@ -33,13 +33,8 @@ export const generateCv = createAsyncThunk(
 
 export const fetchCvs = createAsyncThunk(
     "cv/fetchCvs",
-    async ({ userId }: { userId: string }, { rejectWithValue }) => {
+    async () => {
         let url = "/api/cvs";
-        const params = new URLSearchParams();
-        if (userId) params.append("userId", String(userId));
-        if (params.toString()) {
-            url += `?${params.toString()}`;
-        }
         try {
             const res = await axios.get(url)
 
@@ -100,3 +95,7 @@ const cvSlice = createSlice({
 export const selectCvState = (state: RootState) => state.cv
 
 export default cvSlice.reducer
+function rejectWithValue(arg0: any): any {
+    throw new Error('Function not implemented.')
+}
+
