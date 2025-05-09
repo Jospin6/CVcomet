@@ -44,6 +44,7 @@ export interface User {
   skills?: string;
   hobbies?: string;
   languages?: string;
+  currentTemplateId?: string;
   github?: string;
   Education?: Education[];
   Project?: Project[]
@@ -113,6 +114,18 @@ export const fetchcurrentUser = createAsyncThunk(
     }
   }
 );
+
+export const updateCurrentTemplate = createAsyncThunk("user/currentUser", async ({id, currentTemplateId}: {id: string, currentTemplateId: string}, { rejectWithValue }) => {
+  try {
+      const response = await axios.put(`/api/users/${id}/updateTemplate`, { id, currentTemplateId });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(error.response?.data || "Erreur inconnue");
+      }
+      return rejectWithValue("Erreur inconnue");
+    }
+})
 
 // User slice
 const userSlice = createSlice({

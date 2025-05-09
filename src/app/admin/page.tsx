@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DialogHeader, DialogTitle, Dialog, DialogTrigger, DialogContent, } from "@/components/ui/dialog";
 import TemplateCardList from "@/components/ui/templateCardList";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { fetchCoverLetter } from "@/redux/coverLetter/coverLetterSlice";
 import { fetchCvs } from "@/redux/cv/cvSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchTemplates } from "@/redux/template/templateSlice";
-import { fetchUsers } from "@/redux/user/userSlice";
+import { fetchUser, fetchUsers, selectUser } from "@/redux/user/userSlice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -37,12 +38,22 @@ export default function AdminDashboard() {
   const letters = useSelector((state: RootState) => state.coverLetter.letters);
   const subscribedUsers = users.filter(user => user.isSubscribed).length;
   const templates = useSelector((state: RootState) => state.template.templates);
+  const currentUser = useCurrentUser()
+  const user = useSelector(selectUser)
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      dispatch(fetchUser(currentUser?.id))
+    }
+  }, [currentUser?.id, dispatch])
+
   useEffect(() => {
     dispatch(fetchUsers())
     dispatch(fetchCvs())
     dispatch(fetchCoverLetter())
     dispatch(fetchTemplates())
   }, [dispatch])
+
   return (
     <div className="">
       <h1 className="text-2xl text-white font-bold mb-8">Admin Dashboard</h1>
@@ -72,7 +83,7 @@ export default function AdminDashboard() {
 
       {templates.length > 0 && (
         <div className="my-3">
-          <TemplateCardList templates={templates} />
+          <TemplateCardList templates={templates} user={user || undefined}  />
         </div>
       )}
 

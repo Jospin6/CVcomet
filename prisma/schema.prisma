@@ -145,7 +145,7 @@ model CoverLetter {
 }
 
 model Template {
-  id           String       @id @default(cuid())
+  id           String       @id @default(uuid())
   name         String
   type         TemplateType // 'CV' ou 'COVER_LETTER'
   templateFile Bytes? // chemin du fichier HTML ou PDF ou JSON
