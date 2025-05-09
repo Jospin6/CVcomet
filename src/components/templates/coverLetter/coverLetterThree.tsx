@@ -1,0 +1,102 @@
+import { CoverLetterProps } from "@/helpers/schema"
+import { User } from "@/redux/user/userSlice"
+import { Download, RefreshCcw } from "lucide-react";
+import html2canvas from "html2canvas-pro"
+import jsPDF from "jspdf"
+import { useRef } from "react"
+import { useTranslation } from 'react-i18next'
+
+export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
+    const { t } = useTranslation();
+    const date = new Date(Date.now());
+    const cvRef = useRef<HTMLDivElement>(null);
+
+    const handleDownload = async () => {
+        const element = cvRef.current;
+        if (!element) return;
+
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        pdf.save("cover_letter.pdf");
+    };
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    return (
+        <div className="max-w-3xl mx-auto bg-white p-8 shadow-lg rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-800">{t("coverLetter")}</h2>
+                <button
+                    onClick={handleDownload}
+                    className="p-2 rounded bg-blue-500 text-white hover:bg-blue-600"
+                    aria-label="Download Cover Letter"
+                >
+                    <Download className="w-5 h-5" />
+                </button>
+            </div>
+
+            <div
+                ref={cvRef}
+                className="flex flex-col space-y-6"
+                style={{
+                    fontFamily: "Arial, sans-serif",
+                    fontSize: "12pt",
+                    lineHeight: "1.5",
+                }}
+            >
+                {/* Header Section */}
+                <header className="flex flex-col space-y-1">
+                    <p className="font-semibold text-gray-800">{user?.name}</p>
+                    <p className="text-gray-700">{user?.address}</p>
+                    <p className="text-gray-700">{user?.email}</p>
+                    <p className="text-gray-700">{user?.phone}</p>
+                </header>
+
+                {/* Date Section */}
+                <p className="text-gray-600">{`${day}/${month}/${year}`}</p>
+
+                {/* Recipient Information */}
+                <section className="space-y-1">
+                    {coverLetter.recipientName && <p className="font-semibold text-gray-800">{coverLetter.recipientName}</p>}
+                    {coverLetter.recipientTitle && <p className="text-gray-700">{coverLetter.recipientTitle}</p>}
+                    {coverLetter.companyName && <p className="font-semibold text-gray-800">{coverLetter.companyName}</p>}
+                    {coverLetter.companyAddress && <p className="text-gray-700">{coverLetter.companyAddress}</p>}
+                </section>
+
+                {/* Salutation Section */}
+                {coverLetter.recipientName && (
+                    <p className="mt-4 text-gray-800">{`${coverLetter.recipientName},`}</p>
+                )}
+
+                {/* Body Section */}
+                <section className="space-y-4">
+                    {coverLetter.introduction && (
+                        <p className="text-gray-700">{coverLetter.introduction}</p>
+                    )}
+
+                    {coverLetter.body && (
+                        <p className="text-gray-700">{coverLetter.body}</p>
+                    )}
+
+                    {coverLetter.conclusion && (
+                        <p className="text-gray-700">{coverLetter.conclusion}</p>
+                    )}
+                </section>
+
+                {/* Closing */}
+                <footer className="mt-6">
+                    <p className="text-gray-800">{user?.name}</p>
+                </footer>
+            </div>
+        </div>
+    );
+}
