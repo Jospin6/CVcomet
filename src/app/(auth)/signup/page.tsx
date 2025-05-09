@@ -51,6 +51,7 @@ export default function RegisterForm() {
         <InputField
           label={"email"}
           name={"email"}
+          className="text-white"
           type="email"
           placeholder={"Email"}
           register={register}
@@ -58,6 +59,7 @@ export default function RegisterForm() {
         />
         <InputField
           label={"password"}
+          className="text-white"
           type="password"
           name={"password"}
           placeholder={"Password"}

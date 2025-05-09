@@ -50,6 +50,7 @@ export default function Login() {
         <InputField
           label={"Email"}
           type="email"
+          className="text-white"
           name={"email"}
           placeholder={"Email"}
           register={register}
@@ -58,6 +59,7 @@ export default function Login() {
         <InputField
           label={"Password"}
           type="password"
+          className="text-white"
           name={"password"}
           placeholder={"Password"}
           register={register}

@@ -10,6 +10,9 @@ import { fetchUser } from "@/redux/user/userSlice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
+import { Button } from "@/components/ui/button";
+import { logout } from "@/redux/auth/authSlice";
+import { redirect } from "next/navigation";
 
 
 export default function Profil() {
@@ -20,6 +23,11 @@ export default function Profil() {
     const experiences = user?.Experience || []
     const educations = user?.Education || []
     const projects = user?.Project || []
+
+    const handleLogout = () => {
+        dispatch(logout({ id: currentUser?.id || "" }))
+        redirect("/login")
+    }
 
     useEffect(() => {
         if (currentUser?.id) {
@@ -58,6 +66,10 @@ export default function Profil() {
                 </div>))}
             </div>
             <ProjectForm user={user || undefined} />
+        </div>
+
+        <div>
+            <Button onClick={handleLogout} className="bg-red-700 text-gray-200">Logout</Button>
         </div>
     </div>
 }

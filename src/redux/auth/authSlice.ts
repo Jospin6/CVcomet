@@ -52,6 +52,17 @@ export const login = createAsyncThunk("auth/login", async ({ email, password }: 
     }
 })
 
+export const logout = createAsyncThunk("auth/logout", async ({ id }: { id: string }, { rejectWithValue }) => {
+    try {
+        const response = await axios.delete(`/api/logout/${id}`);
+
+        return response.data;
+    } catch (error: any) {
+        console.log("Erreur Axios :", error.response?.data || error.message);
+        return rejectWithValue(error.response?.data || "Erreur inconnue");
+    }
+})
+
 export const signup = createAsyncThunk(
     "auth/signup",
     async (data: User, { rejectWithValue }) => {

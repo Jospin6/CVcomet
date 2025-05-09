@@ -39,7 +39,7 @@ const items = [
       <SidebarContent className="bg-[#1a1a1a] text-white">
         <SidebarGroup>
           <div className="h-16 flex items-center ">
-          <SidebarGroupLabel className="text-2xl text-white font-bold">My Cv</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-2xl text-white font-bold">SmartCV</SidebarGroupLabel>
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
