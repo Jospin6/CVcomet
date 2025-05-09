@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   const token = await generateToken(user);
   
-  const response = NextResponse.json({ message: "Connexion réussie" }, { status: 200 });
+  const response = NextResponse.json(user, { status: 200 });
   
   (await cookies()).set("token_cv", token, {
     httpOnly: true,

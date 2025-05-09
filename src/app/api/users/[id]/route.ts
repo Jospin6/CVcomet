@@ -14,6 +14,7 @@ export async function GET(req: Request) {
       Experience: true,
       Education: true,
       Project: true,
+      currentTemplate: true 
     },
   })
   if (!user) {

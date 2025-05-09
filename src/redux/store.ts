@@ -9,6 +9,7 @@ import cvReducer from './cv/cvSlice'
 import coverLetterReducer from './coverLetter/coverLetterSlice'
 import conversationReducer from './conversation/conversationSlice';
 import authReducer from './auth/authSlice'
+import templateReducer from './template/templateSlice';
 
 export const store = configureStore({
   reducer: {
@@ -21,6 +22,7 @@ export const store = configureStore({
     cv: cvReducer,
     coverLetter: coverLetterReducer,
     conversation: conversationReducer,
+    template: templateReducer
   },
 });
 
