@@ -3,13 +3,14 @@ import prisma from "../../../../prisma/prisma"
 
 
 export async function POST(req: Request) {
-    const { name, organization, date, userId } = await req.json()
+    const { name, organization,description, date, userId } = await req.json()
 
     try {
         const certifications = await prisma.certification.create({
             data: {
                 name,
                 organization,
+                description,
                 date,
                 userId
             }

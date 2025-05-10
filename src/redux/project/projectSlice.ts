@@ -10,6 +10,7 @@ export type Project = {
   title: string;
   url: string;
   userId: string;
+  description?: string
 };
 
 interface ProjectState {

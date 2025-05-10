@@ -11,6 +11,7 @@ const certificationSchema = z.object({
   name: z.string().min(1, "Certification name is required"),
   organization: z.string().min(1, "Organization is required"),
   date: z.string().min(1, "Date is required"),
+  description: z.string().optional()
 });
 
 type CertificationFormValues = z.infer<typeof certificationSchema>;
@@ -52,6 +53,15 @@ export default function CertificationForm() {
         register={register}
         errors={errors}
       />
+
+      <div>
+        <TextAreaField
+          label={"Description"}
+          name={"description"}
+          placeholder={"What did you learn as education"}
+          register={register}
+          errors={errors} />
+      </div>
 
       <div className="flex justify-end my-4">
         <Button type="submit">{`${t("addCertificat")}`}</Button>

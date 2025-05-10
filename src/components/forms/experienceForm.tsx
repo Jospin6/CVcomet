@@ -17,6 +17,7 @@ const experienceSchema = z.object({
   location: z.string().min(1, "Location is required"),
   start: z.string().min(1, "Start date is required"),
   end: z.string().optional(),
+  description: z.string().optional()
 });
 
 type ExperienceFormValues = z.infer<typeof experienceSchema>;
@@ -101,13 +102,13 @@ export default function ExperienceForm({ user }: { user?: User }) {
           errors={errors}
         />
       </div>
-      {/* <TextAreaField
+      <TextAreaField
         label="Description"
         name="description"
         placeholder="Brief description of your responsibilities and achievements"
         register={register}
         errors={errors}
-      /> */}
+      />
       <div className="flex justify-end">
         <Button type="submit">{isSubmitting ? `${t("loading")}` : `${t("addExperience")}`}</Button>
       </div>

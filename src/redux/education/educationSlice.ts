@@ -10,6 +10,7 @@ type Education = {
   start: string;
   end?: string;
   userId: string;
+  description?: string
 };
 
 interface EducationState {

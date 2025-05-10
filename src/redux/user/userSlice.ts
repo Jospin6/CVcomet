@@ -8,6 +8,7 @@ type Certification = {
   id: string;
   name: string;
   organization: string;
+  description: string;
   date: string;
 };
 
@@ -50,6 +51,7 @@ export interface User {
   Education?: Education[];
   Project?: Project[]
   Experience?: Experience[];
+  Certification?: Certification[];
   createdAt?: string;
 }
 
@@ -95,7 +97,7 @@ export const addUser = createAsyncThunk('user/addUser', async (newUser: User) =>
 
 export const updateUser = createAsyncThunk(
   'user/updateUser',
-  async ({ id, data }: { id: string; data: User}) => {
+  async ({ id, data }: { id: string; data: User }) => {
     const response = await axios.put(`/api/users/${id}`, data);
     return response.data;
   }
@@ -116,7 +118,7 @@ export const fetchcurrentUser = createAsyncThunk(
   }
 );
 
-export const updateCurrentTemplate = createAsyncThunk("user/currentUser", async ({id, type, currentTemplateId}: {id: string, type: string, currentTemplateId: string}, { rejectWithValue }) => {
+export const updateCurrentTemplate = createAsyncThunk("user/currentUser", async ({ id, type, currentTemplateId }: { id: string, type: string, currentTemplateId: string }, { rejectWithValue }) => {
   let url = ""
   if (type === "CV") {
     url = `/api/users/${id}/updateTemplate`
@@ -124,14 +126,14 @@ export const updateCurrentTemplate = createAsyncThunk("user/currentUser", async 
     url = `/api/users/${id}/updateCoverLetter`
   }
   try {
-      const response = await axios.put(url, { id, currentTemplateId });
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(error.response?.data || "Erreur inconnue");
-      }
-      return rejectWithValue("Erreur inconnue");
+    const response = await axios.put(url, { id, currentTemplateId });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return rejectWithValue(error.response?.data || "Erreur inconnue");
     }
+    return rejectWithValue("Erreur inconnue");
+  }
 })
 
 // User slice
@@ -176,9 +178,9 @@ const userSlice = createSlice({
         state.error = action.error.message || 'Failed to update user data';
       });
 
-      builder.addCase(fetchUsers.pending, (state) => {
-        state.status = 'loading';
-      })
+    builder.addCase(fetchUsers.pending, (state) => {
+      state.status = 'loading';
+    })
       .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<any>) => {
         state.status = 'succeeded';
         state.users = action.payload;

@@ -9,6 +9,7 @@ type Certification = {
   organization: string;
   date: string;
   userId: string;
+  description?: string;
 };
 
 interface CertificationState {

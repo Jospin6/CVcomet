@@ -11,6 +11,7 @@ type Experience = {
   start: string;
   end?: string;
   userId: string;
+  description?: string
 };
 
 interface ExperienceState {

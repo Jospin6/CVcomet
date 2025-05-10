@@ -10,12 +10,14 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { useTranslation } from 'react-i18next';
 import { addProject } from "@/redux/project/projectSlice";
+import { TextAreaField } from "../ui/textAreaField";
 
 const projectSchema = z.object({
   start: z.string().min(1, "Start date is required"),
   end: z.string().optional(),
   title: z.string().min(1, "Project title is required"),
   url: z.string().url("Enter a valid URL").min(1, "Project URL is required"),
+  description: z.string().optional(),
 });
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
@@ -88,6 +90,14 @@ export default function ProjectForm({ user }: { user?: User }) {
           register={register}
           errors={errors}
         />
+      </div>
+      <div>
+        <TextAreaField
+          label={"Description"}
+          name={"description"}
+          placeholder={"What did you learn as education"}
+          register={register}
+          errors={errors} />
       </div>
       <div className="flex justify-end my-4">
         <Button type="submit">{`${t("addProject")}`}</Button>

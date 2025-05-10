@@ -63,43 +63,47 @@ model Conversation {
 }
 
 model Experience {
-  id       String  @id @default(uuid())
-  title    String
-  company  String
-  location String
-  start    String
-  end      String?
-  userId   String
-  user     User    @relation(fields: [userId], references: [id])
+  id          String  @id @default(uuid())
+  title       String
+  company     String
+  location    String
+  start       String
+  end         String?
+  description String?
+  userId      String
+  user        User    @relation(fields: [userId], references: [id])
 }
 
 model Education {
-  id     String  @id @default(uuid())
-  degree String
-  school String
-  start  String
-  end    String?
-  userId String
-  user   User    @relation(fields: [userId], references: [id])
+  id          String  @id @default(uuid())
+  degree      String
+  school      String
+  start       String
+  end         String?
+  description String?
+  userId      String
+  user        User    @relation(fields: [userId], references: [id])
 }
 
 model Certification {
-  id           String @id @default(uuid())
+  id           String  @id @default(uuid())
   name         String
   organization String
   date         String
+  description  String?
   userId       String
-  user         User   @relation(fields: [userId], references: [id])
+  user         User    @relation(fields: [userId], references: [id])
 }
 
 model Project {
-  id     String  @id @default(uuid())
-  start  String?
-  end    String?
-  title  String
-  url    String?
-  userId String
-  user   User    @relation(fields: [userId], references: [id])
+  id          String  @id @default(uuid())
+  start       String?
+  end         String?
+  title       String
+  url         String?
+  description String?
+  userId      String
+  user        User    @relation(fields: [userId], references: [id])
 }
 
 model Cv {

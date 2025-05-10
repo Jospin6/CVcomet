@@ -9,12 +9,14 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { addEducation } from "@/redux/education/educationSlice";
 import { useTranslation } from 'react-i18next';
+import { TextAreaField } from "../ui/textAreaField";
 
 const educationSchema = z.object({
   degree: z.string().min(1, "Degree is required"),
   school: z.string().min(1, "School is required"),
   start: z.string().min(1, "Start date is required"),
-  end: z.string().optional()
+  end: z.string().optional(),
+  description: z.string().optional()
 });
 
 type EducationFormValues = z.infer<typeof educationSchema>;
@@ -88,6 +90,15 @@ export default function EducationForm({ user }: { user?: User }) {
           register={register}
           errors={errors}
         />
+      </div>
+
+      <div>
+        <TextAreaField 
+          label={"Description"} 
+          name={"description"} 
+          placeholder={"What did you learn as education"} 
+          register={register} 
+          errors={errors}/>
       </div>
 
       <div className="flex justify-end">
