@@ -39,7 +39,7 @@ export interface User {
   address?: string;
   linkedin?: string;
   portfolio?: string;
-  isSubscribed: boolean;
+  isSubscribed?: boolean;
   summary?: string;
   skills?: string;
   hobbies?: string;

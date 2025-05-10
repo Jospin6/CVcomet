@@ -65,9 +65,11 @@ export default function EditUserForm({ user }: { user?: User }) {
   }, [user, reset]);
 
   const onSubmit = (data: UserFormValues) => {
+    console.log("data: ", data)
     dispatch(updateUser({ id: user?.id ?? "", data }))
     reset()
   };
+  
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="shadow border-[1px] border-gray-500 p-4 rounded-xl w-full">
