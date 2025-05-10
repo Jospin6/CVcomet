@@ -58,7 +58,7 @@ export default function ExperienceForm({ user }: { user?: User }) {
           {successMessage}
         </div>
       )}
-      <div className="grid grid-cols-10 gap-4">
+      <div className="md:grid md:grid-cols-10 gap-4">
         <InputField
           label={`${t("start")}`}
           className="col-span-2"

@@ -4,7 +4,7 @@ import { RootState } from '@/redux/store'; // Assure-toi que tu as bien configur
 import axios from 'axios';
 
 type Certification = {
-  id: string;
+  id?: string;
   name: string;
   organization: string;
   date: string;

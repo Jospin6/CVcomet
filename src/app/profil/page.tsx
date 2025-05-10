@@ -13,6 +13,8 @@ import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { logout } from "@/redux/auth/authSlice";
 import { redirect } from "next/navigation";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import CertificationForm from "@/components/forms/certificationForm";
 
 
 export default function Profil() {
@@ -23,6 +25,7 @@ export default function Profil() {
     const experiences = user?.Experience || []
     const educations = user?.Education || []
     const projects = user?.Project || []
+    const certifications = user?.certifications || []
 
     const handleLogout = () => {
         dispatch(logout({ id: currentUser?.id || "" }))
@@ -43,29 +46,68 @@ export default function Profil() {
         <div className="mt-3">
             <div className="text-lg font-bold">{t("experience")}</div>
             <div className="space-y-4 mb-4">
-                {experiences && experiences.map((exp) => (<div key={exp.id} className="p-2 border-b-[1px] border-gray-500">
-                    {formatDateToMonthYear(exp.start)} {exp.end && ` - ${formatDateToMonthYear(exp.end)}`}, {exp.title} {exp.company} 
-                </div>))}
+                {experiences && experiences.map((exp) => (
+                    <Accordion key={exp.id} type="single" collapsible>
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger>{formatDateToMonthYear(exp.start)} {exp.end && ` - ${formatDateToMonthYear(exp.end)}`}, {exp.title} {exp.company}</AccordionTrigger>
+                            <AccordionContent>
+                                {exp.description}
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                ))}
             </div>
             <ExperienceForm user={user || undefined} />
         </div>
         <div className="mt-3">
             <div className="text-lg font-bold">{t("education")}</div>
             <div className="space-y-4 mb-4">
-                {educations && educations.map((edu) => (<div key={edu.id} className="p-2 border-b-[1px] border-gray-500">
-                    {formatDateToMonthYear(edu.start)} {edu.end && ` - ${formatDateToMonthYear(edu.end)}`}, {edu.school} {edu.degree}
-                </div>))}
+                {educations && educations.map((edu) => (
+                    <Accordion key={edu.id} type="single" collapsible>
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger>{formatDateToMonthYear(edu.start)} {edu.end && ` - ${formatDateToMonthYear(edu.end)}`}, {edu.school} {edu.degree}</AccordionTrigger>
+                            <AccordionContent>
+                                {edu.description}
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+
+                ))}
             </div>
             <EducationForm user={user || undefined} />
         </div>
-        <div className="mt-3 mb-6">
+        <div className="mt-3">
             <div className="text-lg font-bold">{t("projects")}</div>
             <div className="space-y-4 mb-4">
-                {projects && projects.map((proj) => (<div key={proj.id} className="p-2 border-b-[1px] border-gray-500">
-                    {formatDateToMonthYear(proj.start)} {proj.end && ` - ${formatDateToMonthYear(proj.end)}`}, {proj.title} {proj.url}
-                </div>))}
+                {projects && projects.map((proj) => (
+                    <Accordion key={proj.id} type="single" collapsible>
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger>{formatDateToMonthYear(proj.start)} {proj.end && ` - ${formatDateToMonthYear(proj.end)}`}, {proj.title} {proj.url}</AccordionTrigger>
+                            <AccordionContent>
+                                {proj.description}
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                ))}
             </div>
             <ProjectForm user={user || undefined} />
+        </div>
+
+        <div className="mt-3 mb-6">
+            <div className="text-lg font-bold">{t("certificationss")}</div>
+            <div className="space-y-4 mb-4">
+                {certifications && certifications.map((cert) => (
+                    <Accordion key={cert.id} type="single" collapsible>
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger>{formatDateToMonthYear(cert.date)} {cert.name} {cert.organization}</AccordionTrigger>
+                            <AccordionContent>
+                                {cert.description}
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                ))}
+            </div>
+            <CertificationForm user={user || undefined} />
         </div>
 
         <div>

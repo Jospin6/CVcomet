@@ -51,7 +51,7 @@ export interface User {
   Education?: Education[];
   Project?: Project[]
   Experience?: Experience[];
-  Certification?: Certification[];
+  certifications?: Certification[];
   createdAt?: string;
 }
 
