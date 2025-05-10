@@ -71,5 +71,6 @@
     "create": "Créer",
     "createResume": "Créer un CV",
     "createCoverLetter": "Créer une lettre de motivation",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "more": "Plus"
 }

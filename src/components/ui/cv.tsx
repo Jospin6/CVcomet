@@ -32,7 +32,7 @@ export const Cv = ({ cv, user }: { cv: CvProps, user?: User }) => {
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
-                <h2 className="text-xl font-bold">Cv</h2>
+                <h2 className="text-xl font-bold">Resume</h2>
                 <div className="flex gap-4">
                     <button
                         onClick={handleDownload}

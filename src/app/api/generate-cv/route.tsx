@@ -56,13 +56,11 @@ export async function POST(req: Request) {
             certifications: object.cvs.certifications,
             projects: object.cvs.projects,
             languages: object.cvs.languages,
-            conversationId: conversationId // Provide a default or appropriate value
+            conversationId: conversationId
           }
         })
       },
     });
-
-
 
     return result.toTextStreamResponse();
   } catch (error) {

@@ -14,31 +14,33 @@ datasource db {
 }
 
 model User {
-  id                String          @id @default(uuid())
-  email             String          @unique
-  name              String?
-  phone             String?
-  address           String?
-  languages         String?
-  linkedin          String?
-  portfolio         String?
-  github            String?
-  summary           String?
-  password          String?
-  skills            String?
-  hobbies           String?
-  isSubscribed      Boolean         @default(false)
-  role              UserRole        @default(USER)
-  lastGeneratedAt   DateTime?
-  subscriptionId    String?
-  generationCount   Int             @default(0)
-  currentTemplateId String?
-  currentTemplate   Template?       @relation(fields: [currentTemplateId], references: [id])
-  certifications    Certification[]
-  Education         Education[]
-  Experience        Experience[]
-  Project           Project[]
-  Conversation      Conversation[]
+  id                   String          @id @default(uuid())
+  email                String          @unique
+  name                 String?
+  phone                String?
+  address              String?
+  languages            String?
+  linkedin             String?
+  portfolio            String?
+  github               String?
+  summary              String?
+  password             String?
+  skills               String?
+  hobbies              String?
+  isSubscribed         Boolean         @default(false)
+  role                 UserRole        @default(USER)
+  lastGeneratedAt      DateTime?
+  subscriptionId       String?
+  generationCount      Int             @default(0)
+  currentTemplateId    String?
+  currentTemplate      Template?       @relation("UserCurrentTemplate", fields: [currentTemplateId], references: [id])
+  currentCoverLetterId String?
+  currentCoverLetter   Template?       @relation("UserCurrentCoverLetter", fields: [currentCoverLetterId], references: [id])
+  certifications       Certification[]
+  Education            Education[]
+  Experience           Experience[]
+  Project              Project[]
+  Conversation         Conversation[]
 
   createdAt DateTime @default(now())
 }
@@ -152,9 +154,10 @@ model Template {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  users        User[]
-  CVs          Cv[]
-  CoverLetters CoverLetter[]
+  usersUsingAsTemplate    User[]        @relation("UserCurrentTemplate")
+  usersUsingAsCoverLetter User[]        @relation("UserCurrentCoverLetter")
+  CVs                     Cv[]
+  CoverLetters            CoverLetter[]
 }
 
 enum TemplateType {

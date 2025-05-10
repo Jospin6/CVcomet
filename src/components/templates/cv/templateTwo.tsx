@@ -29,7 +29,7 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
-                <h2 className="text-xl font-bold">CV Template Two</h2>
+                <h2 className="text-xl font-bold">Resume</h2>
                 <button
                     onClick={handleDownload}
                     className="p-1 rounded hover:border cursor-pointer"
@@ -44,6 +44,7 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                 style={{ width: "210mm", minHeight: "297mm" }}
             >
                 {/* Sidebar */}
+
                 <aside className="w-1/3 bg-blue-900 text-white p-6 flex flex-col justify-between">
                     <div>
                         <h1 className="text-2xl font-bold uppercase">{user?.name ?? "No name"}</h1>

@@ -1,4 +1,5 @@
 "use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -13,14 +14,17 @@ type Template = {
     id: string;
     name: string;
     type: "CV" | "COVER_LETTER";
-    templateFile: string; // URL ou base64 image
+    templateFile: string;
     createdAt: string;
 };
 
 export const TemplateItem = ({ template, user }: { template: Template; user?: User }) => {
     const dispatch = useDispatch<AppDispatch>();
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
     const isCurrentTemplate = template.id === user?.currentTemplateId;
+    const isCurrentCoverLetter = template.id === user?.currentCoverLetterId;
+    const isCurrent = template.type === "CV" ? isCurrentTemplate : isCurrentCoverLetter;
 
     useEffect(() => {
         if (template.id) {
@@ -29,7 +33,11 @@ export const TemplateItem = ({ template, user }: { template: Template; user?: Us
         }
     }, [template.id]);
 
-    const handleSelectTemplate = () => (user?.id) && dispatch(updateCurrentTemplate({ id: user.id, currentTemplateId: template.id }));
+    const handleSelectTemplate = () => {
+        if (user?.id) {
+            dispatch(updateCurrentTemplate({ id: user.id, type: template.type, currentTemplateId: template.id }));
+        }
+    };
 
     return (
         <motion.div
@@ -38,7 +46,7 @@ export const TemplateItem = ({ template, user }: { template: Template; user?: Us
             transition={{ type: "spring", stiffness: 300 }}
         >
             <Card
-                className={`relative overflow-hidden pt-0 rounded-xl shadow-lg backdrop-blur border ${isCurrentTemplate
+                className={`relative overflow-hidden pt-0 rounded-xl shadow-lg backdrop-blur border ${isCurrent
                         ? "border-yellow-600 bg-transparent ring-2 ring-primary/50"
                         : "border-muted-foreground/10 bg-muted/20 dark:bg-muted/30"
                     }`}
@@ -53,7 +61,7 @@ export const TemplateItem = ({ template, user }: { template: Template; user?: Us
                         />
                     )}
 
-                    {isCurrentTemplate && (
+                    {isCurrent && (
                         <div className="absolute top-2 right-2 z-10">
                             <Badge variant="default">Sélectionné</Badge>
                         </div>
@@ -70,16 +78,12 @@ export const TemplateItem = ({ template, user }: { template: Template; user?: Us
                 </CardHeader>
 
                 <CardContent>
-                    {/* <p className="text-sm text-muted-foreground">
-                        Créé le {new Date(template.createdAt).toLocaleDateString()}
-                    </p> */}
-
                     <Button
                         className="mt-4 w-full cursor-pointer"
-                        variant={isCurrentTemplate ? "default" : "secondary"}
+                        variant={isCurrent ? "default" : "secondary"}
                         onClick={handleSelectTemplate}
                     >
-                        {isCurrentTemplate ? "Utilisé actuellement" : "Choisir ce template"}
+                        {isCurrent ? "Utilisé actuellement" : "Choisir ce template"}
                     </Button>
                 </CardContent>
             </Card>

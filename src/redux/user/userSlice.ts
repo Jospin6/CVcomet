@@ -45,6 +45,7 @@ export interface User {
   hobbies?: string;
   languages?: string;
   currentTemplateId?: string;
+  currentCoverLetterId?: string;
   github?: string;
   Education?: Education[];
   Project?: Project[]
@@ -115,9 +116,15 @@ export const fetchcurrentUser = createAsyncThunk(
   }
 );
 
-export const updateCurrentTemplate = createAsyncThunk("user/currentUser", async ({id, currentTemplateId}: {id: string, currentTemplateId: string}, { rejectWithValue }) => {
+export const updateCurrentTemplate = createAsyncThunk("user/currentUser", async ({id, type, currentTemplateId}: {id: string, type: string, currentTemplateId: string}, { rejectWithValue }) => {
+  let url = ""
+  if (type === "CV") {
+    url = `/api/users/${id}/updateTemplate`
+  } else {
+    url = `/api/users/${id}/updateCoverLetter`
+  }
   try {
-      const response = await axios.put(`/api/users/${id}/updateTemplate`, { id, currentTemplateId });
+      const response = await axios.put(url, { id, currentTemplateId });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {

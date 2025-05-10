@@ -1,5 +1,5 @@
 "use client"
-import { Home, User, ArrowUpCircle } from "lucide-react"
+import { Home, User, ArrowUpCircle, LayoutDashboard } from "lucide-react"
 import { useTranslation } from 'react-i18next';
  
 import {
@@ -27,6 +27,11 @@ const items = [
     title: `${t("profil")}`,
     url: "/profil",
     icon: User,
+  },
+   {
+    title: `${t("more")}`,
+    url: "/more",
+    icon: LayoutDashboard,
   },
   {
     title: `${t("upgrade")}`,

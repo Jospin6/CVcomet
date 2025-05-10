@@ -9,7 +9,7 @@ export const generateCvPrompt = (
         Your task is to generate a personalized, impactful, and cleanly structured resume based on the job description and candidate profile below. The resume must align precisely with the tone, keywords, and expectations of the job posting, and be ready for direct submission.
 
         ---
-        📝 Job Description:
+        Job Description:
         ${description}
 
         👤 Candidate Profile:
@@ -19,7 +19,7 @@ export const generateCvPrompt = (
         Output format:
         Respond with a **single JSON object** , following this structure:
 
-        📌 Instructions:
+        Instructions:
         - Output ONLY the JSON. No extra text or explanations.
         - the summary must have at most 3 sentences.
         - Use a **professional summary** that reflects the candidate's strengths and how they align with the job.
@@ -32,7 +32,7 @@ export const generateCvPrompt = (
         - Optimize for Applicant Tracking Systems (ATS): include relevant keywords from the job description.
         - Avoid generic phrases and focus on measurable impact.
 
-        🎯 Goal:
+        Goal:
         Deliver a fully personalized, ATS-optimized resume in JSON format that maximizes the candidate's chances of getting selected for the position.
 
         Title
