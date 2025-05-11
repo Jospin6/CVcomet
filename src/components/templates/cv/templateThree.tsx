@@ -29,7 +29,7 @@ export const CvThree = ({ cv, user }: { cv: CvProps, user?: User }) => {
     return (
         <>
             <div className="flex items-center justify-between mb-4 text-gray-800">
-                <h2 className="text-xl font-bold">CV Template Three</h2>
+                <h2 className="text-xl font-bold">{t("resume")}</h2>
                 <button
                     onClick={handleDownload}
                     className="p-1 rounded hover:border cursor-pointer"

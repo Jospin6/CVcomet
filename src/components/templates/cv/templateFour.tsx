@@ -31,7 +31,7 @@ export const CvFour = ({ cv, user }: { cv: CvProps; user?: User }) => {
   return (
     <>
       <div className="flex items-center justify-between text-white mb-4">
-        <h2 className="text-xl font-bold">CV</h2>
+        <h2 className="text-xl font-bold">{t("resume")}</h2>
         <button
           onClick={handleDownload}
           className="p-1 rounded hover:border cursor-pointer"

@@ -29,7 +29,7 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
-                <h2 className="text-xl font-bold">Resume</h2>
+                <h2 className="text-xl font-bold">{t("resume")}</h2>
                 <button
                     onClick={handleDownload}
                     className="p-1 rounded hover:border cursor-pointer"
@@ -128,8 +128,8 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                             {cv.projects.map((project, i) => (
                                 <div key={i} className="mb-2">
                                     <h3 className="font-semibold text-base">{project.title}</h3>
-                                    <p className="text-sm">{project.description}</p>
-                                    <p className="text-xs text-gray-600">Technologies: {project.technologies}</p>
+                                    <p className="text-sm leading-none">{project.description}</p>
+                                    <p className="text-xs leading-none text-gray-600">Technologies: {project.technologies}</p>
                                 </div>
                             ))}
                         </section>
