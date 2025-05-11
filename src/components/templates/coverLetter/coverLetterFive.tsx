@@ -61,7 +61,7 @@ export const CoverLetterFive = ({ coverLetter, user }: { coverLetter: CoverLette
                             <p className="text-xl font-semibold">{user?.name}</p>
                             <p className="text-[16px] font-semibold">User title</p>
                         </div>
-                        <div className="flex justify-between border-y-[2px]">
+                        <div className="flex justify-between py-1 border-gray-900 border-y-[2px]">
                             <p>{user?.phone}</p>
                             <p>{user?.email}</p>
                             <p>{user?.address}</p>
@@ -70,7 +70,7 @@ export const CoverLetterFive = ({ coverLetter, user }: { coverLetter: CoverLette
 
                     <div className="flex justify-end">
                         <div>
-                            {coverLetter.companyName && <p>{coverLetter.companyName}</p>}
+                            {coverLetter.companyName && <p className="text-lg font-bold">{coverLetter.companyName}</p>}
                             {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
                             <p className="mt-8">{`${day}/${month}/${year}`}</p>
                         </div>

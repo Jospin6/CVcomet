@@ -63,7 +63,7 @@ export const CoverLetterFour = ({ coverLetter, user }: { coverLetter: CoverLette
 
                     <div className="mt-2 grid-cols-4 grid gap-4">
                         <div className="col-span-2">
-                            {coverLetter.companyName && <p>{coverLetter.companyName}</p>}
+                            {coverLetter.companyName && <p className="font-bold">{coverLetter.companyName}</p>}
                             {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
                         </div>
                         <div className="col-span-2 flex justify-end">
@@ -88,7 +88,7 @@ export const CoverLetterFour = ({ coverLetter, user }: { coverLetter: CoverLette
                     )}
 
                     <p className="mt-4">{user?.name}</p>
-                    <div className="mt-2 grid-cols-4 pt-4 border-t-[2px] grid gap-4">
+                    <div className="grid-cols-4 pt-4 mt-5 border-t-[2px] grid gap-4">
                         <div className="col-span-2">
                             <p className="text-lg font-medium">{user?.name}</p>
                         </div>

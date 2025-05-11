@@ -63,7 +63,7 @@ export const CoverLetterOne = ({ coverLetter, user }: { coverLetter: CoverLetter
                     <p>{user?.phone}</p>
                     <p>{user?.email}</p>
                     <p>{user?.address}</p>
-                    
+
                     <div className="mt-8">
                         {coverLetter.companyName && <p className="font-semibold">{coverLetter.companyName}</p>}
                         {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}

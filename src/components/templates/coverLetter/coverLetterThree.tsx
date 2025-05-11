@@ -32,12 +32,12 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
     const year = date.getFullYear();
 
     return (
-        <div className="flex items-center text-white justify-between mb-4">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-800">{t("coverLetter")}</h2>
+        <div className=" mb-4">
+            <div className="flex text-white items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">{t("coverLetter")}</h2>
                 <button
                     onClick={handleDownload}
-                    className="p-2 rounded bg-blue-500 text-white hover:bg-blue-600"
+                    className="p-1 rounded hover:border-[1px] cursor-pointer"
                     aria-label="Download Cover Letter"
                 >
                     <Download className="w-5 h-5" />
@@ -48,9 +48,11 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
                 ref={cvRef}
                 className="mx-auto bg-white flex flex-col justify-start shadow-lg"
                 style={{
+                    width: "210mm",
+                    height: "297mm",
+                    padding: "20mm",
+                    boxSizing: "border-box",
                     fontFamily: "Arial, sans-serif",
-                    fontSize: "12pt",
-                    lineHeight: "1.5",
                 }}
             >
                 {/* Header Section */}
@@ -67,7 +69,7 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
 
 
                 {/* Recipient Information */}
-                <section className="space-y-1 flex">
+                <section className="space-y-1 flex mt-4">
                     <div className="w-2/4">
                         {coverLetter.companyName && <p className="font-semibold text-gray-800">{coverLetter.companyName}</p>}
                         {coverLetter.companyAddress && <p className="text-gray-700">{coverLetter.companyAddress}</p>}
@@ -80,7 +82,7 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
 
                 {/* Salutation Section */}
                 {coverLetter.recipientName && (
-                    <p className="mt-4 text-gray-800">{`${coverLetter.recipientName},`}</p>
+                    <p className="my-4 text-gray-800">{`${coverLetter.recipientName},`}</p>
                 )}
 
                 {/* Body Section */}
