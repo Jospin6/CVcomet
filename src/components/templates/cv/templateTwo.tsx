@@ -7,6 +7,7 @@ import html2canvas from "html2canvas-pro"
 import jsPDF from "jspdf"
 import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
+import { formatDateToMonthYear } from "@/lib/utils"
 
 export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
     const { t } = useTranslation()
@@ -48,7 +49,7 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                 <main className="w-2/3 bg-white p-6">
                     <div className="mb-2">
                         <h1 className="text-2xl font-bold uppercase">{user?.name ?? "No name"}</h1>
-                        <p className="text-[12px] uppercase font-medium">{cv.title}</p>
+                        <p className="text-[sm] uppercase font-semibold">{cv.title}</p>
                     </div>
                     {cv.summary && (
                         <section className="mb-4">
@@ -77,7 +78,7 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                             {cv.educations.map((edu, i) => (
                                 <div key={i} className="mb-2">
                                     <h3 className="font-semibold text-base">{edu.degree} - {edu.school}</h3>
-                                    <p className="text-xs text-gray-600">{edu.start} - {edu.end ?? 'Present'}</p>
+                                    <p className="text-xs">{formatDateToMonthYear(edu.start)} - {edu.end ? formatDateToMonthYear(edu.end) : 'Present'}</p>
                                     <ul className="list-disc list-inside text-sm">
                                         {edu.description?.map((desc, j) => <li key={j}>{desc}</li>)}
                                     </ul>
@@ -90,10 +91,10 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         <section className="mb-4">
                             <h2 className="text-xl font-semibold mb-2">{t("projects")}</h2>
                             {cv.projects.map((project, i) => (
-                                <div key={i} className="mb-2">
-                                    <h3 className="font-semibold text-base">{project.title}</h3>
-                                    <p className="text-sm leading-none">{project.description}</p>
-                                    <p className="text-xs leading-none text-gray-600">Technologies: {project.technologies}</p>
+                                <div key={i}>
+                                    <h3 className="font-semibold text-sm">{project.title}</h3>
+                                    <p className="text-xs text-black">{project.description}</p>
+                                    <p className="text-xs text-black">Tech: {project.technologies}</p>
                                 </div>
                             ))}
                         </section>
@@ -101,15 +102,15 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                 </main>
 
                 {/* Sidebar */}
-                <aside className="w-1/3 text-black p-6 flex flex-col justify-between">
+                <aside className="w-1/3 text-black bg-white p-6 flex flex-col justify-between">
                     <div>
 
                         <section className="">
                             <h2 className="text-lg font-semibold mb-2">{t("contact")}</h2>
                             <div className="text-sm space-y-1">
                                 {user?.email && <p className="mt-2">{user.email}</p>}
-                                {user?.linkedin && <p>LinkedIn: {user.linkedin}</p>}
-                                {user?.github && <p>GitHub: {user.github}</p>}
+                                {user?.linkedin && <p>LinkedIn</p>}
+                                {user?.github && <p>Portfolio</p>}
                             </div>
                         </section>
 
@@ -120,9 +121,22 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                                 <ul className="text-sm space-y-1">
                                     {cv.skills.map((skill, i) => (
                                         <li key={i}>
-                                            {skill.hardskills && <p>{skill.hardskills}</p>}
-                                            {skill.softskills && <p>{skill.softskills}</p>}
-                                            {skill.tools && <p>{skill.tools}</p>}
+                                            {skill.hardskills && (<div className="mb-2">
+                                                <div className="font-medium">Technical</div>
+                                                <p className="text-xs">{skill.hardskills}</p>
+                                            </div>)}
+                                            {skill.softskills && (
+                                                <div className="mb-2">
+                                                    <div className="font-medium">Soft</div>
+                                                    <p className="text-xs">{skill.softskills}</p>
+                                                </div>
+                                            )}
+                                            {skill.tools && (
+                                                <div className="mb-2">
+                                                    <div className="font-medium">Tools</div>
+                                                    <p className="text-xs">{skill.tools}</p>
+                                                </div>
+                                            )}
                                         </li>
                                     ))}
                                 </ul>

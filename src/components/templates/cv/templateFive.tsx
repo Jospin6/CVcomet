@@ -6,6 +6,7 @@ import html2canvas from "html2canvas-pro"
 import jsPDF from "jspdf"
 import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
+import { formatDateToMonthYear } from "@/lib/utils"
 
 
 
@@ -58,7 +59,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
 
                 {cv.summary && (
                     <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-y mb-2">{t("summary")}</h2>
+                        <h2 className="text-lg font-semibold border-y border-gray-900 mb-2">{t("summary")}</h2>
                         <p className="text-[12px] leading-relaxed">
                             {cv.summary}
                         </p>
@@ -67,7 +68,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
 
                 {cv.skills && (
                     <section>
-                        <h2 className="text-lg font-semibold border-y mb-2">{t("skills")}</h2>
+                        <h2 className="text-lg font-semibold border-y border-gray-900 mb-2">{t("skills")}</h2>
                         <div className="text-[12px]">
                             {cv.skills.map((skill, index) => (
                                 <div key={index} className="inline-block rounded-full py-1 text-[12px] text-black mr-2 mb-2">
@@ -82,7 +83,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
 
                 {cv.experiences && (
                     <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-y mb-2">{t("experience")}</h2>
+                        <h2 className="text-lg font-semibold border-y border-gray-900 mb-2">{t("experience")}</h2>
                         {cv.experiences.map((exp, index) => (
                             <div key={index} className={index > 0 ? "mt-2" : ""}>
                                 <div className="flex justify-between font-semibold">
@@ -103,7 +104,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
 
                 {cv.projects && (
                     <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-y mb-2">{t("projects")}</h2>
+                        <h2 className="text-lg font-semibold border-y border-gray-900 mb-2">{t("projects")}</h2>
                         {cv.projects.map((project, index) => (
                             <div key={index} className={index > 0 ? "mt-2" : ""}>
                                 <h3 className="font-semibold text-sm">{project.title}</h3>
@@ -118,14 +119,14 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
 
                 {cv.educations && (
                     <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-y mb-2">{t("education")}</h2>
+                        <h2 className="text-lg font-semibold border-y border-gray-900 mb-2">{t("education")}</h2>
                         {cv.educations.map((edu, index) => (
                             <div key={index} className={index > 0 ? "mt-2" : ""}>
                                 <div className="flex justify-between text-black font-semibold">
-                                    <h3 className="text-[12px]">{edu.degree}</h3>
-                                    <p className="text-xs ">{edu.start} - {edu.end ?? 'Present'}</p>
+                                    <h3 className="text-sm">{edu.degree}</h3>
+                                    <p className="text-xs ">{formatDateToMonthYear(edu.start)} - {edu.end ? formatDateToMonthYear(edu.end) : 'Present'}</p>
                                 </div>
-                                <div>{edu.school}</div>
+                                <div className="text-xs">{edu.school}</div>
                                 <ul className="list-disc list-inside text-[12px]">
                                     {edu.description && edu.description.map((desc, i) => (
                                         <li key={i}>{desc}</li>
@@ -136,27 +137,34 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                     </section>
                 )}
 
-                <section className="mb-4">
-                    <h2 className="text-lg font-semibold border-y mb-2">{t("additional")}</h2>
-                    <ul className="text-xs">
-                        <li>
-                            <span className="font-medium">Languages: </span>
-                            {cv.languages && cv.languages.map((lang, index) => (
-                                <span key={index} >
-                                    {lang.language}
-                                </span>
-                            ))}
-                        </li>
-                        <li>
-                            <span className="font-medium">Certifications: </span>
-                            {cv.certifications && cv.certifications.map((cert, index) => (
-                                <span key={index} >
-                                    {cert.title}, {cert.issuer}
-                                </span>
-                            ))}
-                        </li>
-                    </ul>
-                </section>
+                {((cv.languages && cv.languages?.length > 0) || (cv.certifications && cv.certifications.length > 0)) && (
+                    <section className="mb-4">
+                        <h2 className="text-lg font-semibold border-y border-gray-900 mb-2">{t("additional")}</h2>
+                        <ul className="text-xs">
+                            {(cv.languages && cv.languages?.length > 0) && (
+                                <li>
+                                    <span className="font-medium">Languages: </span>
+                                    {cv.languages && cv.languages.map((lang, index) => (
+                                        <span key={index} >
+                                            {lang.language}
+                                        </span>
+                                    ))}
+                                </li>
+                            )}
+                            {(cv.certifications && cv.certifications.length > 0) && (
+                                <li>
+                                    <span className="font-medium">Certifications: </span>
+                                    {cv.certifications.map((cert, index) => (
+                                        <span key={index} >
+                                            {cert.title}, {cert.issuer}
+                                        </span>
+                                    ))}
+                                </li>
+                            )}
+                        </ul>
+                    </section>
+                )}
+
             </div>
         </>
     )
