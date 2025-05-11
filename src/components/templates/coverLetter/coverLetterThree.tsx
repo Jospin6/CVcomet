@@ -32,7 +32,7 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
     const year = date.getFullYear();
 
     return (
-        <div className="max-w-3xl mx-auto bg-white p-8 shadow-lg rounded-lg border border-gray-200">
+        <div className="flex items-center text-white justify-between mb-4">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-gray-800">{t("coverLetter")}</h2>
                 <button
@@ -46,7 +46,7 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
 
             <div
                 ref={cvRef}
-                className="flex flex-col space-y-6"
+                className="mx-auto bg-white flex flex-col justify-start shadow-lg"
                 style={{
                     fontFamily: "Arial, sans-serif",
                     fontSize: "12pt",

@@ -45,11 +45,11 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
             >
                 {/* Sidebar */}
 
-                <aside className="w-1/3 bg-blue-900 text-white p-6 flex flex-col justify-between">
+                <aside className="w-1/3 bg-white/30 text-gray-200 p-6 flex flex-col justify-between">
                     <div>
                         <h1 className="text-2xl font-bold uppercase">{user?.name ?? "No name"}</h1>
                         <p className="text-sm">{cv.title}</p>
-                        <hr className="my-4 border-white/30" />
+                        <hr className="my-4 border-gray-400" />
                         {cv.skills && (
                             <section className="mb-4">
                                 <h2 className="text-lg font-semibold mb-2">{t("skills")}</h2>

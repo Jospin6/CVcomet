@@ -32,7 +32,7 @@ export const CoverLetterTwo = ({ coverLetter, user }: { coverLetter: CoverLetter
     const year = date.getFullYear();
 
     return (
-        <div className="mx-auto bg-white p-6 shadow-lg max-w-xl">
+        <div className="flex items-center text-white justify-between mb-4">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold">{t("coverLetter")}</h2>
                 <button
@@ -46,7 +46,7 @@ export const CoverLetterTwo = ({ coverLetter, user }: { coverLetter: CoverLetter
 
             <div
                 ref={cvRef}
-                className="flex flex-col justify-start"
+                className="mx-auto bg-white flex flex-col justify-start shadow-lg"
                 style={{
                     width: "100%",
                     fontFamily: "Arial, sans-serif",
