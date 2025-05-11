@@ -55,25 +55,23 @@ export const CoverLetterTwo = ({ coverLetter, user }: { coverLetter: CoverLetter
                 }}
             >
                 {/* Header - User Information */}
-                <div className="mb-6">
-                    <p>{user?.name}</p>
-                    <p>{user?.address}</p>
-                    <p>{user?.email}</p>
+                <div className="mb-4 pb-4 border border-black">
+                    <div className="mb-3">
+                        <p className="text-xl font-semibold">{user?.name}</p>
+                        <p className="text-[16px] font-semibold">User title</p>
+                    </div>
                     <p>{user?.phone}</p>
+                    <p>{user?.email}</p>
+                    <p>{user?.address}</p>
                 </div>
 
                 {/* Recipient Information */}
                 {coverLetter.recipientName && (
                     <div className="mb-4">
-                        <p>{coverLetter.recipientName}</p>
-                        <p>{coverLetter.recipientTitle}</p>
-                        <p>{coverLetter.companyName}</p>
+                        <p className="text-lg font-semibold">{coverLetter.companyName}</p>
                         <p>{coverLetter.companyAddress}</p>
                     </div>
                 )}
-
-                {/* Date */}
-                <p className="mb-4">{`${day}/${month}/${year}`}</p>
 
                 {/* Salutation */}
                 {coverLetter.recipientName && (

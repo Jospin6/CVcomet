@@ -5,14 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDateToMonthYear(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-  });
-}
+export function formatDateToMonthYear(dateStr: string): string {
+    const date = new Date(dateStr);
+    const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'short',
+    };
 
+    // Format avec locale française pour "sept." au lieu de "Sep"
+    const formatted = date.toLocaleDateString('en-US', options);
+
+    // Capitaliser le premier caractère du mois (ex: sept → Sept)
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
 export const transformStringToArray = (input: string): string[] => {
   return input
     .split(",")

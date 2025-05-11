@@ -1,76 +1,100 @@
 "use client"
-
 import { CvProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
-import { Download } from "lucide-react"
+import { Download, RefreshCcw } from "lucide-react"
 import html2canvas from "html2canvas-pro"
 import jsPDF from "jspdf"
 import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
 
+
+
 export const CvThree = ({ cv, user }: { cv: CvProps, user?: User }) => {
-    const { t } = useTranslation()
-    const cvRef = useRef<HTMLDivElement>(null)
+    const { t } = useTranslation();
+    const cvRef = useRef<HTMLDivElement>(null);
 
     const handleDownload = async () => {
-        const element = cvRef.current
-        if (!element) return
+        const element = cvRef.current;
+        if (!element) return;
 
-        const canvas = await html2canvas(element, { scale: 2 })
-        const imgData = canvas.toDataURL("image/png")
-        const pdf = new jsPDF("p", "mm", "a4")
-        const imgProps = pdf.getImageProperties(imgData)
-        const pdfWidth = pdf.internal.pageSize.getWidth()
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight)
-        pdf.save("cv-template-three.pdf")
-    }
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        pdf.save("cv.pdf");
+    };
 
     return (
         <>
-            <div className="flex items-center justify-between mb-4 text-gray-800">
+            <div className="flex items-center text-white justify-between mb-4">
                 <h2 className="text-xl font-bold">{t("resume")}</h2>
-                <button
-                    onClick={handleDownload}
-                    className="p-1 rounded hover:border cursor-pointer"
-                    aria-label="Download CV"
-                >
-                    <Download className="w-5 h-5" />
-                </button>
+                <div className="flex gap-4">
+                    <button
+                        onClick={handleDownload}
+                        className="p-1 rounded hover:border-[1px] cursor-pointer"
+                        aria-label="Download CV"
+                    >
+                        <Download className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
-            <div
-                ref={cvRef}
-                className="max-w-[794px] mx-auto shadow-lg px-10 py-8 bg-white"
-                style={{ width: "210mm", minHeight: "297mm" }}
-            >
-                <header className="text-center mb-6">
-                    <h1 className="text-4xl font-extrabold uppercase tracking-widest">{user?.name ?? "No Name"}</h1>
-                    <p className="text-lg text-gray-600">{cv.title}</p>
-                    <div className="mt-2 text-sm text-gray-700 flex flex-col items-center gap-1">
-                        {user?.email && <p>{user.email}</p>}
-                        {user?.linkedin && <p>{user.linkedin}</p>}
-                        {user?.github && <p>{user.github}</p>}
-                    </div>
+            <div ref={cvRef} className="max-w-[794px] mx-auto p-8 bg-white shadow-lg" style={{ width: "210mm", minHeight: "297mm" }}>
+                <header className="text-center mb-4">
+                    <h1 className="text-2xl font-bold uppercase">{user?.name ?? "No name"}</h1>
+                    <p className="text-[12px] uppercase font-medium">
+                        {cv.title}
+                    </p>
+                    <p className="text-[12px] border-y-[1px] border-black">
+                        {user?.linkedin && `LinkedIn | `}
+                        {user?.email && (<a href={`mailto:${user.email}`}> {user?.email}</a>)}
+                        {user?.github && ` | GitHub`}
+                    </p>
                 </header>
 
-                <hr className="border-t-2 border-gray-200 mb-6" />
-
                 {cv.summary && (
-                    <section className="mb-6">
-                        <h2 className="uppercase text-gray-700 text-sm tracking-widest font-semibold mb-2">{t("summary")}</h2>
-                        <p className="text-sm text-gray-800">{cv.summary}</p>
+                    <section className="mb-4 pb-1 border-b">
+                        <h2 className="text-lg font-semibold mb-2">{t("summary")}</h2>
+                        <p className="text-[12px] leading-relaxed">
+                            {cv.summary}
+                        </p>
+                    </section>
+                )}
+
+                {cv.skills && (
+                    <section className="border-b pb-1">
+                        <h2 className="text-lg font-semibold mb-2">{t("skills")}</h2>
+                        <div className="text-[12px]">
+                            {cv.skills.map((skill, index) => (
+                                <div key={index} className="inline-block rounded-full py-1 text-[12px] text-black mr-2 mb-2">
+                                    {skill.hardskills && (<p> <span className="font-semibold">Technical: </span> {skill.hardskills}</p>)}
+                                    {skill.softskills && (<p><span className="font-semibold">Soft: </span>  {skill.softskills}</p>)}
+                                    {skill.tools && (<p><span className="font-semibold">Tools: </span> {skill.tools}</p>)}
+                                </div>
+                            ))}
+                        </div>
                     </section>
                 )}
 
                 {cv.experiences && (
-                    <section className="mb-6">
-                        <h2 className="uppercase text-gray-700 text-sm tracking-widest font-semibold mb-2">{t("experience")}</h2>
-                        {cv.experiences.map((exp, i) => (
-                            <div key={i} className="mb-4">
-                                <h3 className="font-semibold text-base">{exp.title} – {exp.company}</h3>
-                                <p className="text-xs text-gray-500">{exp.start} – {exp.end ?? 'Present'} | {exp.location}</p>
-                                <ul className="list-disc list-inside text-sm text-gray-800">
-                                    {exp.description?.map((desc, j) => <li key={j}>{desc}</li>)}
+                    <section className="mb-4 border-b pb-1">
+                        <h2 className="text-lg font-semibold mb-2">{t("experience")}</h2>
+                        {cv.experiences.map((exp, index) => (
+                            <div key={index} className={index > 0 ? "mt-2" : ""}>
+                                <div className="flex justify-between font-semibold">
+                                    <h3 className="text-sm">{exp.title}, {exp.company}</h3>
+                                    <p className="text-xs">
+                                        {exp.start} – {exp.end ?? 'Present'} | {exp.location}
+                                    </p>
+                                </div>
+                                <ul className="list-disc list-inside text-[12px]">
+                                    {exp.description && exp.description.map((desc, i) => (
+                                        <li key={i}>{desc}</li>
+                                    ))}
                                 </ul>
                             </div>
                         ))}
@@ -78,71 +102,61 @@ export const CvThree = ({ cv, user }: { cv: CvProps, user?: User }) => {
                 )}
 
                 {cv.educations && (
-                    <section className="mb-6">
-                        <h2 className="uppercase text-gray-700 text-sm tracking-widest font-semibold mb-2">{t("education")}</h2>
-                        {cv.educations.map((edu, i) => (
-                            <div key={i} className="mb-4">
-                                <h3 className="font-semibold text-base">{edu.degree} - {edu.school}</h3>
-                                <p className="text-xs text-gray-500">{edu.start} - {edu.end ?? 'Present'}</p>
-                                <ul className="list-disc list-inside text-sm text-gray-800">
-                                    {edu.description?.map((desc, j) => <li key={j}>{desc}</li>)}
+                    <section className="border-b pb-1 mb-4">
+                        <h2 className="text-lg font-semibold mb-2">{t("education")}</h2>
+                        {cv.educations.map((edu, index) => (
+                            <div key={index} className={index > 0 ? "mt-2" : ""}>
+                                <div className="flex justify-between text-black font-semibold">
+                                    <h3 className="text-[12px]">{edu.degree}</h3>
+                                    <p className="text-xs ">{edu.start} - {edu.end ?? 'Present'}</p>
+                                </div>
+                                <div>{edu.school}</div>
+                                <ul className="list-disc list-inside text-[12px]">
+                                    {edu.description && edu.description.map((desc, i) => (
+                                        <li key={i}>{desc}</li>
+                                    ))}
                                 </ul>
                             </div>
                         ))}
                     </section>
                 )}
 
+                
+
                 {cv.projects && (
-                    <section className="mb-6">
-                        <h2 className="uppercase text-gray-700 text-sm tracking-widest font-semibold mb-2">{t("projects")}</h2>
-                        {cv.projects.map((project, i) => (
-                            <div key={i} className="mb-4">
-                                <h3 className="font-semibold text-base">{project.title}</h3>
-                                <p className="text-sm text-gray-800">{project.description}</p>
-                                <p className="text-xs text-gray-500">Technologies: {project.technologies}</p>
+                    <section className="border-b pb-1 mb-4">
+                        <h2 className="text-lg font-semibold mb-2">{t("projects")}</h2>
+                        {cv.projects.map((project, index) => (
+                            <div key={index} className={index > 0 ? "mt-2" : ""}>
+                                <h3 className="font-semibold text-sm">{project.title}</h3>
+                                <p className="text-xs text-black">{project.description}</p>
+                                <p className="text-xs text-black">Tech: {project.technologies}</p>
                             </div>
                         ))}
                     </section>
                 )}
 
-                {cv.certifications && (
-                    <section className="mb-6">
-                        <h2 className="uppercase text-gray-700 text-sm tracking-widest font-semibold mb-2">{t("certifications")}</h2>
-                        {cv.certifications.map((cert, i) => (
-                            <div key={i} className="mb-4">
-                                <h3 className="font-semibold text-base">{cert.title} – {cert.issuer}</h3>
-                                <p className="text-xs text-gray-500">{cert.date}</p>
-                                {cert.description && <p className="text-sm text-gray-800">{cert.description}</p>}
-                            </div>
-                        ))}
-                    </section>
-                )}
-
-                {cv.skills && (
-                    <section className="mb-6">
-                        <h2 className="uppercase text-gray-700 text-sm tracking-widest font-semibold mb-2">{t("skills")}</h2>
-                        <ul className="text-sm text-gray-800 space-y-1">
-                            {cv.skills.map((skill, i) => (
-                                <li key={i}>
-                                    {skill.hardskills && <p><strong>Tech:</strong> {skill.hardskills}</p>}
-                                    {skill.softskills && <p><strong>Soft:</strong> {skill.softskills}</p>}
-                                    {skill.tools && <p><strong>Tools:</strong> {skill.tools}</p>}
-                                </li>
+                <section className="mb-4">
+                    <h2 className="text-lg font-semibold mb-2">{t("additional")}</h2>
+                    <ul className="text-xs">
+                        <li>
+                            <span className="font-medium">Languages: </span>
+                            {cv.languages && cv.languages.map((lang, index) => (
+                                <span key={index} >
+                                    {lang.language}
+                                </span>
                             ))}
-                        </ul>
-                    </section>
-                )}
-
-                {cv.languages && (
-                    <section>
-                        <h2 className="uppercase text-gray-700 text-sm tracking-widest font-semibold mb-2">{t("languages")}</h2>
-                        <ul className="text-sm text-gray-800 space-y-1">
-                            {cv.languages.map((lang, i) => (
-                                <li key={i}>{lang.language} - {lang.level}</li>
+                        </li>
+                        <li>
+                            <span className="font-medium">Certifications: </span>
+                            {cv.certifications && cv.certifications.map((cert, index) => (
+                                <span key={index} >
+                                    {cert.title}, {cert.issuer}
+                                </span>
                             ))}
-                        </ul>
-                    </section>
-                )}
+                        </li>
+                    </ul>
+                </section>
             </div>
         </>
     )

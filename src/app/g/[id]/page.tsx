@@ -21,12 +21,28 @@ import { useTranslation } from 'react-i18next';
 import { Brain, Sparkles, Bot, Wand2 } from 'lucide-react';
 import { CvOne } from "@/components/templates/cv/templateOne";
 import { CvTwo } from "@/components/templates/cv/templateTwo";
+import { CvThree } from "@/components/templates/cv/templateThree";
+import { CvFour } from "@/components/templates/cv/templateFour";
+import { CvFive } from "@/components/templates/cv/templateFive";
+import { CoverLetterOne } from "@/components/templates/coverLetter/coverLetterOne";
+import { CoverLetterTwo } from "@/components/templates/coverLetter/coverLetterTwo";
 import { CoverLetterThree } from "@/components/templates/coverLetter/coverLetterThree";
+import { CoverLetterFour } from "@/components/templates/coverLetter/coverLetterFour";
+import { CoverLetterFive } from "@/components/templates/coverLetter/coverLetterFive";
+import { cover1, cover2, cover3, cover4, cover5, cv1, cv2, cv3, cv4, cv5 } from "@/helpers/constants";
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
-    "cmagx73es0000uxh8pxlvb38e": CvOne,
-    "cmahyh4up0001uxh8sswdkf6b": CvTwo,
-    "cmahyhv9f0002uxh8j9wmqp7b": CoverLetterThree,
+    [cv1]: CvOne,
+    [cv2]: CvTwo,
+    [cv3]: CvThree,
+    [cv4]: CvFour,
+    [cv5]: CvFive,
+
+    [cover1]: CoverLetterOne,
+    [cover2]: CoverLetterTwo,
+    [cover3]: CoverLetterThree,
+    [cover4]: CoverLetterFour,
+    [cover5]: CoverLetterFive,
 };
 
 export default function Home() {

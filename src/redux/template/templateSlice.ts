@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { RootState } from '../store';
 
 export interface Template {
   id: string;
@@ -11,12 +12,14 @@ export interface Template {
 
 interface TemplateState {
   templates: Template[];
+  template: Template | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: TemplateState = {
   templates: [],
+  template: null,
   loading: false,
   error: null,
 };
@@ -28,6 +31,16 @@ const API_URL = '/api/templates';
 export const fetchTemplates = createAsyncThunk('template/fetchTemplates', async (_, thunkAPI) => {
   try {
     const response = await axios.get<Template[]>(API_URL);
+    return response.data;
+  } catch (error: any) {
+    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Erreur lors du chargement');
+  }
+});
+
+// 🟢 Thunk pour récupérer les templates
+export const fetchTemplate = createAsyncThunk('template/fetchTemplate', async ({id}:{id: string}, thunkAPI) => {
+  try {
+    const response = await axios.get<Template>(`${API_URL}/${id}`);
     return response.data;
   } catch (error: any) {
     return thunkAPI.rejectWithValue(error.response?.data?.message || 'Erreur lors du chargement');
@@ -70,6 +83,19 @@ const templateSlice = createSlice({
         state.error = action.payload as string;
       })
 
+      .addCase(fetchTemplate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTemplate.fulfilled, (state, action: PayloadAction<Template>) => {
+        state.loading = false;
+        state.template = action.payload;
+      })
+      .addCase(fetchTemplate.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
       .addCase(addTemplate.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -84,5 +110,7 @@ const templateSlice = createSlice({
       });
   },
 });
+
+export const selectTemplate = (state: RootState) => state.template.template 
 
 export default templateSlice.reducer;

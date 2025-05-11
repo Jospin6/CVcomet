@@ -6,7 +6,7 @@ import jsPDF from "jspdf"
 import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
 
-export const CoverLetterOne = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
+export const CoverLetterFour = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
     const { t } = useTranslation();
     const date = new Date(Date.now());
     const cvRef = useRef<HTMLDivElement>(null);
@@ -56,18 +56,19 @@ export const CoverLetterOne = ({ coverLetter, user }: { coverLetter: CoverLetter
                 }}
             >
                 <div className="text-sm leading-relaxed">
-                    <div className="pb-4 border-b-[2px]">
-                        <p className="uppercase text-lg font-bold">{user?.name}</p>
-                        <p>{user?.address}</p>
-                        <p>{user?.email}</p>
-                        <p>{user?.phone}</p>
+                    <div className="pb-4 text-center border-b-[2px]">
+                        <p className="uppercase text-xl font-bold">{user?.name}</p>
+                        <p className="text-[16px] font-semibold">User title</p>
                     </div>
 
-                    <div className="mt-2">
-                        {coverLetter.recipientName && <p className="font-bold text-lg">{coverLetter.recipientName}</p>}
-                        {coverLetter.recipientTitle && <p>{coverLetter.recipientTitle}</p>}
-                        {coverLetter.companyName && <p>{coverLetter.companyName}</p>}
-                        {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
+                    <div className="mt-2 grid-cols-4 grid gap-4">
+                        <div className="col-span-2">
+                            {coverLetter.companyName && <p>{coverLetter.companyName}</p>}
+                            {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
+                        </div>
+                        <div className="col-span-2 flex justify-end">
+                            <p className="mt-8">{`${day}/${month}/${year}`}</p>
+                        </div>
                     </div>
 
                     {coverLetter.recipientName && (
@@ -87,6 +88,18 @@ export const CoverLetterOne = ({ coverLetter, user }: { coverLetter: CoverLetter
                     )}
 
                     <p className="mt-4">{user?.name}</p>
+                    <div className="mt-2 grid-cols-4 pt-4 border-t-[2px] grid gap-4">
+                        <div className="col-span-2">
+                            <p className="text-lg font-medium">{user?.name}</p>
+                        </div>
+                        <div className="col-span-2 flex justify-end">
+                            <div>
+                                <p>{user?.address}</p>
+                                <p>{user?.email}</p>
+                                <p>{user?.phone}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </>

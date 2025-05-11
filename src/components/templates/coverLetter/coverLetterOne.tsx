@@ -56,15 +56,16 @@ export const CoverLetterOne = ({ coverLetter, user }: { coverLetter: CoverLetter
                 }}
             >
                 <div className="text-sm leading-relaxed">
-                    <p>{user?.name}</p>
-                    <p>{user?.address}</p>
-                    <p>{user?.email}</p>
+                    <div className="mb-3">
+                        <p className="text-xl font-semibold">{user?.name}</p>
+                        <p className="text-[16px] font-semibold">User title</p>
+                    </div>
                     <p>{user?.phone}</p>
-
+                    <p>{user?.email}</p>
+                    <p>{user?.address}</p>
+                    
                     <div className="mt-8">
-                        {coverLetter.recipientName && <p>{coverLetter.recipientName}</p>}
-                        {coverLetter.recipientTitle && <p>{coverLetter.recipientTitle}</p>}
-                        {coverLetter.companyName && <p>{coverLetter.companyName}</p>}
+                        {coverLetter.companyName && <p className="font-semibold">{coverLetter.companyName}</p>}
                         {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
                     </div>
 

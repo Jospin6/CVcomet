@@ -44,12 +44,12 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                 </div>
             </div>
             <div ref={cvRef} className="max-w-[794px] mx-auto p-8 bg-white shadow-lg" style={{ width: "210mm", minHeight: "297mm" }}>
-                <header className="text-center mb-4">
+                <header className="mb-4">
                     <h1 className="text-2xl font-bold uppercase">{user?.name ?? "No name"}</h1>
                     <p className="text-[12px] uppercase font-medium">
                         {cv.title}
                     </p>
-                    <p className="text-[12px] border-y-[1px] border-black">
+                    <p className="text-[12px]">
                         {user?.linkedin && `LinkedIn | `}
                         {user?.email && (<a href={`mailto:${user.email}`}> {user?.email}</a>)}
                         {user?.github && ` | GitHub`}
@@ -58,7 +58,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
 
                 {cv.summary && (
                     <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("summary")}</h2>
+                        <h2 className="text-lg font-semibold border-y mb-2">{t("summary")}</h2>
                         <p className="text-[12px] leading-relaxed">
                             {cv.summary}
                         </p>
@@ -67,13 +67,13 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
 
                 {cv.skills && (
                     <section>
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("skills")}</h2>
+                        <h2 className="text-lg font-semibold border-y mb-2">{t("skills")}</h2>
                         <div className="text-[12px]">
                             {cv.skills.map((skill, index) => (
                                 <div key={index} className="inline-block rounded-full py-1 text-[12px] text-black mr-2 mb-2">
-                                    {skill.hardskills && (<p> <span className="font-semibold">Technical: </span> {skill.hardskills}</p>)}
-                                    {skill.softskills && (<p><span className="font-semibold">Soft: </span>  {skill.softskills}</p>)}
-                                    {skill.tools && (<p><span className="font-semibold">Tools: </span> {skill.tools}</p>)}
+                                    {skill.hardskills && (<p>{skill.hardskills}</p>)}
+                                    {skill.softskills && (<p>{skill.softskills}</p>)}
+                                    {skill.tools && (<p>{skill.tools}</p>)}
                                 </div>
                             ))}
                         </div>
@@ -82,7 +82,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
 
                 {cv.experiences && (
                     <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("experience")}</h2>
+                        <h2 className="text-lg font-semibold border-y mb-2">{t("experience")}</h2>
                         {cv.experiences.map((exp, index) => (
                             <div key={index} className={index > 0 ? "mt-2" : ""}>
                                 <div className="flex justify-between font-semibold">
@@ -101,9 +101,24 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                     </section>
                 )}
 
+                {cv.projects && (
+                    <section className="mb-4">
+                        <h2 className="text-lg font-semibold border-y mb-2">{t("projects")}</h2>
+                        {cv.projects.map((project, index) => (
+                            <div key={index} className={index > 0 ? "mt-2" : ""}>
+                                <h3 className="font-semibold text-sm">{project.title}</h3>
+                                <p className="text-xs text-black">{project.description}</p>
+                                <p className="text-xs text-black">Tools: {project.technologies}</p>
+                            </div>
+                        ))}
+                    </section>
+                )}
+
+                
+
                 {cv.educations && (
                     <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("education")}</h2>
+                        <h2 className="text-lg font-semibold border-y mb-2">{t("education")}</h2>
                         {cv.educations.map((edu, index) => (
                             <div key={index} className={index > 0 ? "mt-2" : ""}>
                                 <div className="flex justify-between text-black font-semibold">
@@ -121,23 +136,8 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                     </section>
                 )}
 
-                
-
-                {cv.projects && (
-                    <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("projects")}</h2>
-                        {cv.projects.map((project, index) => (
-                            <div key={index} className={index > 0 ? "mt-2" : ""}>
-                                <h3 className="font-semibold text-sm">{project.title}</h3>
-                                <p className="text-xs text-black">{project.description}</p>
-                                <p className="text-xs text-black">Tech: {project.technologies}</p>
-                            </div>
-                        ))}
-                    </section>
-                )}
-
                 <section className="mb-4">
-                    <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("additional")}</h2>
+                    <h2 className="text-lg font-semibold border-y mb-2">{t("additional")}</h2>
                     <ul className="text-xs">
                         <li>
                             <span className="font-medium">Languages: </span>

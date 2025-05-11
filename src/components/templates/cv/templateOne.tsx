@@ -6,6 +6,8 @@ import html2canvas from "html2canvas-pro"
 import jsPDF from "jspdf"
 import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
+import { formatDateToMonthYear } from "@/lib/utils"
+
 
 
 
@@ -44,9 +46,9 @@ export const CvOne = ({ cv, user }: { cv: CvProps, user?: User }) => {
                 </div>
             </div>
             <div ref={cvRef} className="max-w-[794px] mx-auto p-8 bg-white shadow-lg" style={{ width: "210mm", minHeight: "297mm" }}>
-                <header className="text-center mb-6">
+                <header className="text-center mb-2 pb-3 border-b-[1px] border-black">
                     <h1 className="text-2xl font-bold uppercase">{user?.name ?? "No name"}</h1>
-                    <p className="text-[12px]">
+                    <p className="text-[12px] uppercase font-medium">
                         {cv.title}
                     </p>
                     <p className="text-[12px]">
@@ -57,23 +59,40 @@ export const CvOne = ({ cv, user }: { cv: CvProps, user?: User }) => {
                 </header>
 
                 {cv.summary && (
-                    <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("summary")}</h2>
+                    <section className="mb-2 pb-2 border-b border-black">
+                        <h2 className="text-lg font-semibold mb-2">{t("summary")}</h2>
                         <p className="text-[12px] leading-relaxed">
                             {cv.summary}
                         </p>
                     </section>
                 )}
 
+                {cv.skills && (
+                    <section className="border-b border-black mb-2 pb-2">
+                        <h2 className="text-lg font-semibold mb-2">{t("skills")}</h2>
+                        <div className="text-[12px]">
+                            {cv.skills.map((skill, index) => (
+                                <div key={index} className="inline-block rounded-full text-[12px] text-black ">
+                                    {skill.hardskills && (<p> <span className="font-semibold">Technical: </span> {skill.hardskills}</p>)}
+                                    {skill.softskills && (<p><span className="font-semibold">Soft: </span>  {skill.softskills}</p>)}
+                                    {skill.tools && (<p><span className="font-semibold">Tools: </span> {skill.tools}</p>)}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
                 {cv.experiences && (
-                    <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("experience")}</h2>
+                    <section className="mb-2 pb-2 border-b border-black">
+                        <h2 className="text-lg font-semibold mb-2">{t("experience")}</h2>
                         {cv.experiences.map((exp, index) => (
-                            <div key={index} className={index > 0 ? "mt-2" : ""}>
-                                <h3 className="font-semibold text-sm">{exp.title} – {exp.company}</h3>
-                                <p className="text-xs text-gray-600">
-                                    {exp.start} – {exp.end ?? 'Present'} | {exp.location}
-                                </p>
+                            <div key={index}>
+                                <div className="flex justify-between font-semibold">
+                                    <h3 className="text-sm">{exp.title}, {exp.company}</h3>
+                                    <p className="text-xs">
+                                        {exp.start} – {exp.end ?? 'Present'} | {exp.location}
+                                    </p>
+                                </div>
                                 <ul className="list-disc list-inside text-[12px]">
                                     {exp.description && exp.description.map((desc, i) => (
                                         <li key={i}>{desc}</li>
@@ -85,12 +104,15 @@ export const CvOne = ({ cv, user }: { cv: CvProps, user?: User }) => {
                 )}
 
                 {cv.educations && (
-                    <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("education")}</h2>
+                    <section className="border-b border-black mb-2 pb-2">
+                        <h2 className="text-lg font-semibold mb-2">{t("education")}</h2>
                         {cv.educations.map((edu, index) => (
-                            <div key={index} className={index > 0 ? "mt-2" : ""}>
-                                <h3 className="font-semibold text-[12px]">{edu.degree} - {edu.school}</h3>
-                                <p className="text-xs text-gray-600">{edu.start} - {edu.end ?? 'Present'}</p>
+                            <div key={index}>
+                                <div className="flex justify-between text-black font-semibold">
+                                    <h3 className="text-sm">{edu.degree}</h3>
+                                    <p className="text-xs ">{formatDateToMonthYear(edu.start)} - {edu.end ? formatDateToMonthYear(edu.end) : 'Present'}</p>
+                                </div>
+                                <div className="text-xs">{edu.school}</div>
                                 <ul className="list-disc list-inside text-[12px]">
                                     {edu.description && edu.description.map((desc, i) => (
                                         <li key={i}>{desc}</li>
@@ -101,61 +123,44 @@ export const CvOne = ({ cv, user }: { cv: CvProps, user?: User }) => {
                     </section>
                 )}
 
-                {cv.skills && (
-                    <section>
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("skills")}</h2>
-                        <div className="text-[12px]">
-                            {cv.skills.map((skill, index) => (
-                                <div key={index} className="inline-block rounded-full py-1 text-[12px] text-black mr-2 mb-2">
-                                    {skill.hardskills && (<p> <span className="font-semibold">Technical: </span> {skill.hardskills}</p>)}
-                                    {skill.softskills && (<p><span className="font-semibold">Soft: </span>  {skill.softskills}</p>)}
-                                    {skill.tools && (<p><span className="font-semibold">Tools: </span> {skill.tools}</p>)}
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {cv.languages && (
-                    <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("languages")}</h2>
-                        {cv.languages.map((lang, index) => (
-                            <div key={index} className={index > 0 ? "mt-2" : ""}>
-                                <h3 className="font-semibold text-sm">{lang.language}</h3>
-                                <p className="text-xs text-gray-600">Proficiency: {lang.level}</p>
-                            </div>
-                        ))}
-                    </section>
-                )}
-
                 {cv.projects && (
-                    <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("projects")}</h2>
+                    <section className="border-b border-black mb-2 pb-2">
+                        <h2 className="text-lg font-semibold mb-2">{t("projects")}</h2>
                         {cv.projects.map((project, index) => (
-                            <div key={index} className={index > 0 ? "mt-2" : ""}>
+                            <div key={index}>
                                 <h3 className="font-semibold text-sm">{project.title}</h3>
                                 <p className="text-xs text-black">{project.description}</p>
-                                <p className="text-xs text-black">Technologies: {project.technologies}</p>
-                                {/* {project.link && (
-                                <p className="text-xs text-blue-500">
-                                    <a href={project.link} target="_blank" rel="noopener noreferrer">View Project</a>
-                                </p>
-                            )} */}
+                                <p className="text-xs text-black">Tech: {project.technologies}</p>
                             </div>
                         ))}
                     </section>
                 )}
 
-                {(cv.certifications && cv.certifications?.length > 0) && (
+                {((cv.languages && cv.languages?.length > 0) || (cv.certifications && cv.certifications.length > 0)) && (
                     <section className="mb-4">
-                        <h2 className="text-lg font-semibold border-b pb-1 mb-2">{t("certifications")}</h2>
-                        {cv.certifications.map((cert, index) => (
-                            <div key={index} className={index > 0 ? "mt-2 leading-none" : "leading-none"}>
-                                <h3 className="font-semibold text-sm">{cert.title} – {cert.issuer}</h3>
-                                <p className="text-[12px] leading-none text-gray-600">{cert.date}</p>
-                                {cert.description && <p className="text-xs leading-none text-black">{cert.description}</p>}
-                            </div>
-                        ))}
+                        <h2 className="text-lg font-semibold mb-2">{t("additional")}</h2>
+                        <ul className="text-xs">
+                            {(cv.languages && cv.languages?.length > 0) && (
+                                <li>
+                                    <span className="font-medium">Languages: </span>
+                                    {cv.languages && cv.languages.map((lang, index) => (
+                                        <span key={index} >
+                                            {lang.language}
+                                        </span>
+                                    ))}
+                                </li>
+                            )}
+                            {(cv.certifications && cv.certifications.length > 0) && (
+                                <li>
+                                    <span className="font-medium">Certifications: </span>
+                                    {cv.certifications.map((cert, index) => (
+                                        <span key={index} >
+                                            {cert.title}, {cert.issuer}
+                                        </span>
+                                    ))}
+                                </li>
+                            )}
+                        </ul>
                     </section>
                 )}
             </div>

@@ -2,12 +2,18 @@ import { CvProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
 import { Cv } from "./cv";
 import { CvOne } from "@/components/templates/cv/templateOne";
-import { CvTwo } from "@/components/templates/cv/templateTwo";
-import { CoverLetterThree } from "@/components/templates/coverLetter/coverLetterThree";
+import { CvTwo } from "../templates/cv/templateTwo";
+import { CvThree } from "@/components/templates/cv/templateThree";
+import { CvFour } from "@/components/templates/cv/templateFour";
+import { CvFive } from "@/components/templates/cv/templateFive";
+import { cv1, cv2, cv3, cv4, cv5 } from "@/helpers/constants";
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
-    "cmagx73es0000uxh8pxlvb38e": CvOne,
-    "cmahyh4up0001uxh8sswdkf6b": CvTwo,
+    [cv1]: CvOne,
+    [cv2]: CvTwo,
+    [cv3]: CvThree,
+    [cv4]: CvFour,
+    [cv5]: CvFive,
 };
 
 

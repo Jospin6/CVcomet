@@ -55,21 +55,27 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
             >
                 {/* Header Section */}
                 <header className="flex flex-col space-y-1">
-                    <p className="font-semibold text-gray-800">{user?.name}</p>
-                    <p className="text-gray-700">{user?.address}</p>
-                    <p className="text-gray-700">{user?.email}</p>
+                    <div className="mb-3">
+                        <p className="text-xl font-semibold">{user?.name}</p>
+                        <p className="text-[16px] font-semibold">User title</p>
+                    </div>
                     <p className="text-gray-700">{user?.phone}</p>
+                    <p className="text-gray-700">{user?.email}</p>
+                    <p className="text-gray-700">{user?.address}</p>
                 </header>
 
-                {/* Date Section */}
-                <p className="text-gray-600">{`${day}/${month}/${year}`}</p>
+
 
                 {/* Recipient Information */}
-                <section className="space-y-1">
-                    {coverLetter.recipientName && <p className="font-semibold text-gray-800">{coverLetter.recipientName}</p>}
-                    {coverLetter.recipientTitle && <p className="text-gray-700">{coverLetter.recipientTitle}</p>}
-                    {coverLetter.companyName && <p className="font-semibold text-gray-800">{coverLetter.companyName}</p>}
-                    {coverLetter.companyAddress && <p className="text-gray-700">{coverLetter.companyAddress}</p>}
+                <section className="space-y-1 flex">
+                    <div className="w-2/4">
+                        {coverLetter.companyName && <p className="font-semibold text-gray-800">{coverLetter.companyName}</p>}
+                        {coverLetter.companyAddress && <p className="text-gray-700">{coverLetter.companyAddress}</p>}
+                    </div>
+                    <div className="w-2/4 flex justify-end">
+                        {/* Date Section */}
+                        <p className="text-gray-600">{`${day}/${month}/${year}`}</p>
+                    </div>
                 </section>
 
                 {/* Salutation Section */}
