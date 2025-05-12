@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Button } from "./button";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { updateCurrentTemplate, User } from "@/redux/user/userSlice";
-import Link from "next/link";
+import { PopupModal } from "./popupModal";
+import { useTranslation } from 'react-i18next';
 
 type Template = {
     id: string;
@@ -19,9 +19,13 @@ type Template = {
     createdAt: string;
 };
 
+
+
 export const TemplateItem = ({ template, user }: { template: Template; user?: User }) => {
     const dispatch = useDispatch<AppDispatch>();
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const { t } = useTranslation();
 
     const isCurrentTemplate = template.id === user?.currentTemplateId;
     const isCurrentCoverLetter = template.id === user?.currentCoverLetterId;
@@ -34,23 +38,19 @@ export const TemplateItem = ({ template, user }: { template: Template; user?: Us
         }
     }, [template.id]);
 
-    const handleSelectTemplate = () => {
-        if (user?.id) {
-            dispatch(updateCurrentTemplate({ id: user.id, type: template.type, currentTemplateId: template.id }));
-        }
+    const handleCardClick = () => {
+        setIsOpen(!isOpen);
     };
 
-    const handleParallelRoute = () => {
-
-    }
-
     return (
-        <motion.div
-            key={template.id}
-            whileHover={{ scale: 1.03 }}
-            transition={{ type: "spring", stiffness: 300 }}
-        >
-            <Link href={`/more/${template.id}`}>
+        <>
+            <motion.div
+                key={template.id}
+                whileHover={{ scale: 1.03 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                onClick={handleCardClick}
+                className="cursor-pointer"
+            >
                 <Card
                     className={`relative overflow-hidden p-0 h-[350px] rounded-xl shadow-lg backdrop-blur border ${isCurrent
                         ? "border-yellow-600 bg-transparent ring-2 ring-primary/50"
@@ -69,7 +69,7 @@ export const TemplateItem = ({ template, user }: { template: Template; user?: Us
 
                         {isCurrent && (
                             <div className="absolute top-2 right-2 z-10">
-                                <Badge variant="default" className="bg-green-600 text-white">Sélectionné</Badge>
+                                <Badge variant="default" className="bg-green-600 text-white">{t("selected")}</Badge>
                             </div>
                         )}
                     </div>
@@ -78,18 +78,12 @@ export const TemplateItem = ({ template, user }: { template: Template; user?: Us
                             {template.type}
                         </Badge>
                     </div>
-
-                    {/* <CardContent>
-                    <Button
-                        className="mt-4 w-full cursor-pointer"
-                        variant={isCurrent ? "default" : "secondary"}
-                        onClick={handleSelectTemplate}
-                    >
-                        {isCurrent ? "Utilisé actuellement" : "Choisir ce template"}
-                    </Button>
-                </CardContent> */}
                 </Card>
-            </Link>
-        </motion.div>
+            </motion.div>
+
+            {isOpen && avatarUrl && (
+                <PopupModal imageUrl={avatarUrl} onClose={handleCardClick} isSelected={isCurrent} template={template} userId={user?.id!} />
+            )}
+        </>
     );
 };

@@ -46,14 +46,12 @@
     "companyDescription": "The name of your current or previous company helps provide context for your professional experience.",
     "languageDescription": "Listing your languages is important for positions requiring language skills.",
     "skillDescription": "Your key skills are crucial to tailor your CV and cover letter to the job requirements.",
-
     "freemiumDescription": "Generate up to 6 CVs & Cover Letters per day for free.",
     "freeItemOne": "Up to 6 CVs/day",
     "freeItemTwo": "Up to 6 Cover Letters/day",
     "freeItemTree": "Unlimited generations",
     "freeItemFour": "Priority support",
     "freeButton": "Current Plan",
-
     "premiumDescription": "Enjoy unlimited CV & Cover Letter generation for only ",
     "premiumItemOne": "Unlimited CVs/day",
     "premiumItemTwo": "Unlimited Cover Letters/day",
@@ -72,5 +70,17 @@
     "certificatName": "Certificat name",
     "addCertificat": "Add certificat",
     "more": "More",
-    "additionalInfos": "additional information"
+    "additionalInfos": "additional information",
+    "plan": "SmartCV Plans",
+    "planDescription": "Create a resume that opens doors. SmartCV helps you land the opportunity you deserve.",
+    "free": "Free",
+    "freeDetail": "6 resumes or cover letters per day + 2 templates available.",
+    "pro": "Pro",
+    "amountMonth": "$9.99/month",
+    "premiumDetail": "Unlimited generation + access to all templates.",
+    "selectedTemp": "Template selected",
+    "chooseTemp": "Choose this template",
+    "resumeTemplate": "Resume Templates",
+    "coverLetterTemplate": "Cover Letter Templates",
+    "selected": "Selected"
 }

@@ -49,14 +49,12 @@
     "companyDescription": "Le nom de votre entreprise actuelle ou précédente permet de contextualiser vos expériences professionnelles.",
     "languageDescription": "Indiquer vos langues maîtrisées est essentiel pour les postes nécessitant des compétences linguistiques.",
     "skillDescription": "Vos compétences clés sont indispensables pour adapter votre CV et lettre de motivation aux exigences du poste.",
-
     "freemiumDescription": "Générez jusqu'à 6 CV et lettres de motivation par jour gratuitement.",
     "freeItemOne": "Jusqu'à 6 CV/jour",
     "freeItemTwo": "Jusqu'à 6 lettres de motivation/jour",
     "freeItemTree": "Générations illimitées",
     "freeItemFour": "Support prioritaire",
     "freeButton": "Plan actuel",
-
     "premiumDescription": "Profitez d'une génération illimitée de CV et lettres de motivation pour seulement ",
     "premiumItemOne": "CV illimités/jour",
     "premiumItemTwo": "Lettres de motivation illimitées/jour",
@@ -73,5 +71,17 @@
     "createCoverLetter": "Créer une lettre de motivation",
     "loading": "Chargement...",
     "more": "Plus",
-    "additionalInfos": "additional information"
+    "additionalInfos": "additional information",
+    "plan": "Plans SmartCV",
+    "planDescription": "Crée un CV qui ouvre des portes. SmartCV t'aide à décrocher l'opportunité que tu mérites.",
+    "free": "Gratuit",
+    "freeDetail": "6 CV ou lettres par jour + 2 templates disponibles.",
+    "pro": "Pro",
+    "amountMonth": "9.99$/mois",
+    "premiumDetail": "génération illimitée + accès à tous les templates.",
+    "selectedTemp": "Template sélectionné",
+    "chooseTemp": "Choisir ce template",
+    "resumeTemplate": "Templates de CV",
+    "coverLetterTemplate": "Templates de lettres de motivation",
+    "selected": "Sélectionné"
 }
