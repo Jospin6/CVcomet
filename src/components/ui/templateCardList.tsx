@@ -1,14 +1,7 @@
 "use client";
 import { User } from "@/redux/user/userSlice";
 import { TemplateItem } from "./templateItem";
-
-type Template = {
-  id: string;
-  name: string;
-  type: "CV" | "COVER_LETTER";
-  templateFile: string; // URL ou base64 image
-  createdAt: string;
-};
+import { Template } from "@/redux/template/templateSlice";
 
 type TemplateCardListProps = {
   templates: Template[];

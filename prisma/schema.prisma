@@ -153,6 +153,7 @@ model CoverLetter {
 model Template {
   id           String       @id @default(uuid())
   name         String
+  plan         Plan         @default(FREE)
   type         TemplateType // 'CV' ou 'COVER_LETTER'
   templateFile Bytes? // chemin du fichier HTML ou PDF ou JSON
   createdAt    DateTime     @default(now())
@@ -167,4 +168,9 @@ model Template {
 enum TemplateType {
   CV
   COVER_LETTER
+}
+
+enum Plan {
+  FREE
+  PAID
 }

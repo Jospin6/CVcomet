@@ -47,6 +47,7 @@ export interface User {
   languages?: string;
   currentTemplateId?: string;
   currentCoverLetterId?: string;
+  role: "ADMIN" | "USER";
   github?: string;
   Education?: Education[];
   Project?: Project[]

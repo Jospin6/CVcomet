@@ -2,20 +2,19 @@ import { AppDispatch } from "@/redux/store";
 import Image from "next/image";
 import { useDispatch } from "react-redux";
 import { Button } from "./button";
-import { updateCurrentTemplate } from "@/redux/user/userSlice";
+import { updateCurrentTemplate, User } from "@/redux/user/userSlice";
 import { useTranslation } from 'react-i18next';
+import { Template, updateTemplatePlan } from "@/redux/template/templateSlice";
+import { UpdatePlanForm } from "./updatePlanForm";
+import Link from "next/link";
 
-type Template = {
-    id: string;
-    name: string;
-    type: "CV" | "COVER_LETTER";
-    templateFile: string;
-    createdAt: string;
-};
-
-export const PopupModal = ({ imageUrl, onClose, isSelected, template, userId }: { imageUrl: string; onClose: () => void, isSelected: boolean, template: Template, userId: string }) => {
+export const PopupModal = ({ imageUrl, onClose, isSelected, template, user }: { imageUrl: string; onClose: () => void, isSelected: boolean, template: Template, user: User }) => {
     const dispatch = useDispatch<AppDispatch>();
     const { t } = useTranslation();
+    const userId = user.id!
+    const isSubscribed = user.isSubscribed
+    const isAllowed = template.plan === "FREE" || user?.isSubscribed;
+    const role = user.role
 
     const handleTemplateChange = () => dispatch(updateCurrentTemplate({ id: userId, type: template.type, currentTemplateId: template.id }))
 
@@ -48,23 +47,41 @@ export const PopupModal = ({ imageUrl, onClose, isSelected, template, userId }: 
                             <span className="font-semibold text-yellow-600">{t("pro")} ({t("amountMonth")}) :</span> {t("premiumDetail")}
                         </p>
 
-                        <Button
-                            onClick={handleTemplateChange}
-                            variant={isSelected ? "default" : "secondary"}
-                            className="w-full flex items-center gap-3 py-2 px-4 rounded-full border"
-                        >
-                            <div className="w-5 h-5 flex items-center justify-center rounded-full border-2 border-primary">
-                                {isSelected && (
-                                    <div className="w-3 h-3 bg-primary rounded-full" />
-                                )}
+                        {role === "ADMIN" && (
+                            <div>
+                                <UpdatePlanForm defaultPlan={template.plan} id={template.id} />
                             </div>
-                            <span className="text-sm font-medium">
-                                {isSelected ? t("selectedTemp") : t("chooseTemp")}
-                            </span>
-                        </Button>
+                        )}
+                        {isAllowed ? (
+                            <div className="col-span-2 mt-4">
+                                <Button
+                                    onClick={handleTemplateChange}
+                                    variant={isSelected ? "default" : "secondary"}
+                                    className={`w-full flex items-center gap-3 py-2 px-4 rounded-full border ${isSelected && "bg-green-600 text-black"}`}
+                                >
+                                    <div className="w-5 h-5 flex items-center justify-center rounded-full border-2 border-primary">
+                                        {isSelected && (
+                                            <div className="w-3 h-3 bg-primary rounded-full" />
+                                        )}
+                                    </div>
+                                    <span className="text-sm font-medium">
+                                        {isSelected ? t("selectedTemp") : t("chooseTemp")}
+                                    </span>
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="col-span-2 mt-4">
+                                <Link href={"/upgrade"}>
+                                    <Button
+                                        variant={"default"}
+                                        className="w-full flex items-center gap-3 py-2 px-4 rounded-full border"
+                                    >
+                                        {t("cta")}
+                                    </Button>
+                                </Link>
+                            </div>
+                        )}
                     </div>
-
-
                 </div>
             </div>
         </div>

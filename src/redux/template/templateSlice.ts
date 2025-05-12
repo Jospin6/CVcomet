@@ -8,6 +8,7 @@ export interface Template {
   type: 'CV' | 'COVER_LETTER';
   templateFile: string;
   createdAt: string;
+  plan?: "FREE" | "PAID"
 }
 
 interface TemplateState {
@@ -61,6 +62,19 @@ export const addTemplate = createAsyncThunk(
     }
   }
 );
+
+export const updateTemplatePlan = createAsyncThunk("user/currentUser", async ({ id, plan }: { id: string, plan: string }, { rejectWithValue }) => {
+  let url = `${API_URL}/${id}/updateplan`
+  try {
+    const response = await axios.put(url, { id, plan });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return rejectWithValue(error.response?.data || "Erreur inconnue");
+    }
+    return rejectWithValue("Erreur inconnue");
+  }
+})
 
 const templateSlice = createSlice({
   name: 'template',

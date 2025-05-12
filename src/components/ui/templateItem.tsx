@@ -10,16 +10,7 @@ import { AppDispatch } from "@/redux/store";
 import { updateCurrentTemplate, User } from "@/redux/user/userSlice";
 import { PopupModal } from "./popupModal";
 import { useTranslation } from 'react-i18next';
-
-type Template = {
-    id: string;
-    name: string;
-    type: "CV" | "COVER_LETTER";
-    templateFile: string;
-    createdAt: string;
-};
-
-
+import { Template } from "@/redux/template/templateSlice";
 
 export const TemplateItem = ({ template, user }: { template: Template; user?: User }) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -82,7 +73,7 @@ export const TemplateItem = ({ template, user }: { template: Template; user?: Us
             </motion.div>
 
             {isOpen && avatarUrl && (
-                <PopupModal imageUrl={avatarUrl} onClose={handleCardClick} isSelected={isCurrent} template={template} userId={user?.id!} />
+                <PopupModal imageUrl={avatarUrl} onClose={handleCardClick} isSelected={isCurrent} template={template} user={user!} />
             )}
         </>
     );
