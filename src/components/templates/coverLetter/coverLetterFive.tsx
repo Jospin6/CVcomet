@@ -59,7 +59,7 @@ export const CoverLetterFive = ({ coverLetter, user }: { coverLetter: CoverLette
                     <div className="pb-4">
                         <div className="mb-3">
                             <p className="text-xl font-semibold">{user?.name}</p>
-                            <p className="text-[16px] font-semibold">User title</p>
+                            <p className="text-[16px] font-semibold">{coverLetter.sendertitle?.toUpperCase()}</p>
                         </div>
                         <div className="flex justify-between py-1 border-gray-900 border-y-[2px]">
                             <p>{user?.phone}</p>

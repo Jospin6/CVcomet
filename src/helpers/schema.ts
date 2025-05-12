@@ -117,6 +117,7 @@ export type CvProps = {
 
 export const coverLetterSchema = z.object({
     coverLetter: z.object({
+        sendertitle: z.string().describe("Title of the profile, e.g., 'Full Stack Developer'"),
         recipientName: z.string().describe("Name of the person to whom the letter is addressed (e.g., 'Mr. John Smith')"),
         recipientTitle: z.string().optional().describe("Title of the recipient (e.g., 'Hiring Manager')"),
         companyName: z.string().describe("Name of the company (e.g., 'XYZ Corporation')"),
@@ -148,4 +149,5 @@ export type CoverLetterProps = {
     senderAddress?: string;
     senderEmail?: string;
     senderPhone?: string;
+    sendertitle?: string;
 };

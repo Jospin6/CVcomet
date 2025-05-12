@@ -53,6 +53,7 @@ export async function POST(req: Request) {
                         senderAddress: object.coverLetter.senderAddress,
                         senderEmail: object.coverLetter.senderEmail,
                         senderPhone: object.coverLetter.senderPhone,
+                        sendertitle: object.coverLetter.sendertitle,
                         conversationId: conversationId,
                     }
                 })

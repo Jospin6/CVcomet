@@ -59,7 +59,7 @@ export const CoverLetterTwo = ({ coverLetter, user }: { coverLetter: CoverLetter
                 <div className="mb-4 pb-4 border-b border-black">
                     <div className="mb-3">
                         <p className="text-xl font-semibold">{user?.name}</p>
-                        <p className="text-[16px] font-semibold">User title</p>
+                        <p className="text-[16px] font-semibold">{coverLetter.sendertitle?.toUpperCase()}</p>
                     </div>
                     <p>{user?.phone}</p>
                     <p>{user?.email}</p>

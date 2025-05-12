@@ -58,7 +58,7 @@ export const CoverLetterFour = ({ coverLetter, user }: { coverLetter: CoverLette
                 <div className="text-sm leading-relaxed">
                     <div className="pb-4 text-center border-b-[2px]">
                         <p className="uppercase text-xl font-bold">{user?.name}</p>
-                        <p className="text-[16px] font-semibold">User title</p>
+                        <p className="text-[16px] font-semibold">{coverLetter.sendertitle?.toUpperCase()}</p>
                     </div>
 
                     <div className="mt-2 grid-cols-4 grid gap-4">

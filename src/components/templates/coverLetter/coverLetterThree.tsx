@@ -59,7 +59,7 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
                 <header className="flex flex-col space-y-1">
                     <div className="mb-3">
                         <p className="text-xl font-semibold">{user?.name}</p>
-                        <p className="text-[16px] font-semibold">User title</p>
+                        <p className="text-[16px] font-semibold">{coverLetter.sendertitle?.toUpperCase()}</p>
                     </div>
                     <p className="text-gray-700">{user?.phone}</p>
                     <p className="text-gray-700">{user?.email}</p>

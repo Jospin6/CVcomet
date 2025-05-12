@@ -239,6 +239,15 @@ export const generateCoverLetterPrompt = (
         - “I look forward to the opportunity to bring my [specific strength] to [Company Name].”
 
         Generate a professional cover letter using the following rules for each section:
+        sendertitle:
+        - you must extract the most accurate and relevant job title from the given job description. This title should reflect the core role the candidate is applying for, based on the responsibilities, required skills, and job context described.
+        - Do not just copy a title from the text blindly — analyze the entire job description to determine the *best possible title* that summarizes the position. This title will be used to personalize the cover letter, and it should align closely with what hiring managers would expect to see.
+        Examples:
+        - If the job description mentions full-stack development with React and Node.js, the correct title could be: **"Full Stack Developer"**.
+        - If the job requires strong backend experience in Django and system architecture, the title might be: **"Backend Software Engineer"**.
+        - For roles involving data analysis and machine learning, suggest: **"Data Scientist"** or **"Machine Learning Engineer"**, based on the emphasis.
+        Your output should be a **concise, professional job title** (3–6 words max), written in Title Case.
+
         recipientName:  
         - Search for and use the recipient’s name from the job description or user data.  
         - If no name is found, default to a professional generic greeting like “Hiring Manager” or “Recruitment Team” based on company type or role.  

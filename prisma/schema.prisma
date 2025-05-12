@@ -140,6 +140,7 @@ model CoverLetter {
   senderAddress String?
   senderEmail   String?
   senderPhone   String?
+  sendertitle   String?
 
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id])
