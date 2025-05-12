@@ -69,25 +69,27 @@ export const CoverLetterOne = ({ coverLetter, user }: { coverLetter: CoverLetter
                         {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
                     </div>
 
-                    <p className="mt-8">{`${day}/${month}/${year}`}</p>
+                    <div className="text-sm">
+                        <p className="mt-8">{`${day}/${month}/${year}`}</p>
 
-                    {coverLetter.recipientName && (
-                        <p className="mt-8">{coverLetter.recipientName},</p>
-                    )}
+                        {coverLetter.recipientName && (
+                            <p className="mt-8">{coverLetter.recipientName},</p>
+                        )}
 
-                    {coverLetter.introduction && (
-                        <p className="mt-4">{coverLetter.introduction}</p>
-                    )}
+                        {coverLetter.introduction && (
+                            <p className="mt-4">{coverLetter.introduction}</p>
+                        )}
 
-                    {coverLetter.body && (
-                        <p className="mt-4">{coverLetter.body}</p>
-                    )}
+                        {coverLetter.body && (
+                            <p className="mt-4">{coverLetter.body}</p>
+                        )}
 
-                    {coverLetter.conclusion && (
-                        <p className="mt-4">{coverLetter.conclusion}</p>
-                    )}
+                        {coverLetter.conclusion && (
+                            <p className="mt-4">{coverLetter.conclusion}</p>
+                        )}
 
-                    <p className="mt-4">{user?.name}</p>
+                        <p className="mt-4">{user?.name}</p>
+                    </div>
                 </div>
             </div>
         </>

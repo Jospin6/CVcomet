@@ -80,30 +80,32 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
                     </div>
                 </section>
 
-                {/* Salutation Section */}
-                {coverLetter.recipientName && (
-                    <p className="my-4 text-gray-800">{`${coverLetter.recipientName},`}</p>
-                )}
-
-                {/* Body Section */}
-                <section className="space-y-4">
-                    {coverLetter.introduction && (
-                        <p className="text-gray-700">{coverLetter.introduction}</p>
+                <div className="text-sm">
+                    {/* Salutation Section */}
+                    {coverLetter.recipientName && (
+                        <p className="my-4 text-gray-800">{`${coverLetter.recipientName},`}</p>
                     )}
 
-                    {coverLetter.body && (
-                        <p className="text-gray-700">{coverLetter.body}</p>
-                    )}
+                    {/* Body Section */}
+                    <section className="space-y-4">
+                        {coverLetter.introduction && (
+                            <p className="text-gray-700">{coverLetter.introduction}</p>
+                        )}
 
-                    {coverLetter.conclusion && (
-                        <p className="text-gray-700">{coverLetter.conclusion}</p>
-                    )}
-                </section>
+                        {coverLetter.body && (
+                            <p className="text-gray-700">{coverLetter.body}</p>
+                        )}
 
-                {/* Closing */}
-                <footer className="mt-6">
-                    <p className="text-gray-800">{user?.name}</p>
-                </footer>
+                        {coverLetter.conclusion && (
+                            <p className="text-gray-700">{coverLetter.conclusion}</p>
+                        )}
+                    </section>
+
+                    {/* Closing */}
+                    <footer className="mt-6">
+                        <p className="text-gray-800">{user?.name}</p>
+                    </footer>
+                </div>
             </div>
         </div>
     );

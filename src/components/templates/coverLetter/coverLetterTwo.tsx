@@ -66,36 +66,38 @@ export const CoverLetterTwo = ({ coverLetter, user }: { coverLetter: CoverLetter
                     <p>{user?.address}</p>
                 </div>
 
-                {/* Recipient Information */}
-                {coverLetter.recipientName && (
-                    <div className="mb-4">
-                        <p className="text-lg font-semibold">{coverLetter.companyName}</p>
-                        <p>{coverLetter.companyAddress}</p>
+                <div className="text-sm">
+                    {/* Recipient Information */}
+                    {coverLetter.recipientName && (
+                        <div className="mb-4">
+                            <p className="text-lg font-semibold">{coverLetter.companyName}</p>
+                            <p>{coverLetter.companyAddress}</p>
+                        </div>
+                    )}
+
+                    {/* Salutation */}
+                    {coverLetter.recipientName && (
+                        <p className="mb-4">{`${coverLetter.recipientName},`}</p>
+                    )}
+
+                    {/* Cover Letter Body */}
+                    <div className="mb-6">
+                        {coverLetter.introduction && (
+                            <p>{coverLetter.introduction}</p>
+                        )}
+
+                        {coverLetter.body && (
+                            <p className="mt-4">{coverLetter.body}</p>
+                        )}
+
+                        {coverLetter.conclusion && (
+                            <p className="mt-4">{coverLetter.conclusion}</p>
+                        )}
                     </div>
-                )}
 
-                {/* Salutation */}
-                {coverLetter.recipientName && (
-                    <p className="mb-4">{`${coverLetter.recipientName},`}</p>
-                )}
-
-                {/* Cover Letter Body */}
-                <div className="mb-6">
-                    {coverLetter.introduction && (
-                        <p>{coverLetter.introduction}</p>
-                    )}
-
-                    {coverLetter.body && (
-                        <p className="mt-4">{coverLetter.body}</p>
-                    )}
-
-                    {coverLetter.conclusion && (
-                        <p className="mt-4">{coverLetter.conclusion}</p>
-                    )}
+                    {/* Closing */}
+                    <p>{user?.name}</p>
                 </div>
-
-                {/* Closing */}
-                <p>{user?.name}</p>
             </div>
         </div>
     );

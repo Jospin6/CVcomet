@@ -71,24 +71,26 @@ export const CoverLetterFour = ({ coverLetter, user }: { coverLetter: CoverLette
                         </div>
                     </div>
 
-                    {coverLetter.recipientName && (
-                        <p className="mt-8">{coverLetter.recipientName},</p>
-                    )}
+                    <div className="text-sm">
+                        {coverLetter.recipientName && (
+                            <p className="mt-8">{coverLetter.recipientName},</p>
+                        )}
 
-                    {coverLetter.introduction && (
-                        <p className="mt-4">{coverLetter.introduction}</p>
-                    )}
+                        {coverLetter.introduction && (
+                            <p className="mt-4">{coverLetter.introduction}</p>
+                        )}
 
-                    {coverLetter.body && (
-                        <p className="mt-4">{coverLetter.body}</p>
-                    )}
+                        {coverLetter.body && (
+                            <p className="mt-4">{coverLetter.body}</p>
+                        )}
 
-                    {coverLetter.conclusion && (
-                        <p className="mt-4">{coverLetter.conclusion}</p>
-                    )}
+                        {coverLetter.conclusion && (
+                            <p className="mt-4">{coverLetter.conclusion}</p>
+                        )}
 
-                    <p className="mt-4">{user?.name}</p>
-                    <div className="grid-cols-4 pt-4 mt-5 border-t-[2px] grid gap-4">
+                        <p className="mt-4">{user?.name}</p>
+                    </div>
+                    <div className="grid-cols-4 text-sm pt-4 mt-5 border-t-[2px] grid gap-4">
                         <div className="col-span-2">
                             <p className="text-lg font-medium">{user?.name}</p>
                         </div>
