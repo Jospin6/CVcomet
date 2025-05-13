@@ -8,10 +8,12 @@ import { fetchUser, selectUser } from "@/redux/user/userSlice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
+import { TemplateItemSkeleton } from "@/components/ui/templateItemSkeleton";
 
 export default function More() {
     const dispatch = useDispatch<AppDispatch>();
     const templates = useSelector((state: RootState) => state.template.templates);
+    const loadTemplates = useSelector((state: RootState) => state.template.loading)
     const currentUser = useCurrentUser()
     const user = useSelector(selectUser)
     const { t } = useTranslation();
@@ -30,6 +32,9 @@ export default function More() {
     }, [dispatch])
 
     return <div>
+
+        {loadTemplates && (<TemplateItemSkeleton/>)}
+
         {cvs.length > 0 && (
             <div>
                 <h1 className="text-xl text-gray-200">{t("resumeTemplate")}</h1>
