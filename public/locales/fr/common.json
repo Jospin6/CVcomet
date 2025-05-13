@@ -84,5 +84,6 @@
     "resumeTemplate": "Templates de CV",
     "coverLetterTemplate": "Templates de lettres de motivation",
     "selected": "Sélectionné",
-    "cta": "Abonnez-vous pour accéder à ce template"
+    "cta": "Abonnez-vous pour accéder à ce template",
+    "templates": "templates"
 }

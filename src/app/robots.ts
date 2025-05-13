@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { mainUrl } from '@/helpers/constants';
  
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/admin/',
     },
-    sitemap: 'https://smartcv-landingpage.vercel.app/sitemap.xml',
+    sitemap: `${mainUrl}/sitemap.xml`,
   }
 }

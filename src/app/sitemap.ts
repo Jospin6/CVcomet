@@ -1,3 +1,4 @@
+import { mainUrl } from '@/helpers/constants';
 import type { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -5,25 +6,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     {
-      url: 'https://smartcv-landingpage.vercel.app/',
+      url: `${mainUrl}/`,
       lastModified,
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
-      url: 'https://smartcv-landingpage.vercel.app/login',
+      url: `${mainUrl}/login`,
       lastModified,
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
-      url: 'https://smartcv-landingpage.vercel.app/upgrade',
+      url: `${mainUrl}/upgrade`,
       lastModified,
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
-      url: 'https://smartcv-landingpage.vercel.app/more',
+      url: `${mainUrl}/templates`,
       lastModified,
       changeFrequency: 'weekly',
       priority: 0.6,

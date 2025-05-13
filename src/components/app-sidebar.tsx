@@ -1,7 +1,7 @@
 "use client"
 import { Home, User, ArrowUpCircle, LayoutDashboard } from "lucide-react"
 import { useTranslation } from 'react-i18next';
- 
+
 import {
   Sidebar,
   SidebarContent,
@@ -13,38 +13,38 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { ConversationList } from "./ui/conversationList"
- 
+
 export function AppSidebar() {
   const { t } = useTranslation();
   // Menu items.
-const items = [
-  {
-    title: `${t("home")}`,
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: `${t("profil")}`,
-    url: "/profil",
-    icon: User,
-  },
-   {
-    title: `${t("more")}`,
-    url: "/more",
-    icon: LayoutDashboard,
-  },
-  {
-    title: `${t("upgrade")}`,
-    url: "/upgrade",
-    icon: ArrowUpCircle,
-  }
-]
+  const items = [
+    {
+      title: `${t("home")}`,
+      url: "/",
+      icon: Home,
+    },
+    {
+      title: `${t("profil")}`,
+      url: "/profil",
+      icon: User,
+    },
+    {
+      title: `${t("templates")}`,
+      url: "/templates",
+      icon: LayoutDashboard,
+    },
+    {
+      title: `${t("upgrade")}`,
+      url: "/upgrade",
+      icon: ArrowUpCircle,
+    }
+  ]
   return (
     <Sidebar className="border-none">
       <SidebarContent className="bg-[#1a1a1a] text-white">
         <SidebarGroup>
           <div className="h-16 flex items-center ">
-          <SidebarGroupLabel className="text-2xl text-white font-bold">SmartCV</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-2xl text-white font-bold">SmartCV</SidebarGroupLabel>
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -58,7 +58,7 @@ const items = [
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              <ConversationList/>
+              <ConversationList />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
