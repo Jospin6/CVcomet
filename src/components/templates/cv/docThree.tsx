@@ -34,7 +34,7 @@ const DocThree = ({ user, cv }: {user: User, cv: CvProps}) => (
       <View style={styles.header}>
         <Text style={{ fontSize: 16 }}>{user?.name ?? "No name"}</Text>
         <Text>{cv.title}</Text>
-        <Text>{user?.email} {user?.linkedin && `| LinkedIn`} {user?.github && `| GitHub`}</Text>
+        <Text style={{borderBottom: '1 solid black', borderTop: '1 solid black', paddingVertical: '1'}}>{user?.email} {user?.linkedin && `| LinkedIn`} {user?.github && `| GitHub`}</Text>
       </View>
 
       {cv.summary && (
