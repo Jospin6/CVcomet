@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { selectCvState } from "@/redux/cv/cvSlice";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppDispatch, RootState } from "@/redux/store";
 import { experimental_useObject as useObject } from '@ai-sdk/react';
@@ -18,7 +17,7 @@ import { getConversation, selectConversation, selectTypeGeneration, clearConvers
 import { CvItems } from "@/components/ui/cvItems";
 import { CoverLetterItems } from "@/components/ui/coverLetterItems";
 import { useTranslation } from 'react-i18next';
-import { Brain, Sparkles, Bot, Wand2 } from 'lucide-react';
+import { Sparkles, Wand2 } from 'lucide-react';
 import { CvOne } from "@/components/templates/cv/templateOne";
 import { CvTwo } from "@/components/templates/cv/templateTwo";
 import { CvThree } from "@/components/templates/cv/templateThree";
@@ -30,7 +29,7 @@ import { CoverLetterThree } from "@/components/templates/coverLetter/coverLetter
 import { CoverLetterFour } from "@/components/templates/coverLetter/coverLetterFour";
 import { CoverLetterFive } from "@/components/templates/coverLetter/coverLetterFive";
 import { cover1, cover2, cover3, cover4, cover5, cv1, cv2, cv3, cv4, cv5 } from "@/helpers/constants";
-import Head from 'next/head';
+import { CoverLetterSkeleton } from "@/components/ui/coverLetterSkeleton";
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
     [cv1]: CvOne,
@@ -47,7 +46,7 @@ const templateComponentMap: Record<string, React.ComponentType<any>> = {
 };
 
 export default function Home() {
-    const { t, i18n } = useTranslation('common')
+    const { i18n } = useTranslation('common')
     const params = useParams()
     const id = params.id
     const conversation = useSelector(selectConversation)
@@ -77,8 +76,6 @@ export default function Home() {
             ([key]) => key !== 'currentTemplateId' && key !== 'currentCoverLetterId'
         )
     );
-
-    console.log("user infos: ", userInfos)
 
     const SelectedCvComponent = currentUser?.currentTemplateId && templateComponentMap[currentUser.currentTemplateId];
     const SelectedCoverLetterComponent = currentUser?.currentCoverLetterId && templateComponentMap[currentUser.currentCoverLetterId];
@@ -110,8 +107,6 @@ export default function Home() {
         }
     };
 
-    console.log("putain: ", conversation)
-
     const handleCoverLetter = () => {
         if (!input.trim()) return;
         submitCoverLetter({ description: input, user: currentUser, conversationId: id, language });
@@ -127,57 +122,8 @@ export default function Home() {
         }
     }, [user?.id, dispatch]);
 
-
-
-
     return (
         <div className="pb-20">
-
-            <Head>
-                <title>SmartCV - Create Professional Resumes with AI</title>
-                <meta
-                    name="description"
-                    content="Build your professional resume in minutes using AI. SmartCV helps you stand out with personalized, modern CVs and cover letters."
-                />
-                <meta
-                    name="keywords"
-                    content="AI resume builder, SmartCV, online CV, AI cover letter, job application, professional resume"
-                />
-                <meta name="author" content="SmartCV Team" />
-
-                {/* Open Graph for social sharing */}
-                <meta property="og:title" content="SmartCV - Create Your Resume with AI" />
-                <meta
-                    property="og:description"
-                    content="SmartCV is an AI-powered platform to generate professional resumes and cover letters easily."
-                />
-                <meta
-                    property="og:image"
-                    content="https://smartcv-landingpage.vercel.app/og-image.png"
-                />
-                <meta
-                    property="og:url"
-                    content="https://smartcv-landingpage.vercel.app"
-                />
-                <meta property="og:type" content="website" />
-
-                {/* Twitter Card */}
-                <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content="SmartCV - AI-Powered Resume Builder" />
-                <meta
-                    name="twitter:description"
-                    content="Generate a professional and modern CV in just a few clicks with the power of AI."
-                />
-                <meta
-                    name="twitter:image"
-                    content="https://smartcv-landingpage.vercel.app/og-image.png"
-                />
-
-                {/* Canonical URL */}
-                <link rel="canonical" href="https://smartcv-landingpage.vercel.app" />
-            </Head>
-
-
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -221,8 +167,8 @@ export default function Home() {
                 </div>
             </motion.div>
 
-
-            {(isLoadingCv || isLoadingCoverLetter || loadConversation) && <CvSkeleton />}
+            {(isLoadingCv || loadConversation) && <CvSkeleton />}
+            {isLoadingCoverLetter && (<CoverLetterSkeleton/>)}
 
             {cvObject?.cvs && (
                 <div className="mb-6">
