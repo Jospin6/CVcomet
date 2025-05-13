@@ -5,27 +5,12 @@ import html2canvas from "html2canvas-pro"
 import jsPDF from "jspdf"
 import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
+import CoverFive from "./coverFive";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 
 export const CoverLetterFive = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
     const { t } = useTranslation();
     const date = new Date(Date.now());
-    const cvRef = useRef<HTMLDivElement>(null);
-
-    const handleDownload = async () => {
-        const element = cvRef.current;
-        if (!element) return;
-
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4");
-
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save("cover_letter.pdf");
-    };
 
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -35,17 +20,18 @@ export const CoverLetterFive = ({ coverLetter, user }: { coverLetter: CoverLette
             <div className="flex items-center text-white justify-between mb-4">
                 <h2 className="text-xl font-bold">{t("coverLetter")}</h2>
                 <div className="flex gap-4">
-                    <button
-                        onClick={handleDownload}
-                        className="p-1 rounded hover:border-[1px] cursor-pointer"
-                        aria-label="Download Cover Letter"
-                    >
-                        <Download className="w-5 h-5" />
-                    </button>
+                    {(user && coverLetter) && (
+                        <PDFDownloadLink
+                            document={<CoverFive user={user} coverLetter={coverLetter} />}
+                            fileName={`${user.name}_cover_letter.pdf`}
+                        >
+                            <Download className="w-5 h-5" />
+                        </PDFDownloadLink>
+                    )}
                 </div>
             </div>
+
             <div
-                ref={cvRef}
                 className="mx-auto bg-white flex flex-col justify-start shadow-lg"
                 style={{
                     width: "210mm",

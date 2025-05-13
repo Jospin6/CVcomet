@@ -13,6 +13,7 @@ import { redirect } from "next/navigation";
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Wand2 } from "lucide-react";
 import Link from "next/link";
+import PdfComponent from "@/components/testPdf";
 
 export default function Home() {
     const { t } = useTranslation();
@@ -54,7 +55,7 @@ export default function Home() {
     return (
         <>
             <div className="flex flex-col items-center justify-center min-h-[90vh] gap-4">
-                {/* Première partie : titre et description */}
+                
                 <div className="text-center max-w-2xl mx-auto  px-4">
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}

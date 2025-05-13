@@ -8,39 +8,26 @@ import jsPDF from "jspdf"
 import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
 import { formatDateToMonthYear } from "@/lib/utils"
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import DocTwo from "./docTwo"
 
 export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
     const { t } = useTranslation()
-    const cvRef = useRef<HTMLDivElement>(null)
-
-    const handleDownload = async () => {
-        const element = cvRef.current
-        if (!element) return
-
-        const canvas = await html2canvas(element, { scale: 2 })
-        const imgData = canvas.toDataURL("image/png")
-        const pdf = new jsPDF("p", "mm", "a4")
-        const imgProps = pdf.getImageProperties(imgData)
-        const pdfWidth = pdf.internal.pageSize.getWidth()
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight)
-        pdf.save("cv-template-two.pdf")
-    }
 
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
                 <h2 className="text-xl font-bold">{t("resume")}</h2>
-                <button
-                    onClick={handleDownload}
-                    className="p-1 rounded hover:border cursor-pointer"
-                    aria-label="Download CV"
-                >
-                    <Download className="w-5 h-5" />
-                </button>
+                {(user && cv) && (
+                    <PDFDownloadLink
+                        document={<DocTwo user={user} cv={cv} />}
+                        fileName={`${user.name}_resume.pdf`}
+                    >
+                        <Download className="w-5 h-5" />
+                    </PDFDownloadLink>
+                )}
             </div>
             <div
-                ref={cvRef}
                 className="max-w-[794px] mx-auto shadow-lg flex"
                 style={{ width: "210mm", minHeight: "297mm" }}
             >

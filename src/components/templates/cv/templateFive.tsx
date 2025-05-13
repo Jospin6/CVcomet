@@ -7,44 +7,31 @@ import jsPDF from "jspdf"
 import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
 import { formatDateToMonthYear } from "@/lib/utils"
+import { DocFive } from "./docFive"
+import { PDFDownloadLink } from "@react-pdf/renderer"
 
 
 
 export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
     const { t } = useTranslation();
-    const cvRef = useRef<HTMLDivElement>(null);
-
-    const handleDownload = async () => {
-        const element = cvRef.current;
-        if (!element) return;
-
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4");
-
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save("cv.pdf");
-    };
 
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
                 <h2 className="text-xl font-bold">{t("resume")}</h2>
                 <div className="flex gap-4">
-                    <button
-                        onClick={handleDownload}
-                        className="p-1 rounded hover:border-[1px] cursor-pointer"
-                        aria-label="Download CV"
-                    >
-                        <Download className="w-5 h-5" />
-                    </button>
+                    {(user && cv) && (
+                        <PDFDownloadLink
+                            document={<DocFive user={user} cv={cv} />}
+                            fileName={`${user.name}_resume.pdf`}
+                        >
+                            <Download className="w-5 h-5" />
+                        </PDFDownloadLink>
+                    )}
                 </div>
             </div>
-            <div ref={cvRef} className="max-w-[794px] mx-auto p-8 bg-white shadow-lg" style={{ width: "210mm", minHeight: "297mm" }}>
+
+            <div className="max-w-[794px] mx-auto p-8 bg-white shadow-lg" style={{ width: "210mm", minHeight: "297mm" }}>
                 <header className="mb-4">
                     <h1 className="text-2xl font-bold uppercase">{user?.name ?? "No name"}</h1>
                     <p className="text-[12px] uppercase font-medium">
@@ -115,7 +102,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                     </section>
                 )}
 
-                
+
 
                 {cv.educations && (
                     <section className="mb-4">
