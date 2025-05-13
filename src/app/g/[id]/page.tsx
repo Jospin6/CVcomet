@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { selectCvState } from "@/redux/cv/cvSlice";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { AppDispatch } from "@/redux/store";
+import { AppDispatch, RootState } from "@/redux/store";
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { coverLetterSchema, cvSchema } from "@/helpers/schema";
 import { Cv } from "@/components/ui/cv";
@@ -30,6 +30,7 @@ import { CoverLetterThree } from "@/components/templates/coverLetter/coverLetter
 import { CoverLetterFour } from "@/components/templates/coverLetter/coverLetterFour";
 import { CoverLetterFive } from "@/components/templates/coverLetter/coverLetterFive";
 import { cover1, cover2, cover3, cover4, cover5, cv1, cv2, cv3, cv4, cv5 } from "@/helpers/constants";
+import Head from 'next/head';
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
     [cv1]: CvOne,
@@ -50,6 +51,7 @@ export default function Home() {
     const params = useParams()
     const id = params.id
     const conversation = useSelector(selectConversation)
+    const loadConversation = useSelector((state: RootState) => state.conversation.loading)
     const inputRef = useRef<HTMLDivElement>(null);
     const [input, setInput] = useState(conversation?.content ?? "");
     const dispatch = useDispatch<AppDispatch>();
@@ -130,42 +132,52 @@ export default function Home() {
 
     return (
         <div className="pb-20">
-            {/* <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full pb-4 pt-2 mt-auto"
-            >
-                <div className="max-w-3xl mx-auto px-4">
-                    <motion.div
-                        animate={{ height: "auto" }}
-                        whileFocus={{ scale: 1.01 }}
-                        transition={{ duration: 0.2 }}
-                        className="relative rounded-2xl lg:rounded-e-3xl p-2.5 flex items-end gap-2 bg-background"
-                    >
-                        <div
-                            contentEditable
-                            role="textbox"
-                            onInput={(e) => {
-                                setInput(e.currentTarget.textContent || "");
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSend();
-                                }
-                            }}
-                            data-placeholder="Enter the Job description..."
-                            className="flex-1 text-gray-200 bg-gray-800 min-h-[36px] max-h-[350px] overflow-y-auto px-3 py-2 focus:outline-none 
-                  text-sm rounded-md empty:before:text-gray-300 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
-                            ref={inputRef}
-                        />
-                        <div className="flex gap-2">
-                            <Button className="cursor-pointer" onClick={handleSend}>Cv</Button>
-                            <Button className="cursor-pointer" onClick={handleCoverLetter}>Cover letter</Button>
-                        </div>
-                    </motion.div>
-                </div>
-            </motion.div> */}
+
+            <Head>
+                <title>SmartCV - Create Professional Resumes with AI</title>
+                <meta
+                    name="description"
+                    content="Build your professional resume in minutes using AI. SmartCV helps you stand out with personalized, modern CVs and cover letters."
+                />
+                <meta
+                    name="keywords"
+                    content="AI resume builder, SmartCV, online CV, AI cover letter, job application, professional resume"
+                />
+                <meta name="author" content="SmartCV Team" />
+
+                {/* Open Graph for social sharing */}
+                <meta property="og:title" content="SmartCV - Create Your Resume with AI" />
+                <meta
+                    property="og:description"
+                    content="SmartCV is an AI-powered platform to generate professional resumes and cover letters easily."
+                />
+                <meta
+                    property="og:image"
+                    content="https://smartcv-landingpage.vercel.app/og-image.png"
+                />
+                <meta
+                    property="og:url"
+                    content="https://smartcv-landingpage.vercel.app"
+                />
+                <meta property="og:type" content="website" />
+
+                {/* Twitter Card */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="SmartCV - AI-Powered Resume Builder" />
+                <meta
+                    name="twitter:description"
+                    content="Generate a professional and modern CV in just a few clicks with the power of AI."
+                />
+                <meta
+                    name="twitter:image"
+                    content="https://smartcv-landingpage.vercel.app/og-image.png"
+                />
+
+                {/* Canonical URL */}
+                <link rel="canonical" href="https://smartcv-landingpage.vercel.app" />
+            </Head>
+
+
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -210,7 +222,7 @@ export default function Home() {
             </motion.div>
 
 
-            {(isLoadingCv || isLoadingCoverLetter) && <CvSkeleton />}
+            {(isLoadingCv || isLoadingCoverLetter || loadConversation) && <CvSkeleton />}
 
             {cvObject?.cvs && (
                 <div className="mb-6">

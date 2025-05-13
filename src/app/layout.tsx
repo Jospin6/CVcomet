@@ -20,6 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html>
+      
       <body className="overflow-x-hidden">
         <ReduxProvider>
           <LanguageProviderWrapper>

@@ -12,6 +12,7 @@ import { addConversation, selectConversationId, setTypeGeneration } from "@/redu
 import { redirect } from "next/navigation";
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Wand2 } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
     const { t } = useTranslation();
@@ -73,45 +74,6 @@ export default function Home() {
                     </motion.p>
                 </div>
 
-                {/* Deuxième partie : input + boutons */}
-                {/* <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="w-full max-w-3xl px-4 pb-4 pt-2"
-                >
-                    <motion.div
-                        animate={{ height: "auto" }}
-                        whileFocus={{ scale: 1.01 }}
-                        transition={{ duration: 0.2 }}
-                        className="relative rounded-2xl lg:rounded-e-3xl p-2.5 flex gap-2 bg-background"
-                    >
-                        <div
-                            contentEditable
-                            role="textbox"
-                            onInput={(e) => {
-                                setInput(e.currentTarget.textContent || "");
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSend();
-                                }
-                            }}
-                            data-placeholder="Enter the Job description..."
-                            className="flex-1 text-gray-600 bg-gray-300 min-h-[100px] max-h-[350px] overflow-y-auto px-3 py-2 focus:outline-none 
-            text-sm rounded-md empty:before:text-gray-600 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
-                            ref={inputRef}
-                        />
-                        <div className="flex flex-col gap-2">
-                            <Button className="cursor-pointer" onClick={handleSend}>
-                                Cv
-                            </Button>
-                            <Button className="cursor-pointer" onClick={handleCoverLetter}>
-                                Cover letter
-                            </Button>
-                        </div>
-                    </motion.div>
-                </motion.div> */}
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -142,14 +104,35 @@ export default function Home() {
                                 ref={inputRef}
                             />
                             <div className="flex gap-2 justify-end">
-                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
-                                    <Sparkles className="w-4 h-4" />
-                                    <span>Cv</span>
-                                </Button>
-                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
-                                    <Wand2 className="w-4 h-4" />
-                                    <span>Cover letter</span>
-                                </Button>
+                                {user ? (
+                                    <>
+                                        <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
+                                            <Sparkles className="w-4 h-4" />
+                                            <span>Cv</span>
+                                        </Button>
+                                        <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
+                                            <Wand2 className="w-4 h-4" />
+                                            <span>Cover letter</span>
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Link href={"/login"}>
+                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                                <Sparkles className="w-4 h-4" />
+                                                <span>Cv</span>
+                                            </Button>
+                                        </Link>
+                                        <Link href={"/login"}>
+                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                                <Wand2 className="w-4 h-4" />
+                                                <span>Cover letter</span>
+                                            </Button>
+                                        </Link>
+
+                                    </>
+                                )}
+
                             </div>
                         </motion.div>
                     </div>
