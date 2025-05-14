@@ -7,14 +7,10 @@ import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
 import CoverThree from "./coverThree";
 import { PDFDownloadLink } from "@react-pdf/renderer";
+import { CurrentFormatDate } from "@/components/ui/currentFormatDate";
 
 export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
     const { t } = useTranslation();
-    const date = new Date(Date.now());
-
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
 
     return (
         <div className=" mb-4">
@@ -41,14 +37,14 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
                 }}
             >
                 {/* Header Section */}
-                <header className="flex flex-col space-y-1">
+                <header className="flex flex-col space-y-1 pb-4 border-b border-black">
                     <div className="mb-3">
                         <p className="text-xl font-semibold">{user?.name}</p>
                         <p className="text-[16px] font-semibold">{coverLetter.sendertitle?.toUpperCase()}</p>
                     </div>
-                    <p className="text-gray-700">{user?.phone}</p>
-                    <p className="text-gray-700">{user?.email}</p>
-                    <p className="text-gray-700">{user?.address}</p>
+                    <p className="text-gray-900">{user?.phone}</p>
+                    <p className="text-gray-900">{user?.email}</p>
+                    <p className="text-gray-900">{user?.address}</p>
                 </header>
 
 
@@ -57,11 +53,11 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
                 <section className="space-y-1 flex mt-4">
                     <div className="w-2/4">
                         {coverLetter.companyName && <p className="font-semibold text-gray-800">{coverLetter.companyName}</p>}
-                        {coverLetter.companyAddress && <p className="text-gray-700">{coverLetter.companyAddress}</p>}
+                        {coverLetter.companyAddress && <p className="text-gray-900">{coverLetter.companyAddress}</p>}
                     </div>
                     <div className="w-2/4 flex justify-end">
                         {/* Date Section */}
-                        <p className="text-gray-600">{`${day}/${month}/${year}`}</p>
+                        <p className="text-gray-600"><CurrentFormatDate/></p>
                     </div>
                 </section>
 
@@ -74,15 +70,15 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
                     {/* Body Section */}
                     <section className="space-y-4">
                         {coverLetter.introduction && (
-                            <p className="text-gray-700">{coverLetter.introduction}</p>
+                            <p className="text-gray-900">{coverLetter.introduction}</p>
                         )}
 
                         {coverLetter.body && (
-                            <p className="text-gray-700">{coverLetter.body}</p>
+                            <p className="text-gray-900">{coverLetter.body}</p>
                         )}
 
                         {coverLetter.conclusion && (
-                            <p className="text-gray-700">{coverLetter.conclusion}</p>
+                            <p className="text-gray-900">{coverLetter.conclusion}</p>
                         )}
                     </section>
 

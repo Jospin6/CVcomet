@@ -2,6 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { CoverLetterProps } from '@/helpers/schema';
 import { User } from '@/redux/user/userSlice';
+import { CurrentDate } from '@/components/ui/currentDate';
 
 const styles = StyleSheet.create({
     page: {
@@ -26,8 +27,8 @@ const styles = StyleSheet.create({
     contactInfo: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        borderBottomWidth: 2,
-        borderTopWidth: 2,
+        borderBottomWidth: 1,
+        borderTopWidth: 1,
         borderColor: '#000',
         paddingVertical: 8,
     },
@@ -57,10 +58,7 @@ const styles = StyleSheet.create({
 });
 
 const CoverFive = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
-    const date = new Date(Date.now());
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
+    
     return <Document>
         <Page size="A4" style={styles.page}>
             {/* Header Section */}
@@ -80,19 +78,19 @@ const CoverFive = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?
             <View style={styles.recipientSection}>
                 <View>
                     {coverLetter.companyName && (
-                        <Text style={styles.bodyText}>{coverLetter.companyName}</Text>
+                        <Text style={{...styles.bodyText, fontWeight: 'bold'}}>{coverLetter.companyName}</Text>
                     )}
                     {coverLetter.companyAddress && (
                         <Text style={styles.bodyText}>{coverLetter.companyAddress}</Text>
                     )}
-                    <Text style={styles.date}>{`${day}/${month}/${year}`}</Text>
+                    <Text style={styles.date}><CurrentDate/></Text>
                 </View>
             </View>
 
             {/* Salutation Section */}
-            {coverLetter.recipientName && (
+            {/* {coverLetter.recipientName && (
                 <Text style={styles.recipientName}>{coverLetter.recipientName},</Text>
-            )}
+            )} */}
 
             {/* Body Section */}
             <View style={styles.bodySection}>

@@ -7,14 +7,10 @@ import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
 import CoverFour from "./coverFour";
 import { PDFDownloadLink } from "@react-pdf/renderer";
+import { CurrentFormatDate } from "@/components/ui/currentFormatDate";
 
 export const CoverLetterFour = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
     const { t } = useTranslation();
-    const date = new Date(Date.now());
-
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
@@ -52,7 +48,7 @@ export const CoverLetterFour = ({ coverLetter, user }: { coverLetter: CoverLette
                             {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
                         </div>
                         <div className="col-span-2 flex justify-end">
-                            <p className="mt-8">{`${day}/${month}/${year}`}</p>
+                            <p className="mt-8"><CurrentFormatDate/></p>
                         </div>
                     </div>
 

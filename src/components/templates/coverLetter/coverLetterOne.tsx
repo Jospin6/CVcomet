@@ -7,14 +7,12 @@ import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
 import CoverOne from "./coverOne";
 import { PDFDownloadLink } from "@react-pdf/renderer";
+import { formatDateToFullYear } from "@/lib/utils";
+import { CurrentFormatDate } from "@/components/ui/currentFormatDate";
 
 export const CoverLetterOne = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
     const { t } = useTranslation();
-    const date = new Date(Date.now());
 
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
@@ -56,7 +54,7 @@ export const CoverLetterOne = ({ coverLetter, user }: { coverLetter: CoverLetter
                     </div>
 
                     <div className="text-sm">
-                        <p className="mt-8">{`${day}/${month}/${year}`}</p>
+                        <p className="mt-8"><CurrentFormatDate/></p>
 
                         {coverLetter.recipientName && (
                             <p className="mt-8">{coverLetter.recipientName},</p>

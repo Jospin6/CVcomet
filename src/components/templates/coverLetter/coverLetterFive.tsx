@@ -7,6 +7,7 @@ import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
 import CoverFive from "./coverFive";
 import { PDFDownloadLink } from "@react-pdf/renderer";
+import { CurrentFormatDate } from "@/components/ui/currentFormatDate";
 
 export const CoverLetterFive = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
     const { t } = useTranslation();
@@ -58,7 +59,7 @@ export const CoverLetterFive = ({ coverLetter, user }: { coverLetter: CoverLette
                         <div>
                             {coverLetter.companyName && <p className="text-lg font-bold">{coverLetter.companyName}</p>}
                             {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
-                            <p className="mt-8">{`${day}/${month}/${year}`}</p>
+                            <p className="mt-8"><CurrentFormatDate/></p>
                         </div>
                     </div>
 

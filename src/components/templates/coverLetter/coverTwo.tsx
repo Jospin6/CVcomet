@@ -63,7 +63,7 @@ const CoverTwo = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?:
 
             <View style={styles.bodySection}>
                 {/* Recipient Information */}
-                {coverLetter.recipientName && (
+                {coverLetter.companyName && (
                     <View style={styles.recipientSection}>
                         <Text style={styles.recipientName}>{coverLetter.companyName}</Text>
                         <Text>{coverLetter.companyAddress}</Text>
@@ -71,7 +71,7 @@ const CoverTwo = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?:
                 )}
 
                 {/* Salutation */}
-                {coverLetter.recipientName && <Text>{`${coverLetter.recipientName},`}</Text>}
+                {/* {coverLetter.recipientName && <Text>{`${coverLetter.recipientName},`}</Text>} */}
 
                 {/* Cover Letter Body */}
                 {coverLetter.introduction && <Text>{coverLetter.introduction}</Text>}
