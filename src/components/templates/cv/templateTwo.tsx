@@ -95,9 +95,11 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         <section className="">
                             <h2 className="text-lg font-semibold mb-2">{t("contact")}</h2>
                             <div className="text-sm space-y-1">
+                                {user?.phone && `${user.phone} | `}
+                                {user?.email && (<p>
+                                    <a href={`mailto:${user.email}`}> {user?.email}</a>
+                                </p>)}
                                 {user?.email && <p className="mt-2">{user.email}</p>}
-                                {user?.linkedin && <p>LinkedIn</p>}
-                                {user?.github && <p>Portfolio</p>}
                             </div>
                         </section>
 

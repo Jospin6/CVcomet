@@ -1,6 +1,6 @@
 import { CvProps } from '@/helpers/schema';
 import { User } from '@/redux/user/userSlice';
-import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Link } from '@react-pdf/renderer';
 import { useTranslation } from 'react-i18next'
 import { formatDateToMonthYear } from "@/lib/utils"
 
@@ -52,11 +52,22 @@ const styles = StyleSheet.create({
     smallText: {
         fontSize: 9,
     },
+    link: {
+        textDecoration: 'none',
+        color: 'black',
+    },
+    displayFlex: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingBottom: '2',
+        width: '100%',
+    }
 });
 
 // Composant PDF
 const DocFour = ({ user, cv }: { user: User, cv: CvProps }) => {
     const { t } = useTranslation();
+    const formatDate = (date: string | number | Date) => date ? new Date(date).toLocaleDateString("en-GB", { month: 'short', year: 'numeric' }) : '';
     return <Document>
         <Page size="A4" style={styles.page}>
             {/* Header */}
@@ -64,9 +75,8 @@ const DocFour = ({ user, cv }: { user: User, cv: CvProps }) => {
                 <Text style={styles.name}>{user?.name ?? "No name"}</Text>
                 <Text style={styles.title}>{cv.title}</Text>
                 <Text style={styles.contact}>
-                    {user?.linkedin && `LinkedIn | `}
-                    {user?.email && `${user.email}`}
-                    {user?.github && ` | GitHub`}
+                    {user?.phone && `${user.phone} | `}
+                    {user?.email && <Link style={styles.link} src={`mailto:${user.email}`}>{user.email}</Link>}
                 </Text>
             </View>
 
@@ -84,12 +94,13 @@ const DocFour = ({ user, cv }: { user: User, cv: CvProps }) => {
                     <Text style={styles.heading}>{t("experience")}</Text>
                     {cv.experiences.map((exp, index) => (
                         <View key={index} style={{ marginTop: index > 0 ? 6 : 0 }}>
-                            <Text style={styles.subHeading}>
-                                {exp.title}, {exp.company}
-                            </Text>
-                            <Text style={styles.smallText}>
-                                {exp.start} – {exp.end ?? "Present"} | {exp.location}
-                            </Text>
+                            <View
+                                style={styles.displayFlex}
+                            >
+                                <Text style={{ fontWeight: "bold" }}>{exp.title}, {exp.company}</Text>
+                                <Text>{formatDate(exp.start)} – {exp.end ? formatDate(exp.end) : 'Present'} | {exp.location}</Text>
+                            </View>
+
                             {exp.description && exp.description.map((desc, i) => (
                                 <Text key={i} style={styles.listItem}>• {desc}</Text>
                             ))}
@@ -118,9 +129,9 @@ const DocFour = ({ user, cv }: { user: User, cv: CvProps }) => {
                     <Text style={styles.heading}>{t("skills")}</Text>
                     {cv.skills.map((skill, index) => (
                         <View key={index}>
-                            {skill.hardskills && <Text>- {skill.hardskills}</Text>}
-                            {skill.softskills && <Text>- {skill.softskills}</Text>}
-                            {skill.tools && <Text>- {skill.tools}</Text>}
+                            {skill.hardskills && <Text style={styles.listItem}>• {skill.hardskills}</Text>}
+                            {skill.softskills && <Text style={styles.listItem}>• {skill.softskills}</Text>}
+                            {skill.tools && <Text style={styles.listItem}>• {skill.tools}</Text>}
                         </View>
                     ))}
                 </View>
@@ -132,10 +143,15 @@ const DocFour = ({ user, cv }: { user: User, cv: CvProps }) => {
                     <Text style={styles.heading}>{t("education")}</Text>
                     {cv.educations.map((edu, index) => (
                         <View key={index} style={{ marginTop: index > 0 ? 6 : 0 }}>
-                            <Text style={styles.subHeading}>{edu.degree}</Text>
-                            <Text style={styles.smallText}>
-                                {formatDateToMonthYear(edu.start)} - {edu.end ? formatDateToMonthYear(edu.end) : "Present"}
-                            </Text>
+                            <View
+                                style={styles.displayFlex}
+                            >
+                                <Text style={{ fontWeight: 'bold' }}>{edu.degree}</Text>
+                                <Text style={styles.smallText}>
+                                    {formatDateToMonthYear(edu.start)} - {edu.end ? formatDateToMonthYear(edu.end) : "Present"}
+                                </Text>
+                            </View>
+
                             <Text style={styles.smallText}>{edu.school}</Text>
                             {edu.description && edu.description.map((desc, i) => (
                                 <Text key={i} style={styles.listItem}>• {desc}</Text>

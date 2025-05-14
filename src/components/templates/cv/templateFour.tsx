@@ -38,9 +38,8 @@ export const CvFour = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         {cv.title}
                     </p>
                     <p className="text-[12px]">
-                        {user?.linkedin && `LinkedIn | `}
+                        {user?.phone && `${user.phone} | `}
                         {user?.email && (<a href={`mailto:${user.email}`}> {user?.email}</a>)}
-                        {user?.github && ` | GitHub`}
                     </p>
                 </header>
 

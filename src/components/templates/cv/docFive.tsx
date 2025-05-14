@@ -1,9 +1,10 @@
 // components/CvDocument.tsx
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Link } from '@react-pdf/renderer';
 import { useTranslation } from 'react-i18next'
 import { User } from '@/redux/user/userSlice';
 import { CvProps } from '@/helpers/schema';
+import { formatDateToMonthYear } from '@/lib/utils';
 
 const styles = StyleSheet.create({
     page: {
@@ -13,23 +14,44 @@ const styles = StyleSheet.create({
     },
     section: { marginBottom: 12 },
     title: { fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
-    subtitle: { fontSize: 14, marginBottom: 4 },
+    subtitle: { fontSize: 14, marginBottom: 4, fontWeight: "bold", borderBottom: '1 solid black', borderTop: '1 solid black', paddingTop: 3, paddingBottom: 3 },
     text: { marginBottom: 2 },
     row: { flexDirection: 'row', justifyContent: 'space-between' },
+    link: {
+        textDecoration: 'none',
+        color: 'black',
+    },
+    listItem: {
+        marginLeft: 8,
+        marginBottom: 2,
+    },
+    displayFlex: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingBottom: '2',
+        width: '100%',
+    },
+    subHeading: {
+        fontWeight: 'bold',
+        fontSize: 10,
+    },
+    smallText: {
+        fontSize: 9,
+    },
 });
 
 export const DocFive = ({ user, cv }: { user: User, cv: CvProps }) => {
     const { t } = useTranslation();
+    const formatDate = (date: string | number | Date) => date ? new Date(date).toLocaleDateString("en-GB", { month: 'short', year: 'numeric' }) : '';
     return <Document>
         <Page size="A4" style={styles.page}>
 
             <View style={styles.section}>
-                <Text style={styles.title}>{user?.name ?? 'No name'}</Text>
-                <Text style={styles.text}>{cv.title}</Text>
+                <Text style={styles.title}>{user?.name?.toUpperCase() ?? 'No name'}</Text>
+                <Text style={styles.text}>{cv.title?.toUpperCase()}</Text>
                 <Text style={styles.text}>
-                    {user?.linkedin && `LinkedIn | `}
-                    {user?.email && user.email}
-                    {user?.github && ` | GitHub`}
+                    {user?.phone && `${user.phone} | `}
+                    {user?.email && <Link style={styles.link} src={`mailto:${user.email}`}>{user.email}</Link>}
                 </Text>
             </View>
 
@@ -45,9 +67,9 @@ export const DocFive = ({ user, cv }: { user: User, cv: CvProps }) => {
                     <Text style={styles.subtitle}>{t('skills')}</Text>
                     {cv.skills.map((skill, i) => (
                         <View key={i}>
-                            {skill.hardskills && <Text>- {skill.hardskills}</Text>}
-                            {skill.softskills && <Text>- {skill.softskills}</Text>}
-                            {skill.tools && <Text>- {skill.tools}</Text>}
+                            {skill.hardskills && <Text style={styles.listItem}>• {skill.hardskills}</Text>}
+                            {skill.softskills && <Text style={styles.listItem}>• {skill.softskills}</Text>}
+                            {skill.tools && <Text style={styles.listItem}>• {skill.tools}</Text>}
                         </View>
                     ))}
                 </View>
@@ -57,13 +79,16 @@ export const DocFive = ({ user, cv }: { user: User, cv: CvProps }) => {
                 <View style={styles.section}>
                     <Text style={styles.subtitle}>{t('experience')}</Text>
                     {cv.experiences.map((exp, i) => (
-                        <View key={i}>
-                            <View style={styles.row}>
-                                <Text>{exp.title}, {exp.company}</Text>
-                                <Text>{exp.start} – {exp.end ?? 'Present'} | {exp.location}</Text>
+                        <View key={i} style={{ marginTop: i > 0 ? 6 : 0 }}>
+                            <View
+                                style={styles.displayFlex}
+                            >
+                                <Text style={{ fontWeight: "bold" }}>{exp.title}, {exp.company}</Text>
+                                <Text>{formatDate(exp.start)} – {exp.end ? formatDate(exp.end) : 'Present'} | {exp.location}</Text>
                             </View>
-                            {exp.description && exp.description.map((desc: string, j: number) => (
-                                <Text key={j}>• {desc}</Text>
+
+                            {exp.description && exp.description.map((desc, i) => (
+                                <Text key={i} style={styles.listItem}>• {desc}</Text>
                             ))}
                         </View>
                     ))}
@@ -74,10 +99,10 @@ export const DocFive = ({ user, cv }: { user: User, cv: CvProps }) => {
                 <View style={styles.section}>
                     <Text style={styles.subtitle}>{t('projects')}</Text>
                     {cv.projects.map((project, i) => (
-                        <View key={i}>
-                            <Text>{project.title}</Text>
-                            <Text>{project.description}</Text>
-                            <Text>Tools: {project.technologies}</Text>
+                        <View key={i} style={{ marginTop: i > 0 ? 6 : 0 }}>
+                            <Text style={{ fontWeight: 'bold' }}>{project.title}</Text>
+                            <Text style={{fontSize: 11}}>{project.description}</Text>
+                            <Text style={{fontSize: 11}}>Tech: {project.technologies}</Text>
                         </View>
                     ))}
                 </View>
@@ -87,14 +112,19 @@ export const DocFive = ({ user, cv }: { user: User, cv: CvProps }) => {
                 <View style={styles.section}>
                     <Text style={styles.subtitle}>{t('education')}</Text>
                     {cv.educations.map((edu, i) => (
-                        <View key={i}>
-                            <View style={styles.row}>
-                                <Text>{edu.degree}</Text>
-                                <Text>{edu.start} - {edu.end ?? 'Present'}</Text>
+                        <View key={i} style={{ marginTop: i > 0 ? 6 : 0 }}>
+                            <View
+                                style={styles.displayFlex}
+                            >
+                                <Text style={{ fontWeight: 'bold' }}>{edu.degree}</Text>
+                                <Text style={{fontSize: 11}}>
+                                    {formatDateToMonthYear(edu.start)} - {edu.end ? formatDateToMonthYear(edu.end) : "Present"}
+                                </Text>
                             </View>
-                            <Text>{edu.school}</Text>
-                            {edu.description?.map((desc: string, j: number) => (
-                                <Text key={j}>• {desc}</Text>
+
+                            <Text style={{fontSize: 11}}>{edu.school}</Text>
+                            {edu.description && edu.description.map((desc, i) => (
+                                <Text key={i} style={styles.listItem}>• {desc}</Text>
                             ))}
                         </View>
                     ))}

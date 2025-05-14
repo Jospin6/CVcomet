@@ -1,7 +1,8 @@
 import React from "react";
-import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
+import { Page, Text, View, Document, StyleSheet, Link } from "@react-pdf/renderer";
 import { User } from "@/redux/user/userSlice";
 import { CvProps } from "@/helpers/schema";
+import { useTranslation } from 'react-i18next'
 
 // Exemple de style inspiré de ton Tailwind
 const styles = StyleSheet.create({
@@ -16,7 +17,7 @@ const styles = StyleSheet.create({
   },
   sidebar: {
     width: "34%",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#ffffff",
     paddingLeft: 10,
   },
   section: {
@@ -40,10 +41,15 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginLeft: 10,
   },
+  link: {
+    textDecoration: 'none',
+    color: 'black',
+  }
 });
 
-const DocTwo = ({ user, cv }: {user: User, cv: CvProps}) => {
-    return  <Document>
+const DocTwo = ({ user, cv }: { user: User, cv: CvProps }) => {
+  const { t } = useTranslation()
+  return <Document>
     <Page size="A4" style={styles.page}>
       {/* Main content */}
       <View style={styles.main}>
@@ -60,11 +66,11 @@ const DocTwo = ({ user, cv }: {user: User, cv: CvProps}) => {
 
         {cv.experiences && cv.experiences?.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.subtitle}>Expérience</Text>
+            <Text style={styles.subtitle}>{t("experience")}</Text>
             {cv.experiences.map((exp, i) => (
               <View key={i} style={{ marginBottom: 5 }}>
-                <Text style={styles.text}>{exp.title} – {exp.company}</Text>
-                <Text style={styles.text}>{exp.start} – {exp.end ?? "Present"} | {exp.location}</Text>
+                <Text style={styles.text}>{exp.title} - {exp.company}</Text>
+                <Text style={styles.text}>{exp.start} - {exp.end ?? "Present"} | {exp.location}</Text>
                 {exp.description?.map((desc, j) => (
                   <Text key={j} style={styles.listItem}>• {desc}</Text>
                 ))}
@@ -75,7 +81,7 @@ const DocTwo = ({ user, cv }: {user: User, cv: CvProps}) => {
 
         {cv.educations && cv.educations?.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.subtitle}>Éducation</Text>
+            <Text style={styles.subtitle}>{t("education")}</Text>
             {cv.educations.map((edu, i) => (
               <View key={i}>
                 <Text style={styles.text}>{edu.degree} - {edu.school}</Text>
@@ -90,7 +96,7 @@ const DocTwo = ({ user, cv }: {user: User, cv: CvProps}) => {
 
         {cv.projects && cv.projects?.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.subtitle}>Projets</Text>
+            <Text style={styles.subtitle}>{t("projects")}</Text>
             {cv.projects.map((project, i) => (
               <View key={i}>
                 <Text style={styles.text}>{project.title}</Text>
@@ -105,35 +111,21 @@ const DocTwo = ({ user, cv }: {user: User, cv: CvProps}) => {
       {/* Sidebar */}
       <View style={styles.sidebar}>
         <View style={styles.section}>
-          <Text style={styles.subtitle}>Contact</Text>
-          {user?.email && <Text style={styles.text}>{user.email}</Text>}
-          {user?.linkedin && <Text style={styles.text}>LinkedIn</Text>}
-          {user?.github && <Text style={styles.text}>Portfolio</Text>}
+          <Text style={styles.subtitle}>{t("contact")}</Text>
+          {user?.phone && <Text style={styles.text}>{user.phone}</Text>}
+          {user?.email && <Text style={styles.text}>
+            <Link style={styles.link} src={`mailto:${user.email}`}>{user.email}</Link>
+          </Text>}
         </View>
 
         {cv.skills && cv.skills?.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.subtitle}>Compétences</Text>
+            <Text style={styles.subtitle}>{t("skills")}</Text>
             {cv.skills.map((skill, i) => (
               <View key={i}>
-                {skill.hardskills && (
-                  <>
-                    <Text style={styles.text}>Techniques :</Text>
-                    <Text style={styles.listItem}>{skill.hardskills}</Text>
-                  </>
-                )}
-                {skill.softskills && (
-                  <>
-                    <Text style={styles.text}>Soft :</Text>
-                    <Text style={styles.listItem}>{skill.softskills}</Text>
-                  </>
-                )}
-                {skill.tools && (
-                  <>
-                    <Text style={styles.text}>Outils :</Text>
-                    <Text style={styles.listItem}>{skill.tools}</Text>
-                  </>
-                )}
+                {skill.hardskills && <Text style={{ fontWeight: '200', fontSize: 10 }}><Text style={{ fontWeight: 'bold', fontSize: 10 }}>Technical:</Text> {skill.hardskills}</Text>}
+                {skill.softskills && <Text style={{ fontWeight: '200', fontSize: 10 }}><Text style={{ fontWeight: 'bold', fontSize: 10 }}>Soft:</Text> {skill.softskills}</Text>}
+                {skill.tools && <Text style={{ fontWeight: '200', fontSize: 10 }}><Text style={{ fontWeight: 'bold', fontSize: 10 }}>Tools:</Text> {skill.tools}</Text>}
               </View>
             ))}
           </View>
@@ -141,7 +133,7 @@ const DocTwo = ({ user, cv }: {user: User, cv: CvProps}) => {
 
         {cv.languages && cv.languages.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.subtitle}>Langues</Text>
+            <Text style={styles.subtitle}>{t("languages")}</Text>
             {cv.languages.map((lang, i) => (
               <Text key={i} style={styles.text}>{lang.language} - {lang.level}</Text>
             ))}
@@ -150,7 +142,7 @@ const DocTwo = ({ user, cv }: {user: User, cv: CvProps}) => {
 
         {(cv.certifications ?? []).length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.subtitle}>Certifications</Text>
+            <Text style={styles.subtitle}>{t("certifications")}</Text>
             {(cv.certifications ?? []).map((cert, i) => (
               <View key={i}>
                 <Text style={styles.text}>{cert.title} – {cert.issuer}</Text>

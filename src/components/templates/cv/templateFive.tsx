@@ -38,9 +38,8 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         {cv.title}
                     </p>
                     <p className="text-[12px]">
-                        {user?.linkedin && `LinkedIn | `}
+                        {user?.phone && `${user.phone} | `}
                         {user?.email && (<a href={`mailto:${user.email}`}> {user?.email}</a>)}
-                        {user?.github && ` | GitHub`}
                     </p>
                 </header>
 
@@ -76,7 +75,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                                 <div className="flex justify-between font-semibold">
                                     <h3 className="text-sm">{exp.title}, {exp.company}</h3>
                                     <p className="text-xs">
-                                        {exp.start} – {exp.end ?? 'Present'} | {exp.location}
+                                        {exp.start} - {exp.end ?? 'Present'} | {exp.location}
                                     </p>
                                 </div>
                                 <ul className="list-disc list-inside text-[12px]">
@@ -101,8 +100,6 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         ))}
                     </section>
                 )}
-
-
 
                 {cv.educations && (
                     <section className="mb-4">
@@ -151,7 +148,6 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         </ul>
                     </section>
                 )}
-
             </div>
         </>
     )

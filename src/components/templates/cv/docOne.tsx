@@ -49,6 +49,16 @@ const styles = StyleSheet.create({
     bulletItem: {
         marginBottom: 2,
     },
+    link: {
+        textDecoration: 'none',
+        color: 'black',
+    },
+    displayFlex: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingBottom: '2',
+        width: '100%',
+    }
 });
 
 const DocOne = ({ user, cv }: { user: User, cv: CvProps }) => {
@@ -61,9 +71,8 @@ const DocOne = ({ user, cv }: { user: User, cv: CvProps }) => {
                 <Text style={styles.title}>{user?.name ?? "No name"}</Text>
                 <Text style={styles.subtitle}>{cv.title}</Text>
                 <Text style={styles.linkRow}>
-                    {user?.linkedin && "LinkedIn | "}
-                    {user?.email && <Link src={`mailto:${user.email}`}>{user.email}</Link>}
-                    {user?.github && " | GitHub"}
+                    {user?.phone && `${user.phone} | `}
+                    {user?.email && <Link style={styles.link} src={`mailto:${user.email}`}>{user.email}</Link>}
                 </Text>
             </View>
 
@@ -95,8 +104,12 @@ const DocOne = ({ user, cv }: { user: User, cv: CvProps }) => {
                     <Text style={styles.sectionTitle}>{t("experience")}</Text>
                     {cv.experiences.map((exp, index) => (
                         <View key={index}>
-                            <Text style={{ fontWeight: "bold" }}>{exp.title}, {exp.company}</Text>
-                            <Text>{exp.start} – {exp.end ?? 'Present'} | {exp.location}</Text>
+                            <View
+                                style={styles.displayFlex}
+                            >
+                                <Text style={{ fontWeight: "bold" }}>{exp.title}, {exp.company}</Text>
+                                <Text>{formatDate(exp.start)} – {exp.end ? formatDate(exp.end) : 'Present'} | {exp.location}</Text>
+                            </View>
                             <View style={styles.bulletList}>
                                 {exp.description?.map((desc, i) => (
                                     <Text key={i} style={styles.bulletItem}>• {desc}</Text>
@@ -113,8 +126,12 @@ const DocOne = ({ user, cv }: { user: User, cv: CvProps }) => {
                     <Text style={styles.sectionTitle}>{t("education")}</Text>
                     {cv.educations.map((edu, index) => (
                         <View key={index}>
-                            <Text style={{ fontWeight: "bold" }}>{edu.degree}</Text>
-                            <Text>{formatDate(edu.start)} - {edu.end ? formatDate(edu.end) : "Present"}</Text>
+                            <View
+                                style={styles.displayFlex}
+                            >
+                                <Text style={{ fontWeight: 'bold' }}>{edu.degree}</Text>
+                                <Text>{formatDate(edu.start)} - {edu.end ? formatDate(edu.end) : 'Present'}</Text>
+                            </View>
                             <Text>{edu.school}</Text>
                             <View style={styles.bulletList}>
                                 {edu.description?.map((desc, i) => (
@@ -142,7 +159,7 @@ const DocOne = ({ user, cv }: { user: User, cv: CvProps }) => {
 
             {/* Additional */}
             {((cv.languages ?? []).length || (cv.certifications ?? []).length) > 0 && (
-                <View style={styles.section}>
+                <View>
                     <Text style={styles.sectionTitle}>{t("additional")}</Text>
                     {(cv.languages ?? []).length > 0 && (
                         <Text>

@@ -1,8 +1,11 @@
 // components/MyCvPdf.jsx
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Link } from '@react-pdf/renderer';
 import { User } from '@/redux/user/userSlice';
 import { CvProps } from '@/helpers/schema';
+import { useTranslation } from 'react-i18next'
+
+const formatDate = (date: string | number | Date) => date ? new Date(date).toLocaleDateString("en-GB", { month: 'short', year: 'numeric' }) : '';
 
 const styles = StyleSheet.create({
   page: {
@@ -25,28 +28,42 @@ const styles = StyleSheet.create({
   listItem: {
     marginLeft: 10,
     marginBottom: 2,
+  },
+  link: {
+    textDecoration: 'none',
+    color: 'black',
+  },
+  displayFlex: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: '2',
+    width: '100%',
   }
 });
 
-const DocThree = ({ user, cv }: {user: User, cv: CvProps}) => (
-  <Document>
+const DocThree = ({ user, cv }: { user: User, cv: CvProps }) => {
+  const { t } = useTranslation();
+  return <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
-        <Text style={{ fontSize: 16 }}>{user?.name ?? "No name"}</Text>
+        <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{user?.name?.toUpperCase() ?? "No name"}</Text>
         <Text>{cv.title}</Text>
-        <Text style={{borderBottom: '1 solid black', borderTop: '1 solid black', paddingVertical: '1'}}>{user?.email} {user?.linkedin && `| LinkedIn`} {user?.github && `| GitHub`}</Text>
+        <Text style={{ borderBottom: '1 solid black', borderTop: '1 solid black', paddingBottom: 5, paddingTop: 5, marginTop: 5, marginBottom: 5 }}>
+          {user?.phone && `${user.phone} | `}
+          {user?.email && <Link style={styles.link} src={`mailto:${user.email}`}>{user.email}</Link>}
+        </Text>
       </View>
 
       {cv.summary && (
         <View style={styles.section}>
-          <Text style={styles.bold}>Summary</Text>
+          <Text style={styles.bold}>{t("summary")}</Text>
           <Text>{cv.summary}</Text>
         </View>
       )}
 
       {cv.skills && (
         <View style={styles.section}>
-          <Text style={styles.bold}>Skills</Text>
+          <Text style={styles.bold}>{t("skills")}</Text>
           {cv.skills.map((skill, index) => (
             <View key={index}>
               {skill.hardskills && <Text>Technical: {skill.hardskills}</Text>}
@@ -59,10 +76,15 @@ const DocThree = ({ user, cv }: {user: User, cv: CvProps}) => (
 
       {cv.experiences && (
         <View style={styles.section}>
-          <Text style={styles.bold}>Experience</Text>
+          <Text style={styles.bold}>{t("experience")}</Text>
           {cv.experiences.map((exp, index) => (
             <View key={index}>
-              <Text>{exp.title}, {exp.company} | {exp.start} – {exp.end ?? 'Present'} | {exp.location}</Text>
+              <View
+                style={styles.displayFlex}
+              >
+                <Text style={{ fontWeight: "500" }}>{exp.title}, {exp.company}</Text>
+                <Text>{formatDate(exp.start)} – {exp.end ? formatDate(exp.end) : 'Present'} | {exp.location}</Text>
+              </View>
               {exp.description?.map((desc, i) => (
                 <Text key={i} style={styles.listItem}>• {desc}</Text>
               ))}
@@ -73,11 +95,16 @@ const DocThree = ({ user, cv }: {user: User, cv: CvProps}) => (
 
       {cv.educations && (
         <View style={styles.section}>
-          <Text style={styles.bold}>Education</Text>
+          <Text style={styles.bold}>{t("education")}</Text>
           {cv.educations.map((edu, index) => (
             <View key={index}>
-              <Text>{edu.degree} | {edu.school}</Text>
-              <Text>{edu.start} – {edu.end ?? 'Present'}</Text>
+              <View
+                style={styles.displayFlex}
+              >
+                <Text style={{ fontWeight: '500' }}>{edu.degree}</Text>
+                <Text>{formatDate(edu.start)} - {edu.end ? formatDate(edu.end) : 'Present'}</Text>
+              </View>
+              <Text>{edu.school}</Text>
               {edu.description?.map((desc, i) => (
                 <Text key={i} style={styles.listItem}>• {desc}</Text>
               ))}
@@ -88,7 +115,7 @@ const DocThree = ({ user, cv }: {user: User, cv: CvProps}) => (
 
       {cv.projects && (
         <View style={styles.section}>
-          <Text style={styles.bold}>Projects</Text>
+          <Text style={styles.bold}>{t("projects")}</Text>
           {cv.projects.map((proj, index) => (
             <View key={index}>
               <Text>{proj.title}</Text>
@@ -100,18 +127,18 @@ const DocThree = ({ user, cv }: {user: User, cv: CvProps}) => (
       )}
 
       {((cv.languages || []).length > 0 || (cv.certifications || []).length > 0) && (
-        <View style={styles.section}>
-          <Text style={styles.bold}>Additional</Text>
+        <View>
+          <Text style={styles.bold}>{t("additional")}</Text>
           {cv.languages && (
             <Text>Languages: {cv.languages.map(lang => lang.language).join(", ")}</Text>
           )}
-          {cv.certifications && (
+          {(cv.certifications && cv.certifications.length > 0) && (
             <Text>Certifications: {cv.certifications.map(cert => `${cert.title}, ${cert.issuer}`).join("; ")}</Text>
           )}
         </View>
       )}
     </Page>
   </Document>
-);
+}
 
 export default DocThree;
