@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { transformStringToArray } from "@/lib/utils";
 import { UserProfilItem } from "../ui/userProfilItem";
 import { useTranslation } from 'react-i18next';
+import { toast } from "sonner";
 
 const userSchema = z.object({
   email: z.string().email(),
@@ -64,18 +65,40 @@ export default function EditUserForm({ user }: { user?: User }) {
     }
   }, [user, reset]);
 
-  const onSubmit = (data: UserFormValues) => {
-    console.log("data: ", data)
-    dispatch(updateUser({ id: user?.id ?? "", data }))
-    reset()
+  const onSubmit = async (data: UserFormValues) => {
+    if (!user?.id) {
+      console.error("User ID is missing");
+      toast.error("User ID is missing");
+      return;
+    }
+
+    try {
+      const resultAction = await dispatch(updateUser({ id: user.id, data }));
+
+      if (updateUser.fulfilled.match(resultAction)) {
+        // Succès
+        console.log("User updated successfully");
+        toast.success("User updated successfully");
+        reset();
+      } else {
+        // Échec logique (ex: erreur 400 ou 500)
+        toast.error("Failed to update user");
+        console.error("Failed to update user:", resultAction.payload || resultAction.error);
+      }
+    } catch (error) {
+      // Erreur inattendue (ex: réseau)
+      toast.error("Failed to update user");
+      console.error("Unexpected error:", error);
+    }
   };
-  
+
+
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="shadow border-[1px] border-gray-500 p-4 rounded-xl w-full">
-      <UserProfilItem 
-      subTitle={`${t("emailDescription")}`}
-      title={`✉️ ${t("email")}`} >
+      <UserProfilItem
+        subTitle={`${t("emailDescription")}`}
+        title={`✉️ ${t("email")}`} >
         <InputField
           label=""
           name="email"
@@ -86,9 +109,9 @@ export default function EditUserForm({ user }: { user?: User }) {
         />
       </UserProfilItem>
 
-      <UserProfilItem 
-      subTitle={`${t("nameDescription")}`}
-      title={`👤 ${t("name")}`} >
+      <UserProfilItem
+        subTitle={`${t("nameDescription")}`}
+        title={`👤 ${t("name")}`} >
         <InputField
           label=""
           name="name"
@@ -98,9 +121,9 @@ export default function EditUserForm({ user }: { user?: User }) {
         />
       </UserProfilItem>
 
-      <UserProfilItem 
-      subTitle={`${t("phoneDescription")}`}
-      title={`📞 ${t("phone")}`} >
+      <UserProfilItem
+        subTitle={`${t("phoneDescription")}`}
+        title={`📞 ${t("phone")}`} >
         <InputField
           label=""
           name="phone"
@@ -110,9 +133,9 @@ export default function EditUserForm({ user }: { user?: User }) {
         />
       </UserProfilItem>
 
-      <UserProfilItem 
-      subTitle={`${t("addressDescription")}`}
-      title={`🏠 ${t("address")}`} >
+      <UserProfilItem
+        subTitle={`${t("addressDescription")}`}
+        title={`🏠 ${t("address")}`} >
         <InputField
           label=""
           name="address"
@@ -122,9 +145,9 @@ export default function EditUserForm({ user }: { user?: User }) {
         />
       </UserProfilItem>
 
-      <UserProfilItem 
-      subTitle={`${t("languageDescription")}`}
-      title={`🌐 ${t("languages")}`} >
+      <UserProfilItem
+        subTitle={`${t("languageDescription")}`}
+        title={`🌐 ${t("languages")}`} >
         <div className="flex flex-wrap gap-2 mb-2">
           {transformStringToArray(user?.languages ?? "").map((language, index) => (
             <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border-[1px] border-gray-500">{language}</div>
@@ -140,9 +163,9 @@ export default function EditUserForm({ user }: { user?: User }) {
       </UserProfilItem>
 
 
-      <UserProfilItem 
-      subTitle={`${t("linkedinDescription")}`}
-      title={`🔗 ${t("linkedin")}`} >
+      <UserProfilItem
+        subTitle={`${t("linkedinDescription")}`}
+        title={`🔗 ${t("linkedin")}`} >
         <InputField
           label=""
           name="linkedin"
@@ -152,9 +175,9 @@ export default function EditUserForm({ user }: { user?: User }) {
         />
       </UserProfilItem>
 
-      <UserProfilItem 
-      subTitle={`${t("githubDescription")}`}
-      title={`🐙 ${t("github")}`} >
+      <UserProfilItem
+        subTitle={`${t("githubDescription")}`}
+        title={`🐙 ${t("github")}`} >
         <InputField
           label=""
           name="github"
@@ -164,9 +187,9 @@ export default function EditUserForm({ user }: { user?: User }) {
         />
       </UserProfilItem>
 
-      <UserProfilItem 
-      subTitle={`${t("websiteDescription")}`}
-      title={`🖼️ ${t("website")}`} >
+      <UserProfilItem
+        subTitle={`${t("websiteDescription")}`}
+        title={`🖼️ ${t("website")}`} >
         <InputField
           label=""
           name="portfolio"
@@ -176,9 +199,9 @@ export default function EditUserForm({ user }: { user?: User }) {
         />
       </UserProfilItem>
 
-      <UserProfilItem 
-      subTitle={`${t("skillDescription")}`}
-      title={`🛠️ ${t("skills")}`} >
+      <UserProfilItem
+        subTitle={`${t("skillDescription")}`}
+        title={`🛠️ ${t("skills")}`} >
         <div className="flex flex-wrap gap-2 mb-2">
           {transformStringToArray(user?.skills ?? "").map((skill, index) => (
             <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border-[1px] border-gray-500">{skill}</div>

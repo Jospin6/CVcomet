@@ -11,6 +11,7 @@ import { AppDispatch } from "@/redux/store";
 import { useTranslation } from 'react-i18next';
 import { addProject } from "@/redux/project/projectSlice";
 import { TextAreaField } from "../ui/textAreaField";
+import { toast } from "sonner";
 
 const projectSchema = z.object({
   start: z.string().min(1, "Start date is required"),
@@ -31,19 +32,24 @@ export default function ProjectForm({ user }: { user?: User }) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const onSubmit = async (data: ProjectFormValues) => {
-    console.log("Form Data:", data);
     try {
       if (!user?.id) {
-        console.log("User ID is missing");
+        toast.error("User ID is missing");
         return;
       }
-      await dispatch(addProject({ userId: user.id, ...data }));
-      setSuccessMessage("Education added successfully!");
-      reset();
-      window.location.reload();
+
+      const result = await dispatch(addProject({ userId: user.id, ...data }));
+
+      if (addProject.fulfilled.match(result)) {
+        toast.success("Project added successfully!");
+        reset();
+        window.location.reload();
+      } else {
+        toast.error("Failed to add project. Please try again.");
+      }
     } catch (err) {
-      console.log(err);
-      setSuccessMessage(null);
+      console.error(err);
+      toast.error("An unexpected error occurred.");
     }
   };
 

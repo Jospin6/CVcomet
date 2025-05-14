@@ -19,6 +19,8 @@ const routePermissions: Record<string, ("USER" | "ADMIN")[]> = {
     "/admin": ["ADMIN"],
     "/g": ["USER", "ADMIN"],
     "/profil": ["USER", "ADMIN"],
+    "/templates": ["USER", "ADMIN"],
+    "/upgrade": ["USER", "ADMIN"],
 };
 
 export async function middleware(request: NextRequest) {
@@ -67,5 +69,7 @@ export const config = {
         "/g/:path*",
         "/admin/:path*",
         "/profil/:path*",
+        "/templates/:path*",
+        "/upgrade/:path*",
     ],
 };

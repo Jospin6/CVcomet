@@ -10,6 +10,7 @@ import { AppDispatch } from "@/redux/store";
 import { addEducation } from "@/redux/education/educationSlice";
 import { useTranslation } from 'react-i18next';
 import { TextAreaField } from "../ui/textAreaField";
+import { toast } from "sonner";
 
 const educationSchema = z.object({
   degree: z.string().min(1, "Degree is required"),
@@ -34,20 +35,26 @@ export default function EducationForm({ user }: { user?: User }) {
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const onSubmit = async (data: EducationFormValues) => {
-    try {
-      if (!user?.id) {
-        console.log("User ID is missing");
-        return;
-      }
-      await dispatch(addEducation({ userId: user.id, ...data }));
-      setSuccessMessage("Education added successfully!");
-      reset();
-      window.location.reload();
-    } catch (err) {
-      console.log(err);
-      setSuccessMessage(null);
+    if (!user?.id) {
+      toast.error("User ID is missing");
+      return;
     }
-  }
+
+    try {
+      const result = await dispatch(addEducation({ userId: user.id, ...data }));
+
+      if (addEducation.fulfilled.match(result)) {
+        toast.success("Education added successfully!");
+        reset();
+        window.location.reload();
+      } else {
+        toast.error("Failed to add education.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="border-[1px] border-gray-500 shadow p-4 rounded-xl space-y-4">
@@ -94,12 +101,12 @@ export default function EducationForm({ user }: { user?: User }) {
       </div>
 
       <div>
-        <TextAreaField 
-          label={"Description"} 
-          name={"description"} 
-          placeholder={"What did you learn as education"} 
-          register={register} 
-          errors={errors}/>
+        <TextAreaField
+          label={"Description"}
+          name={"description"}
+          placeholder={"What did you learn as education"}
+          register={register}
+          errors={errors} />
       </div>
 
       <div className="flex justify-end">

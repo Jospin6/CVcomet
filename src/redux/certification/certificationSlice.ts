@@ -36,9 +36,13 @@ export const fetchCertifications = createAsyncThunk<Certification[], string>(
 
 export const addCertification = createAsyncThunk<Certification, Omit<Certification, 'id'>>(
   'certification/addCertification',
-  async (newCertification) => {
-    const response = await axios.post('/api/certifications', newCertification);
-    return response.data;
+  async (newCertification, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/api/certifications', newCertification);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data);
+    }
   }
 );
 

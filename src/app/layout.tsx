@@ -5,6 +5,7 @@ import "./globals.css";
 import { ReduxProvider } from "@/redux/provider";
 import { AccountNav } from "@/components/navbar/accountNav";
 import { LanguageProviderWrapper } from "@/components/LanguageProviderWrapper";
+import { Toaster } from '@/components/ui/sonner' 
 
 export const metadata: Metadata = {
   title: {
@@ -73,6 +74,7 @@ export default function RootLayout({
                 <div className="w-10/12 m-auto">
                   {children}
                   {modal}
+                  <Toaster richColors position="bottom-right" />
                 </div>
               </main>
             </SidebarProvider>

@@ -10,6 +10,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { addExperience } from "@/redux/experience/experienceSlice";
 import { useTranslation } from 'react-i18next';
+import { toast } from "sonner";
 
 const experienceSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -37,20 +38,26 @@ export default function ExperienceForm({ user }: { user?: User }) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const onSubmit = async (data: ExperienceFormValues) => {
-    try {
-      if (!user?.id) {
-        console.log("User ID is missing");
-        return;
-      }
-      await dispatch(addExperience({ userId: user.id, ...data }));
-      setSuccessMessage("Education added successfully!");
-      reset();
-      window.location.reload();
-    } catch (err) {
-      console.log(err);
-      setSuccessMessage(null);
+    if (!user?.id) {
+      toast.error("User ID is missing");
+      return;
     }
-  }
+
+    try {
+      const result = await dispatch(addExperience({ userId: user.id, ...data }));
+
+      if (addExperience.fulfilled.match(result)) {
+        toast.success("Experience added successfully!");
+        reset();
+        window.location.reload();
+      } else {
+        toast.error("Failed to add experience. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="border-[1px] border-gray-500 shadow p-4 rounded-xl space-y-4">
