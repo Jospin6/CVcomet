@@ -11,6 +11,8 @@ import { AppDispatch } from "@/redux/store";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/InputField";
 import { login } from "@/redux/auth/authSlice";
+import { FileText } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
   email: z.string().email("Invalide email"),
@@ -18,6 +20,7 @@ const schema = z.object({
 });
 
 export default function Login() {
+  const { t } = useTranslation()
   const {
     register,
     handleSubmit,
@@ -44,7 +47,10 @@ export default function Login() {
 
   return (
     <div className="w-8/12 mx-auto p-6 border border-gray-700 shadow">
-      <h2 className="text-2xl font-bold mb-4 text-gray-200">Login</h2>
+      <div className="py-4">
+        <div className="font-bold text-gray-200 flex items-center justify-center"><FileText size={30}/> <span className="text-3xl">SmartCV</span></div>
+          <h2 className="text-2xl text-center font-bold mb-4 text-gray-200">{t("login")}</h2>
+      </div>
       {error && <p className="text-red-500">{error}</p>}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <InputField
@@ -68,9 +74,9 @@ export default function Login() {
         <Button className="w-4/12">{isSubmitting ? "Connexion..." : "Login"}</Button>
       </form>
       <div className="mt-4 flex text-sm justify-center">
-        <span className="pr-2 text-gray-300">Don't have an account?</span>
+        <span className="pr-2 text-gray-300">{t("nonAccount")}</span>
         <Link href="/signup" className="text-blue-500 hover:underline">
-          Signup
+          {t("signup")}
         </Link>
       </div>
     </div>

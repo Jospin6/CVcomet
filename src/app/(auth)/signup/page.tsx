@@ -10,7 +10,8 @@ import { redirect } from "next/navigation";
 import { signup } from "@/redux/auth/authSlice";
 import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/button";
-;
+import { FileText } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
   email: z.string().email("Invalid email"),
@@ -20,6 +21,7 @@ const schema = z.object({
 type signupFormData = z.infer<typeof schema>;
 
 export default function RegisterForm() {
+  const { t } = useTranslation()
   const dispatch = useDispatch<AppDispatch>();
   const {
     register,
@@ -45,7 +47,10 @@ export default function RegisterForm() {
 
   return (
     <div className="w-8/12 mx-auto p-6 border border-gray-700 shadow">
-      <h2 className="text-2xl font-bold mb-4 text-gray-200">Signup</h2>
+      <div className="py-4">
+        <div className="font-bold text-gray-200 flex items-center justify-center"><FileText size={30} /> <span className="text-3xl">SmartCV</span></div>
+        <h2 className="text-2xl text-center font-bold mb-4 text-gray-200">{t("signup")}</h2>
+      </div>
       {error && <p className="text-red-500">{error}</p>}
       <form onSubmit={handleSubmit(onSubmit)}>
         <InputField
@@ -69,9 +74,9 @@ export default function RegisterForm() {
         <Button className="w-4/12">{isSubmitting ? "Loading..." : "Signup"}</Button>
       </form>
       <div className="mt-4 flex text-sm justify-center">
-        <span className="pr-2 text-gray-300">Already have an account?</span>
+        <span className="pr-2 text-gray-300">{t("haveSignedup")}</span>
         <Link href="/login" className="text-blue-500 hover:underline">
-          Login
+          {t("login")}
         </Link>
       </div>
     </div>

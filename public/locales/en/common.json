@@ -84,5 +84,9 @@
     "coverLetterTemplate": "Cover Letter Templates",
     "selected": "Selected",
     "cta": "Subscribe to access this template",
-    "templates": "templates"
+    "templates": "templates",
+    "signup": "Signup",
+    "login": "Login",
+    "haveSignedup": "Already have an account?",
+    "nonAccount": "Don't have an account?"
 }

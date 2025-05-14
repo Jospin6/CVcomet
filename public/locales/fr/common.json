@@ -85,5 +85,9 @@
     "coverLetterTemplate": "Templates de lettres de motivation",
     "selected": "Sélectionné",
     "cta": "Abonnez-vous pour accéder à ce template",
-    "templates": "templates"
+    "templates": "templates",
+    "signup": "S'inscrire",
+    "login": "Connexion",
+    "haveSignedup": "Avez-vous déjà un compte?",
+    "nonAccount": "Vous n'avez pas encore de compte?"
 }
