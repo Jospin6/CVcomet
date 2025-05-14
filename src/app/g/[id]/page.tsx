@@ -101,23 +101,35 @@ export default function Home() {
         }
     }, [dispatch, id]);
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!input.trim()) return;
-        cvSubmit({ description: input, user: currentUser, conversationId: id, language });
-        setInput("");
-        setCvLoad(!isCvLoad)
-        if (inputRef.current) {
-            inputRef.current.innerText = "";
+        setCvLoad(true);
+        try {
+            await cvSubmit({ description: input, user: currentUser, conversationId: id, language });
+            setInput("");
+            setCvLoad(false);
+            if (inputRef.current) {
+                inputRef.current.innerText = "";
+            }
+        } catch (error) {
+            console.error("Error submitting CV:", error);
+            setCvLoad(false);
         }
     };
 
-    const handleCoverLetter = () => {
+    const handleCoverLetter = async () => {
         if (!input.trim()) return;
-        submitCoverLetter({ description: input, user: currentUser, conversationId: id, language });
-        setCoverLoad(!isCoverLoad)
-        setInput("");
-        if (inputRef.current) {
-            inputRef.current.innerText = "";
+        setCoverLoad(true)
+        try {
+            await submitCoverLetter({ description: input, user: currentUser, conversationId: id, language });
+            setCoverLoad(false)
+            setInput("");
+            if (inputRef.current) {
+                inputRef.current.innerText = "";
+            }
+        } catch (error) {
+            console.error("Error submitting Cover letter:", error);
+            setCoverLoad(false)
         }
     };
 
