@@ -40,10 +40,10 @@ const styles = StyleSheet.create({
     },
 });
 
-export const DocFive = ({ user, cv }: { user: User, cv: CvProps }) => {
-    const { t } = useTranslation();
-    const formatDate = (date: string | number | Date) => date ? new Date(date).toLocaleDateString("en-GB", { month: 'short', year: 'numeric' }) : '';
-    return <Document>
+const formatDate = (date: string | number | Date) => date ? new Date(date).toLocaleDateString("en-GB", { month: 'short', year: 'numeric' }) : '';
+
+export const DocFive = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) => string }) => (
+    <Document>
         <Page size="A4" style={styles.page}>
 
             <View style={styles.section}>
@@ -101,8 +101,8 @@ export const DocFive = ({ user, cv }: { user: User, cv: CvProps }) => {
                     {cv.projects.map((project, i) => (
                         <View key={i} style={{ marginTop: i > 0 ? 6 : 0 }}>
                             <Text style={{ fontWeight: 'bold' }}>{project.title}</Text>
-                            <Text style={{fontSize: 11}}>{project.description}</Text>
-                            <Text style={{fontSize: 11}}>Tech: {project.technologies}</Text>
+                            <Text style={{ fontSize: 11 }}>{project.description}</Text>
+                            <Text style={{ fontSize: 11 }}>Tech: {project.technologies}</Text>
                         </View>
                     ))}
                 </View>
@@ -117,12 +117,12 @@ export const DocFive = ({ user, cv }: { user: User, cv: CvProps }) => {
                                 style={styles.displayFlex}
                             >
                                 <Text style={{ fontWeight: 'bold' }}>{edu.degree}</Text>
-                                <Text style={{fontSize: 11}}>
+                                <Text style={{ fontSize: 11 }}>
                                     {formatDateToMonthYear(edu.start)} - {edu.end ? formatDateToMonthYear(edu.end) : "Present"}
                                 </Text>
                             </View>
 
-                            <Text style={{fontSize: 11}}>{edu.school}</Text>
+                            <Text style={{ fontSize: 11 }}>{edu.school}</Text>
                             {edu.description && edu.description.map((desc, i) => (
                                 <Text key={i} style={styles.listItem}>• {desc}</Text>
                             ))}
@@ -149,5 +149,4 @@ export const DocFive = ({ user, cv }: { user: User, cv: CvProps }) => {
 
         </Page>
     </Document>
-
-};
+)

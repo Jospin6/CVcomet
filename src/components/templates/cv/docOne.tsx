@@ -61,9 +61,8 @@ const styles = StyleSheet.create({
     }
 });
 
-const DocOne = ({ user, cv }: { user: User, cv: CvProps }) => {
-    const { t } = useTranslation();
-    return <Document>
+const DocOne = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) => string }) => (
+    <Document>
         <Page size="A4" style={styles.page}>
 
             {/* Header */}
@@ -178,6 +177,6 @@ const DocOne = ({ user, cv }: { user: User, cv: CvProps }) => {
 
         </Page>
     </Document>
-};
+)
 
 export default DocOne;

@@ -3,28 +3,27 @@
 import { CvProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
 import { Download } from "lucide-react"
-import html2canvas from "html2canvas-pro"
-import jsPDF from "jspdf"
-import { useRef } from "react"
 import { useTranslation } from 'react-i18next'
 import { formatDateToMonthYear } from "@/lib/utils"
-import { PDFDownloadLink } from '@react-pdf/renderer';
 import DocTwo from "./docTwo"
+import { DownLoadPdf } from "@/lib/downloadPdf"
 
 export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
     const { t } = useTranslation()
+
+    const onClickDownload = () => {
+        DownLoadPdf({
+            pdfElement: <DocTwo user={user!} cv={cv} t={t} />,
+            filename: `${user!.name}_resume.pdf`,
+        });
+    };
 
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
                 <h2 className="text-xl font-bold">{t("resume")}</h2>
                 {(user && cv) && (
-                    <PDFDownloadLink
-                        document={<DocTwo user={user} cv={cv} />}
-                        fileName={`${user.name}_resume.pdf`}
-                    >
-                        <Download className="w-5 h-5" />
-                    </PDFDownloadLink>
+                    <Download className="w-5 h-5 cursor-pointer" onClick={onClickDownload} />
                 )}
             </div>
             <div

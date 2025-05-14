@@ -1,19 +1,24 @@
 "use client"
 import { CvProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
-import { Download, RefreshCcw } from "lucide-react"
-import html2canvas from "html2canvas-pro"
-import jsPDF from "jspdf"
-import { useRef } from "react"
+import { Download } from "lucide-react"
 import { useTranslation } from 'react-i18next'
 import { formatDateToMonthYear } from "@/lib/utils"
 import DocFour from "./docFour"
-import { PDFDownloadLink } from "@react-pdf/renderer"
+// import { PDFDownloadLink } from "@react-pdf/renderer"
+import { DownLoadPdf } from "@/lib/downloadPdf"
 
 
 
 export const CvFour = ({ cv, user }: { cv: CvProps, user?: User }) => {
     const { t } = useTranslation();
+
+    const onClickDownload = () => {
+        DownLoadPdf({
+            pdfElement: <DocFour user={user!} cv={cv} t={t} />,
+            filename: `${user!.name}_resume.pdf`,
+        });
+    };
 
     return (
         <>
@@ -21,12 +26,7 @@ export const CvFour = ({ cv, user }: { cv: CvProps, user?: User }) => {
                 <h2 className="text-xl font-bold">{t("resume")}</h2>
                 <div className="flex gap-4">
                     {(user && cv) && (
-                        <PDFDownloadLink
-                            document={<DocFour user={user} cv={cv} />}
-                            fileName={`${user.name}_resume.pdf`}
-                        >
-                            <Download className="w-5 h-5" />
-                        </PDFDownloadLink>
+                        <Download className="w-5 h-5 cursor-pointer" onClick={onClickDownload} />
                     )}
                 </div>
             </div>

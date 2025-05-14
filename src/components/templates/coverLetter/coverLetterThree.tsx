@@ -1,28 +1,27 @@
 import { CoverLetterProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
-import { Download, RefreshCcw } from "lucide-react";
-import html2canvas from "html2canvas-pro"
-import jsPDF from "jspdf"
-import { useRef } from "react"
+import { Download } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 import CoverThree from "./coverThree";
-import { PDFDownloadLink } from "@react-pdf/renderer";
 import { CurrentFormatDate } from "@/components/ui/currentFormatDate";
+import { DownLoadPdf } from "@/lib/downloadPdf";
 
 export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
     const { t } = useTranslation();
+
+    const onClickDownload = () => {
+        DownLoadPdf({
+            pdfElement: <CoverThree user={user!} coverLetter={coverLetter} />,
+            filename: `${user!.name}_cover_letter.pdf`,
+        });
+    };
 
     return (
         <div className=" mb-4">
             <div className="flex text-white items-center justify-between mb-4">
                 <h2 className="text-xl font-bold">{t("coverLetter")}</h2>
                 {(user && coverLetter) && (
-                    <PDFDownloadLink
-                        document={<CoverThree user={user} coverLetter={coverLetter} />}
-                        fileName={`${user.name}_cover_letter.pdf`}
-                    >
-                        <Download className="w-5 h-5" />
-                    </PDFDownloadLink>
+                    <Download className="w-5 h-5 cursor-pointer" onClick={onClickDownload} />
                 )}
             </div>
 
@@ -57,7 +56,7 @@ export const CoverLetterThree = ({ coverLetter, user }: { coverLetter: CoverLett
                     </div>
                     <div className="w-2/4 flex justify-end">
                         {/* Date Section */}
-                        <p className="text-gray-600"><CurrentFormatDate/></p>
+                        <p className="text-gray-600"><CurrentFormatDate /></p>
                     </div>
                 </section>
 

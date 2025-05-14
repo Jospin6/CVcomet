@@ -1,28 +1,28 @@
 import { CoverLetterProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
-import { Download, RefreshCcw } from "lucide-react";
-import html2canvas from "html2canvas-pro"
-import jsPDF from "jspdf"
-import { useRef } from "react"
+import { Download } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 import CoverFour from "./coverFour";
-import { PDFDownloadLink } from "@react-pdf/renderer";
 import { CurrentFormatDate } from "@/components/ui/currentFormatDate";
+import { DownLoadPdf } from "@/lib/downloadPdf";
 
 export const CoverLetterFour = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
     const { t } = useTranslation();
+
+    const onClickDownload = () => {
+        DownLoadPdf({
+            pdfElement: <CoverFour user={user!} coverLetter={coverLetter} />,
+            filename: `${user!.name}_cover_letter.pdf`,
+        });
+    };
+
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
                 <h2 className="text-xl font-bold">{t("coverLetter")}</h2>
                 <div className="flex gap-4">
                     {(user && coverLetter) && (
-                        <PDFDownloadLink
-                            document={<CoverFour user={user} coverLetter={coverLetter} />}
-                            fileName={`${user.name}_cover_letter.pdf`}
-                        >
-                           <Download className="w-5 h-5" />
-                        </PDFDownloadLink>
+                        <Download className="w-5 h-5 cursor-pointer" onClick={onClickDownload} />
                     )}
                 </div>
             </div>
@@ -48,7 +48,7 @@ export const CoverLetterFour = ({ coverLetter, user }: { coverLetter: CoverLette
                             {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
                         </div>
                         <div className="col-span-2 flex justify-end">
-                            <p className="mt-8"><CurrentFormatDate/></p>
+                            <p className="mt-8"><CurrentFormatDate /></p>
                         </div>
                     </div>
 

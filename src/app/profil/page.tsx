@@ -15,6 +15,11 @@ import { logout } from "@/redux/auth/authSlice";
 import { redirect } from "next/navigation";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import CertificationForm from "@/components/forms/certificationForm";
+import { Badge } from "@/components/ui/badge";
+import { deleteExperience } from "@/redux/experience/experienceSlice";
+import { deleteEducation } from "@/redux/education/educationSlice";
+import { deleteProject } from "@/redux/project/projectSlice";
+import { deleteCertification } from "@/redux/certification/certificationSlice";
 
 
 export default function Profil() {
@@ -38,6 +43,11 @@ export default function Profil() {
         }
     }, [currentUser?.id, dispatch])
 
+    const handleDeleteExp = (id: string) => dispatch(deleteExperience(id))
+    const handleDeleteEdu = (id: string) => dispatch(deleteEducation(id))
+    const handleDeleteProj = (id: string) => dispatch(deleteProject(id))
+    const handleDeleteCert = (id: string) => dispatch(deleteCertification(id))
+
     return <div className="w-full text-gray-200">
         <div className="mt-3">
             <div className="text-lg font-bold mb-3">{t("userInfos")}</div>
@@ -49,9 +59,14 @@ export default function Profil() {
                 {experiences && experiences.map((exp) => (
                     <Accordion key={exp.id} type="single" collapsible>
                         <AccordionItem value="item-1">
-                            <AccordionTrigger>{formatDateToMonthYear(exp.start)} {exp.end && ` - ${formatDateToMonthYear(exp.end)}`}, {exp.title} {exp.company}</AccordionTrigger>
+                            <AccordionTrigger>
+                                {formatDateToMonthYear(exp.start)} {exp.end && ` - ${formatDateToMonthYear(exp.end)}`}, {exp.title} {exp.company}
+                            </AccordionTrigger>
                             <AccordionContent>
                                 {exp.description}
+                                <div className="mt-3">
+                                    <Badge onClick={() => handleDeleteExp(exp.id)} className="text-white bg-red-600 ml-4 cursor-pointer">delete</Badge>
+                                </div>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
@@ -65,9 +80,15 @@ export default function Profil() {
                 {educations && educations.map((edu) => (
                     <Accordion key={edu.id} type="single" collapsible>
                         <AccordionItem value="item-1">
-                            <AccordionTrigger>{formatDateToMonthYear(edu.start)} {edu.end && ` - ${formatDateToMonthYear(edu.end)}`}, {edu.school} {edu.degree}</AccordionTrigger>
+                            <AccordionTrigger>
+                                <span>{formatDateToMonthYear(edu.start)} {edu.end && ` - ${formatDateToMonthYear(edu.end)}`}, {edu.school} {edu.degree}</span>
+                                
+                            </AccordionTrigger>
                             <AccordionContent>
                                 {edu.description}
+                                <div className="mt-3">
+                                    <Badge onClick={() => handleDeleteEdu(edu.id)} className="text-white bg-red-600 ml-4 cursor-pointer">delete</Badge>
+                                </div>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
@@ -82,9 +103,15 @@ export default function Profil() {
                 {projects && projects.map((proj) => (
                     <Accordion key={proj.id} type="single" collapsible>
                         <AccordionItem value="item-1">
-                            <AccordionTrigger>{formatDateToMonthYear(proj.start)} {proj.end && ` - ${formatDateToMonthYear(proj.end)}`}, {proj.title} {proj.url}</AccordionTrigger>
+                            <AccordionTrigger>
+                                {formatDateToMonthYear(proj.start)} {proj.end && ` - ${formatDateToMonthYear(proj.end)}`}, {proj.title} {proj.url}
+                                
+                            </AccordionTrigger>
                             <AccordionContent>
                                 {proj.description}
+                                <div className="mt-3">
+                                    <Badge onClick={() => handleDeleteProj(proj.id)} className="text-white bg-red-600 ml-4 cursor-pointer">delete</Badge>
+                                </div>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
@@ -99,9 +126,15 @@ export default function Profil() {
                 {certifications && certifications.map((cert) => (
                     <Accordion key={cert.id} type="single" collapsible>
                         <AccordionItem value="item-1">
-                            <AccordionTrigger>{formatDateToMonthYear(cert.date)} {cert.name} {cert.organization}</AccordionTrigger>
+                            <AccordionTrigger>
+                                {formatDateToMonthYear(cert.date)} {cert.name} {cert.organization}
+                                
+                            </AccordionTrigger>
                             <AccordionContent>
                                 {cert.description}
+                                <div className="mt-3">
+                                    <Badge onClick={() => handleDeleteCert(cert.id)} className="text-white bg-red-600 ml-4 cursor-pointer">delete</Badge>
+                                </div>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>

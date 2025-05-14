@@ -7,16 +7,28 @@ import { useTranslation } from 'react-i18next';
 import { Template, updateTemplatePlan } from "@/redux/template/templateSlice";
 import { UpdatePlanForm } from "./updatePlanForm";
 import Link from "next/link";
+import { useState } from "react";
 
 export const PopupModal = ({ imageUrl, onClose, isSelected, template, user }: { imageUrl: string; onClose: () => void, isSelected: boolean, template: Template, user: User }) => {
     const dispatch = useDispatch<AppDispatch>();
     const { t } = useTranslation();
-    const userId = user.id!
-    const isSubscribed = user.isSubscribed
+    const [isLoading, setIsLoading] = useState(false);
+    const userId = user.id!;
+    const isSubscribed = user.isSubscribed;
     const isAllowed = template.plan === "FREE" || user?.isSubscribed;
-    const role = user.role
+    const role = user.role;
 
-    const handleTemplateChange = () => dispatch(updateCurrentTemplate({ id: userId, type: template.type, currentTemplateId: template.id }))
+    const handleTemplateChange = async () => {
+        try {
+            setIsLoading(true);
+            await dispatch(updateCurrentTemplate({ id: userId, type: template.type, currentTemplateId: template.id }));
+            window.location.reload();
+        } catch (error) {
+            console.error("Erreur lors du changement de template", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-50 bg-black/70 bg-opacity-60 flex items-center justify-center">
@@ -56,6 +68,7 @@ export const PopupModal = ({ imageUrl, onClose, isSelected, template, user }: { 
                             <div className="col-span-2 mt-4">
                                 <Button
                                     onClick={handleTemplateChange}
+                                    disabled={isLoading}
                                     variant={isSelected ? "default" : "secondary"}
                                     className={`w-full flex items-center gap-3 py-2 px-4 rounded-full border ${isSelected && "bg-green-600 text-black"}`}
                                 >
@@ -65,7 +78,7 @@ export const PopupModal = ({ imageUrl, onClose, isSelected, template, user }: { 
                                         )}
                                     </div>
                                     <span className="text-sm font-medium">
-                                        {isSelected ? t("selectedTemp") : t("chooseTemp")}
+                                        {isLoading ? t("loading") : (isSelected ? t("selectedTemp") : t("chooseTemp"))}
                                     </span>
                                 </Button>
                             </div>
@@ -85,5 +98,5 @@ export const PopupModal = ({ imageUrl, onClose, isSelected, template, user }: { 
                 </div>
             </div>
         </div>
-    )
+    );
 };

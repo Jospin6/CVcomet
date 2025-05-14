@@ -63,9 +63,8 @@ const styles = StyleSheet.create({
     }
 });
 
-const CoverThree = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
-    
-    return <Document>
+const CoverThree = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => (
+    <Document>
         <Page size="A4" style={styles.page}>
             {/* Header Section */}
             <View style={styles.header}>
@@ -111,6 +110,6 @@ const CoverThree = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user
             </View>
         </Page>
     </Document>
-}
+)
 
 export default CoverThree;

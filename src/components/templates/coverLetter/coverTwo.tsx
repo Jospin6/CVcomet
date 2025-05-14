@@ -47,8 +47,8 @@ const styles = StyleSheet.create({
     },
 });
 
-const CoverTwo = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
-    return <Document>
+const CoverTwo = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => (
+    <Document>
         <Page size="A4" style={styles.page}>
             {/* Header - User Information */}
             <View style={styles.header}>
@@ -87,6 +87,6 @@ const CoverTwo = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?:
             </View>
         </Page>
     </Document>
-}
+)
 
 export default CoverTwo;

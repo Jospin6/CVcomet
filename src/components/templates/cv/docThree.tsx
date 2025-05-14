@@ -41,9 +41,8 @@ const styles = StyleSheet.create({
   }
 });
 
-const DocThree = ({ user, cv }: { user: User, cv: CvProps }) => {
-  const { t } = useTranslation();
-  return <Document>
+const DocThree = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) => string }) => (
+  <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
         <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{user?.name?.toUpperCase() ?? "No name"}</Text>
@@ -139,6 +138,6 @@ const DocThree = ({ user, cv }: { user: User, cv: CvProps }) => {
       )}
     </Page>
   </Document>
-}
+)
 
 export default DocThree;

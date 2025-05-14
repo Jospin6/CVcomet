@@ -64,11 +64,11 @@ const styles = StyleSheet.create({
     }
 });
 
+const formatDate = (date: string | number | Date) => date ? new Date(date).toLocaleDateString("en-GB", { month: 'short', year: 'numeric' }) : '';
+
 // Composant PDF
-const DocFour = ({ user, cv }: { user: User, cv: CvProps }) => {
-    const { t } = useTranslation();
-    const formatDate = (date: string | number | Date) => date ? new Date(date).toLocaleDateString("en-GB", { month: 'short', year: 'numeric' }) : '';
-    return <Document>
+const DocFour = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) => string }) => (
+    <Document>
         <Page size="A4" style={styles.page}>
             {/* Header */}
             <View style={styles.header}>
@@ -185,6 +185,6 @@ const DocFour = ({ user, cv }: { user: User, cv: CvProps }) => {
             )}
         </Page>
     </Document>
-}
+)
 
 export default DocFour;

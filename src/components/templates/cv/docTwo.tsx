@@ -47,9 +47,8 @@ const styles = StyleSheet.create({
   }
 });
 
-const DocTwo = ({ user, cv }: { user: User, cv: CvProps }) => {
-  const { t } = useTranslation()
-  return <Document>
+const DocTwo = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) => string }) => (
+  <Document>
     <Page size="A4" style={styles.page}>
       {/* Main content */}
       <View style={styles.main}>
@@ -154,6 +153,6 @@ const DocTwo = ({ user, cv }: { user: User, cv: CvProps }) => {
       </View>
     </Page>
   </Document>
-}
+)
 
 export default DocTwo;

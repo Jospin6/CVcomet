@@ -2,6 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { CoverLetterProps } from '@/helpers/schema';
 import { User } from '@/redux/user/userSlice';
+import { CurrentDate } from '@/components/ui/currentDate';
 
 const styles = StyleSheet.create({
     page: {
@@ -40,13 +41,8 @@ const styles = StyleSheet.create({
     },
 });
 
-const CoverOne = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
-    const date = new Date(Date.now());
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-
-    return <Document>
+const CoverOne = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => (
+    <Document>
         <Page size="A4" style={styles.page}>
             <View style={styles.header}>
                 <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{user?.name}</Text>
@@ -67,7 +63,7 @@ const CoverOne = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?:
             )}
 
             <View style={styles.dateAndRecipient}>
-                <Text>{`${day}/${month}/${year}`}</Text>
+                <Text><CurrentDate/></Text>
                 {coverLetter.recipientName && <Text>{coverLetter.recipientName},</Text>}
             </View>
 
@@ -82,6 +78,6 @@ const CoverOne = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?:
             </View>
         </Page>
     </Document>
-}
+)
 
 export default CoverOne;
