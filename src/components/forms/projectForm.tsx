@@ -40,6 +40,7 @@ export default function ProjectForm({ user }: { user?: User }) {
       await dispatch(addProject({ userId: user.id, ...data }));
       setSuccessMessage("Education added successfully!");
       reset();
+      window.location.reload();
     } catch (err) {
       console.log(err);
       setSuccessMessage(null);

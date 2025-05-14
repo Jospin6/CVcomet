@@ -45,6 +45,7 @@ export default function ExperienceForm({ user }: { user?: User }) {
       await dispatch(addExperience({ userId: user.id, ...data }));
       setSuccessMessage("Education added successfully!");
       reset();
+      window.location.reload();
     } catch (err) {
       console.log(err);
       setSuccessMessage(null);

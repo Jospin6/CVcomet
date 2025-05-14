@@ -42,6 +42,7 @@ export default function EducationForm({ user }: { user?: User }) {
       await dispatch(addEducation({ userId: user.id, ...data }));
       setSuccessMessage("Education added successfully!");
       reset();
+      window.location.reload();
     } catch (err) {
       console.log(err);
       setSuccessMessage(null);
