@@ -115,6 +115,7 @@ const DocTwo = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) => 
           {user?.email && <Text style={styles.text}>
             <Link style={styles.link} src={`mailto:${user.email}`}>{user.email}</Link>
           </Text>}
+          {user?.portfolio && <Text style={styles.text}><Link style={styles.link} src={user.portfolio}>{t('portfolio')}</Link></Text>}
         </View>
 
         {cv.skills && cv.skills?.length > 0 && (

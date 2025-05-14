@@ -72,6 +72,7 @@ const DocOne = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) => 
                 <Text style={styles.linkRow}>
                     {user?.phone && `${user.phone} | `}
                     {user?.email && <Link style={styles.link} src={`mailto:${user.email}`}>{user.email}</Link>}
+                    {user?.portfolio && <Text> | <Link style={styles.link} src={user.portfolio}>{t('portfolio')}</Link></Text>}
                 </Text>
             </View>
 

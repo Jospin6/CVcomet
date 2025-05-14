@@ -99,6 +99,7 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                                     <a href={`mailto:${user.email}`}> {user?.email}</a>
                                 </p>)}
                                 {user?.email && <p className="mt-2">{user.email}</p>}
+                                {user?.portfolio && (<p> | <a href={user.portfolio}>{t('portfolio')}</a></p>)}
                             </div>
                         </section>
 

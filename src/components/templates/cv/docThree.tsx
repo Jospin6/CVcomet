@@ -50,6 +50,7 @@ const DocThree = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) =
         <Text style={{ borderBottom: '1 solid black', borderTop: '1 solid black', paddingBottom: 5, paddingTop: 5, marginTop: 5, marginBottom: 5 }}>
           {user?.phone && `${user.phone} | `}
           {user?.email && <Link style={styles.link} src={`mailto:${user.email}`}>{user.email}</Link>}
+          {user?.portfolio && <Text> | <Link style={styles.link} src={user.portfolio}>{t('portfolio')}</Link></Text>}
         </Text>
       </View>
 

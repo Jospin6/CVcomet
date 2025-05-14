@@ -39,6 +39,7 @@ export const CvThree = ({ cv, user }: { cv: CvProps, user?: User }) => {
                     <p className="text-[12px] border-y-[1px] py-1 mt-2 border-black">
                         {user?.phone && `${user.phone} | `}
                         {user?.email && (<a href={`mailto:${user.email}`}> {user?.email}</a>)}
+                        {user?.portfolio && (<span> | <a href={user.portfolio}>{t('portfolio')}</a></span>)}
                     </p>
                 </header>
 
