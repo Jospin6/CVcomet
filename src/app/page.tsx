@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Sparkles, Wand2 } from "lucide-react";
 import Link from "next/link";
 import PdfComponent from "@/components/testPdf";
+import { LoadingIcon } from "@/components/ui/loadingIcon";
 
 export default function Home() {
     const { t } = useTranslation();
@@ -24,18 +25,21 @@ export default function Home() {
     const user = useCurrentUser();
     const currentUser = useSelector(selectUser)
     const currentConversationId = useSelector(selectConversationId)
+    const [isCvLoad, setCvLoad] = useState<boolean>(false)
+    const [isCoverLoad, setCoverLoad] = useState<boolean>(false)
 
 
 
     const handleSend = () => {
         dispatch(addConversation({ content: input, userId: user?.id }))
         dispatch(setTypeGeneration("cv"))
+        setCvLoad(!isCvLoad)
     };
 
     const handleCoverLetter = () => {
         dispatch(addConversation({ content: input, userId: user?.id }))
         dispatch(setTypeGeneration("coverLetter"))
-
+        setCoverLoad(!isCoverLoad)
     };
 
     useEffect(() => {
@@ -55,7 +59,7 @@ export default function Home() {
     return (
         <>
             <div className="flex flex-col items-center justify-center min-h-[90vh] gap-4">
-                
+
                 <div className="text-center max-w-2xl mx-auto  px-4">
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
@@ -107,14 +111,27 @@ export default function Home() {
                             <div className="flex gap-2 justify-end">
                                 {user ? (
                                     <>
-                                        <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
-                                            <Sparkles className="w-4 h-4" />
-                                            <span>Cv</span>
-                                        </Button>
-                                        <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
-                                            <Wand2 className="w-4 h-4" />
-                                            <span>Cover letter</span>
-                                        </Button>
+                                        {!isCvLoad ? (
+                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
+                                                <Sparkles className="w-4 h-4" />
+                                                <span>Cv</span>
+                                            </Button>
+                                        ) : (
+                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                                <LoadingIcon />
+                                            </Button>
+                                        )}
+                                        {!isCoverLoad ? (
+                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
+                                                <Wand2 className="w-4 h-4" />
+                                                <span>Cover letter</span>
+                                            </Button>
+                                        ) : (
+                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                                <LoadingIcon />
+                                            </Button>
+                                        )}
+
                                     </>
                                 ) : (
                                     <>

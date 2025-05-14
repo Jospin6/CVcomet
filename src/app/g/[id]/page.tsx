@@ -30,6 +30,7 @@ import { CoverLetterFour } from "@/components/templates/coverLetter/coverLetterF
 import { CoverLetterFive } from "@/components/templates/coverLetter/coverLetterFive";
 import { cover1, cover2, cover3, cover4, cover5, cv1, cv2, cv3, cv4, cv5 } from "@/helpers/constants";
 import { CoverLetterSkeleton } from "@/components/ui/coverLetterSkeleton";
+import { LoadingIcon } from "@/components/ui/loadingIcon";
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
     [cv1]: CvOne,
@@ -60,6 +61,8 @@ export default function Home() {
     const typeGeneration = useSelector(selectTypeGeneration)
     const [hasGenerated, setHasGenerated] = useState(false);
     let language = i18n.language === 'fr' ? 'French' : 'English'
+    const [isCvLoad, setCvLoad] = useState<boolean>(false)
+    const [isCoverLoad, setCoverLoad] = useState<boolean>(false)
 
     const { object: cvObject, submit: cvSubmit, isLoading: isLoadingCv } = useObject({
         api: '/api/generate-cv',
@@ -102,6 +105,7 @@ export default function Home() {
         if (!input.trim()) return;
         cvSubmit({ description: input, user: currentUser, conversationId: id, language });
         setInput("");
+        setCvLoad(!isCvLoad)
         if (inputRef.current) {
             inputRef.current.innerText = "";
         }
@@ -110,6 +114,7 @@ export default function Home() {
     const handleCoverLetter = () => {
         if (!input.trim()) return;
         submitCoverLetter({ description: input, user: currentUser, conversationId: id, language });
+        setCoverLoad(!isCoverLoad)
         setInput("");
         if (inputRef.current) {
             inputRef.current.innerText = "";
@@ -154,21 +159,33 @@ export default function Home() {
                             ref={inputRef}
                         />
                         <div className="flex gap-2 justify-end">
-                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
-                                <Sparkles className="w-4 h-4" />
-                                <span>Cv</span>
-                            </Button>
-                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
-                                <Wand2 className="w-4 h-4" />
-                                <span>Cover letter</span>
-                            </Button>
+                            {!isCvLoad ? (
+                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
+                                    <Sparkles className="w-4 h-4" />
+                                    <span>Cv</span>
+                                </Button>
+                            ) : (
+                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                    <LoadingIcon />
+                                </Button>
+                            )}
+                            {!isCoverLoad ? (
+                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
+                                    <Wand2 className="w-4 h-4" />
+                                    <span>Cover letter</span>
+                                </Button>
+                            ) : (
+                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                    <LoadingIcon />
+                                </Button>
+                            )}
                         </div>
                     </motion.div>
                 </div>
             </motion.div>
 
             {(isLoadingCv || loadConversation) && <CvSkeleton />}
-            {isLoadingCoverLetter && (<CoverLetterSkeleton/>)}
+            {isLoadingCoverLetter && (<CoverLetterSkeleton />)}
 
             {cvObject?.cvs && (
                 <div className="mb-6">

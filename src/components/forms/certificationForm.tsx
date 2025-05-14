@@ -23,7 +23,7 @@ type CertificationFormValues = z.infer<typeof certificationSchema>;
 
 export default function CertificationForm({ user }: { user?: User }) {
   const { t } = useTranslation();
-  const { register, reset, handleSubmit, formState: { errors } } = useForm<CertificationFormValues>({
+  const { register, reset, handleSubmit, formState: { errors, isSubmitting } } = useForm<CertificationFormValues>({
     resolver: zodResolver(certificationSchema),
   });
   const dispatch = useDispatch<AppDispatch>()
@@ -91,7 +91,7 @@ export default function CertificationForm({ user }: { user?: User }) {
       </div>
 
       <div className="flex justify-end my-4">
-        <Button type="submit">{`${t("addCertificat")}`}</Button>
+        <Button type="submit">{isSubmitting ? `${t("loading")}` : `${t("addCertificat")}`}</Button>
       </div>
     </form>
   );

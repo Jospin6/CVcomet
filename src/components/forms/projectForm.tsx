@@ -25,7 +25,7 @@ type ProjectFormValues = z.infer<typeof projectSchema>;
 export default function ProjectForm({ user }: { user?: User }) {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>()
-  const { register, reset, handleSubmit, formState: { errors } } = useForm<ProjectFormValues>({
+  const { register, reset, handleSubmit, formState: { errors, isSubmitting } } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -100,7 +100,7 @@ export default function ProjectForm({ user }: { user?: User }) {
           errors={errors} />
       </div>
       <div className="flex justify-end my-4">
-        <Button type="submit">{`${t("addProject")}`}</Button>
+        <Button type="submit">{isSubmitting ? `${t("loading")}` : `${t("addProject")}`}</Button>
       </div>
     </form>
   );
