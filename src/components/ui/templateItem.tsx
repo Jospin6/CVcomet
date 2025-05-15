@@ -55,6 +55,7 @@ export const TemplateItem = ({ template, user }: { template: Template; user?: Us
                                 alt={`Template ${template.name}`}
                                 fill
                                 className="object-fill"
+                                unoptimized
                             />
                         )}
 
