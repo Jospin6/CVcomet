@@ -3,24 +3,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "../../../../prisma/prisma";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
-
-const SECRET_KEY = "secret_key";
-
-const secret = new TextEncoder().encode("secret_key");
-
-async function generateToken(user: any) {
-  const token = await new SignJWT({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(100 * 365 * 24 * 60 * 60)
-    .sign(secret);
-
-  return token;
-}
+import { generateToken } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();

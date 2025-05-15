@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
+import { SignJWT } from "jose";
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -39,4 +40,21 @@ export function formatDateToFullYear(dateInput: string | number, language: strin
   }
 
   return date.toLocaleDateString(lang, options);
+}
+
+// Define your secret key here or import it from your environment/config
+const secret = new TextEncoder().encode(process.env.JWT_SECRET || "secret_key");
+
+export async function generateToken(user: any) {
+  const token = await new SignJWT({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(100 * 365 * 24 * 60 * 60)
+    .sign(secret);
+
+  return token;
 }
