@@ -13,7 +13,6 @@ import { redirect } from "next/navigation";
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Wand2 } from "lucide-react";
 import Link from "next/link";
-import PdfComponent from "@/components/testPdf";
 import { LoadingIcon } from "@/components/ui/loadingIcon";
 
 export default function Home() {
