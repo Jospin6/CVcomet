@@ -1,4 +1,5 @@
 // /app/api/checkout/route.ts
+import { mainUrl } from "@/helpers/constants";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -19,8 +20,8 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `http://localhost:3000/`,
-      cancel_url: `http://localhost:3000/`,
+      success_url: `${mainUrl}`,
+      cancel_url: `${mainUrl}`,
       metadata: { userId },
     });
 
