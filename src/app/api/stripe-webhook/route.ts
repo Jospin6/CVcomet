@@ -27,17 +27,6 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Webhook error", { status: 400 });
   }
 
-  // traiter l’événement
-//   if (event.type === "checkout.session.completed") {
-//     const session = event.data.object as Stripe.Checkout.Session;
-//     const userId = session.metadata?.userId;
-
-//     // ✅ activer l’abonnement dans ta DB
-//     await prisma.user.update({
-//       where: { id: userId },
-//       data: { isSubscribed: true },
-//     });
-//   }
 if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.metadata?.userId;

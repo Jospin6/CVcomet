@@ -20,22 +20,22 @@ export function AppSidebar() {
   // Menu items.
   const items = [
     {
-      title: t("home"),
+      title: `${t("home")}`,
       url: "/",
       icon: Home,
     },
     {
-      title: t("profil"),
+      title: `${t("profil")}`,
       url: "/profil",
       icon: User,
     },
     {
-      title: t("templates"),
+      title: `${t("templates")}`,
       url: "/templates",
       icon: LayoutDashboard,
     },
     {
-      title: t("upgrade"),
+      title: `${t("upgrade")}`,
       url: "/upgrade",
       icon: ArrowUpCircle,
     }
