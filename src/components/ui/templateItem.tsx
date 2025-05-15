@@ -24,7 +24,7 @@ export const TemplateItem = ({ template, user }: { template: Template; user?: Us
 
     useEffect(() => {
         if (template.id) {
-            const imageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/avatar?id=${template.id}`;
+            const imageUrl = `/api/avatar?id=${template.id}`;
             setAvatarUrl(imageUrl);
         }
     }, [template.id]);
