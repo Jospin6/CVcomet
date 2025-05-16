@@ -44,8 +44,14 @@ export async function POST(req: Request) {
         where: { id: sessionData.metadata?.userId },
         data: {
           isSubscribed: true,
-          subscriptionId: sessionData.subscription as string,
-          stripeCustomerId: sessionData.customer as string,
+          subscriptionId:
+            typeof sessionData.subscription === "string"
+              ? sessionData.subscription
+              : sessionData.subscription?.id ?? null,
+          stripeCustomerId:
+            typeof sessionData.customer === "string"
+              ? sessionData.customer
+              : sessionData.customer?.id ?? null,
           generationCount: 0,
           lastGeneratedAt: new Date(),
         },
