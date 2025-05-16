@@ -65,10 +65,16 @@
 // }
 
 // /app/api/webhook/route.ts
+
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import prisma from "../../../../prisma/prisma";
-import { headers } from "next/headers";
+import { Readable } from "stream";
+import getRawBody from "raw-body";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-04-30.basil",
+});
 
 export const config = {
   api: {
@@ -76,37 +82,31 @@ export const config = {
   },
 };
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-04-30.basil", // ou la version que tu veux
-});
-
-async function buffer(readable: ReadableStream<Uint8Array>): Promise<Buffer> {
-  const reader = readable.getReader();
-  const chunks = [];
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-  }
-
-  return Buffer.concat(chunks);
-}
-
 export async function POST(req: Request) {
-  const rawBody = await buffer(req.body as ReadableStream<Uint8Array>);
-  const sig = req.headers.get("stripe-signature") as string;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+  const sig = req.headers.get("stripe-signature") as string;
+
+  let rawBody: Buffer;
+
+  try {
+    // Convert Request.body (ReadableStream) to Node.js Readable
+    const readable = Readable.fromWeb(req.body as any);
+    rawBody = await getRawBody(readable);
+  } catch (err) {
+    console.error("❌ Error getting raw body:", err);
+    return new Response("Failed to read request body", { status: 400 });
+  }
 
   let event: Stripe.Event;
 
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
-    console.error("❌ Error verifying Stripe signature:", err.message);
+    console.error("❌ Stripe signature verification failed:", err.message);
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
+  // ✅ Handle events
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
@@ -139,4 +139,3 @@ export async function POST(req: Request) {
 
   return new NextResponse("✅ Webhook received", { status: 200 });
 }
-
