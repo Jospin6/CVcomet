@@ -69,18 +69,10 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import prisma from "../../../../prisma/prisma";
-import { Readable } from "stream";
-import getRawBody from "raw-body";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil",
 });
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
 
 export async function POST(req: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -89,9 +81,9 @@ export async function POST(req: Request) {
   let rawBody: Buffer;
 
   try {
-    // Convert Request.body (ReadableStream) to Node.js Readable
-    const readable = Readable.fromWeb(req.body as any);
-    rawBody = await getRawBody(readable);
+    // ✅ Utilise arrayBuffer au lieu de Readable.fromWeb
+    const buffer = await req.arrayBuffer();
+    rawBody = Buffer.from(buffer);
   } catch (err) {
     console.error("❌ Error getting raw body:", err);
     return new Response("Failed to read request body", { status: 400 });
@@ -106,7 +98,7 @@ export async function POST(req: Request) {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // ✅ Handle events
+  // ✅ Traitement des événements
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
