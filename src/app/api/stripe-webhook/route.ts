@@ -5,6 +5,7 @@ import Stripe from "stripe";
 import prisma from "../../../../prisma/prisma";
 import { headers } from "next/headers";
 
+
 export const config = {
   api: {
     bodyParser: false,
@@ -19,14 +20,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 
 export async function POST(req: Request) {
-  const body = await req.text();
+  const buf = Buffer.from(await req.arrayBuffer());
+  
   const sig = (await headers()).get('Stripe-Signature') as string;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
   let event: Stripe.Event;
 
   try {
     if (!sig || !webhookSecret) return;
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
   } catch (err: any) {
     console.log(`❌ Error message: ${err.message}`);
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
