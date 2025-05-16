@@ -109,52 +109,56 @@ export default function Home() {
                             />
                             <div className="flex gap-2 justify-between items-center">
 
-                                {currentUser?.isSubscribed && (
-                                    <span className="text-xs text-gray-400">
-                                        {currentUser?.isSubscribed ? t("active") : t("inactive")}
-                                    </span>
-                                )}
-                                {user ? (
-                                    <>
-                                        {!isCvLoad ? (
-                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
-                                                <Sparkles className="w-4 h-4" />
-                                                <span>Cv</span>
-                                            </Button>
-                                        ) : (
-                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
-                                                <LoadingIcon />
-                                            </Button>
-                                        )}
-                                        {!isCoverLoad ? (
-                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
-                                                <Wand2 className="w-4 h-4" />
-                                                <span>Cover letter</span>
-                                            </Button>
-                                        ) : (
-                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
-                                                <LoadingIcon />
-                                            </Button>
-                                        )}
+                                <div>
+                                    {currentUser?.isSubscribed && (
+                                        <span className="text-xs text-gray-400">
+                                            {currentUser?.isSubscribed ? t("active") : t("inactive")}
+                                        </span>
+                                    )}
+                                </div>
+                                <div>
+                                    {user ? (
+                                        <>
+                                            {!isCvLoad ? (
+                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
+                                                    <Sparkles className="w-4 h-4" />
+                                                    <span>Cv</span>
+                                                </Button>
+                                            ) : (
+                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                                    <LoadingIcon />
+                                                </Button>
+                                            )}
+                                            {!isCoverLoad ? (
+                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
+                                                    <Wand2 className="w-4 h-4" />
+                                                    <span>Cover letter</span>
+                                                </Button>
+                                            ) : (
+                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                                    <LoadingIcon />
+                                                </Button>
+                                            )}
 
-                                    </>
-                                ) : (
-                                    <>
-                                        <Link href={"/login"}>
-                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
-                                                <Sparkles className="w-4 h-4" />
-                                                <span>Cv</span>
-                                            </Button>
-                                        </Link>
-                                        <Link href={"/login"}>
-                                            <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
-                                                <Wand2 className="w-4 h-4" />
-                                                <span>Cover letter</span>
-                                            </Button>
-                                        </Link>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Link href={"/login"}>
+                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                                    <Sparkles className="w-4 h-4" />
+                                                    <span>Cv</span>
+                                                </Button>
+                                            </Link>
+                                            <Link href={"/login"}>
+                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                                    <Wand2 className="w-4 h-4" />
+                                                    <span>Cover letter</span>
+                                                </Button>
+                                            </Link>
 
-                                    </>
-                                )}
+                                        </>
+                                    )}
+                                </div>
 
                             </div>
                         </motion.div>

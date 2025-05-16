@@ -171,12 +171,15 @@ export default function Home() {
                             ref={inputRef}
                         />
                         <div className="flex gap-2 justify-between items-center">
-                            {currentUser?.isSubscribed && (
+                            <div>
+                                {currentUser?.isSubscribed && (
                                 <span className="text-xs text-gray-400">
                                     {currentUser?.isSubscribed ? t("active") : t("inactive")}
                                 </span>
                             )}
-                            {!isCvLoad ? (
+                            </div>
+                            <div>
+                                {!isCvLoad ? (
                                 <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
                                     <Sparkles className="w-4 h-4" />
                                     <span>Cv</span>
@@ -196,6 +199,7 @@ export default function Home() {
                                     <LoadingIcon />
                                 </Button>
                             )}
+                            </div>
                         </div>
                     </motion.div>
                 </div>
