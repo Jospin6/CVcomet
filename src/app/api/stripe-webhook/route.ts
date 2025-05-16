@@ -68,35 +68,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 // Nécessaire pour désactiver le body parsing par défaut
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-// Fonction pour lire le corps brut de la requête
-async function buffer(readable: ReadableStream<Uint8Array>) {
-  const reader = readable.getReader();
-  const chunks: Uint8Array[] = [];
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) chunks.push(value);
-  }
-
-  return Buffer.concat(chunks);
-}
 
 export async function POST(req: Request) {
-  const rawBody = await buffer(req.body!);
+  const body = await req.text();
   const sig = req.headers.get("stripe-signature")!;
 
   let event: Stripe.Event;
 
   try {
     event = stripe.webhooks.constructEvent(
-      rawBody,
+      body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
