@@ -142,7 +142,7 @@ export async function POST(req: Request) {
     const userId = session.metadata?.userId;
     const subscriptionId = session.subscription as string;
 
-    if (!userId || !subscriptionId) {
+    if (!userId) {
       console.error("❌ Missing metadata.");
       return new NextResponse("Missing metadata", { status: 400 });
     }
