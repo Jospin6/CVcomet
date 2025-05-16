@@ -88,5 +88,7 @@
     "signup": "Signup",
     "login": "Login",
     "haveSignedup": "Already have an account?",
-    "nonAccount": "Don't have an account?"
+    "nonAccount": "Don't have an account?",
+    "active": "Active",
+    "inactive": "Inactive"
 }

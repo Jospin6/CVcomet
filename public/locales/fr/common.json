@@ -89,5 +89,7 @@
     "signup": "S'inscrire",
     "login": "Connexion",
     "haveSignedup": "Avez-vous déjà un compte?",
-    "nonAccount": "Vous n'avez pas encore de compte?"
+    "nonAccount": "Vous n'avez pas encore de compte?",
+    "active": "Active",
+    "inactive": "Inactive"
 }

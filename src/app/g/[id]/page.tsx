@@ -47,7 +47,7 @@ const templateComponentMap: Record<string, React.ComponentType<any>> = {
 };
 
 export default function Home() {
-    const { i18n } = useTranslation('common')
+    const { t, i18n } = useTranslation('common')
     const params = useParams()
     const id = params.id
     const conversation = useSelector(selectConversation)
@@ -170,7 +170,12 @@ export default function Home() {
                   text-sm rounded-md empty:before:text-gray-300 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
                             ref={inputRef}
                         />
-                        <div className="flex gap-2 justify-end">
+                        <div className="flex gap-2 justify-between items-center">
+                            {currentUser?.isSubscribed && (
+                                <span className="text-xs text-gray-400">
+                                    {currentUser?.isSubscribed ? t("active") : t("inactive")}
+                                </span>
+                            )}
                             {!isCvLoad ? (
                                 <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
                                     <Sparkles className="w-4 h-4" />

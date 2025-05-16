@@ -35,6 +35,11 @@ export async function POST(req: NextRequest) {
         where: { id: userId },
         data: { stripeCustomerId },
       });
+    } else {
+      // 🔧 On met à jour le metadata si jamais il manque
+      await stripe.customers.update(stripeCustomerId, {
+        metadata: { userId },
+      });
     }
 
     // 3. Crée une session de paiement avec le customer
