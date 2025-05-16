@@ -37,13 +37,13 @@ export async function POST(req: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const payment_status = session.payment_status;
-    if (payment_status !== "paid") {
+    if (payment_status === "paid") {
       const sessionData = await stripe.checkout.sessions.retrieve(session.id, {
         expand: ['metadata', 'customer', 'subscription'],
       });
 
       await prisma.user.update({
-        where: { id: sessionData.metadata?.userId },
+        where: { id: sessionData.metadata!.userId },
         data: {
           isSubscribed: true,
           subscriptionId: sessionData.subscription as string,
