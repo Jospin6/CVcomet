@@ -53,9 +53,6 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      subscription_data: {
-        metadata: { userId }, // <-- C'est ici que tu ajoutes le metadata à la subscription !
-      },
       success_url: `${mainUrl}`,
       cancel_url: `${mainUrl}`,
       metadata: { userId }, // 👈 Pour le retrouver dans le webhook

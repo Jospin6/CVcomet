@@ -136,44 +136,26 @@ export async function POST(req: Request) {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // ✅ Traiter l'événement Stripe
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.metadata?.userId;
+    const subscriptionId = session.subscription as string;
 
-    console.log("✅ Session complétée reçue:", session);
-
-    // Juste pour logguer ici, car subscription est null
-    console.log("👉 Subscription dans session:", session.subscription);
-
-    // Ne rien faire ici si subscription est null
-  }
-
-  if (event.type === "customer.subscription.created") {
-    const subscription = event.data.object as Stripe.Subscription;
-    const customerId = subscription.customer as string;
-
-    const customer = await stripe.customers.retrieve(customerId);
-    const userId = (customer as Stripe.Customer).metadata.userId;
-
-    console.log("✅ Subscription créée pour user:", userId);
-
-    if (!userId) {
-      console.error("❌ Pas de userId dans metadata du customer Stripe");
-      return new NextResponse("Missing userId", { status: 400 });
+    if (!userId || !subscriptionId) {
+      console.error("❌ Missing metadata.");
+      return new NextResponse("Missing metadata", { status: 400 });
     }
 
     await prisma.user.update({
       where: { id: userId },
       data: {
         isSubscribed: true,
-        subscriptionId: subscription.id,
+        subscriptionId,
         generationCount: 0,
         lastGeneratedAt: new Date(),
       },
     });
-
-    console.log("✅ Utilisateur mis à jour avec subscription", subscription.id);
   }
 
   if (event.type === "customer.subscription.deleted") {
