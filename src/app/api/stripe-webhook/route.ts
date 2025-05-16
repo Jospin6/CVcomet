@@ -135,14 +135,18 @@ export async function POST(req: Request) {
     console.log(`❌ Error message: ${err.message}`);
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
-  const session = event.data.object as Stripe.Checkout.Session;
+  
   // ✅ Traiter l'événement Stripe
   if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.metadata?.userId;
-    const subscriptionId = session.subscription as string;
+    const subscriptionId =
+      typeof session.subscription === "string"
+        ? session.subscription
+        : session.subscription?.id;
 
     if (!userId || !subscriptionId) {
-      console.error("❌ Missing metadata.");
+      console.error("❌ Missing metadata:", { userId, subscriptionId });
       return new NextResponse("Missing metadata", { status: 400 });
     }
 
@@ -155,8 +159,9 @@ export async function POST(req: Request) {
         lastGeneratedAt: new Date(),
       },
     });
-  }
 
+    console.log("✅ Abonnement mis à jour pour l'utilisateur", userId);
+  }
   if (event.type === "customer.subscription.deleted") {
     const subscription = event.data.object as Stripe.Subscription;
 

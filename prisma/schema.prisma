@@ -35,6 +35,7 @@ model User {
   currentTemplateId    String?
   currentTemplate      Template?       @relation("UserCurrentTemplate", fields: [currentTemplateId], references: [id])
   currentCoverLetterId String?
+  stripeCustomerId     String?
   currentCoverLetter   Template?       @relation("UserCurrentCoverLetter", fields: [currentCoverLetterId], references: [id])
   certifications       Certification[]
   Education            Education[]
