@@ -107,7 +107,7 @@ export default function Home() {
                                   text-sm rounded-md empty:before:text-gray-300 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
                                 ref={inputRef}
                             />
-                            <div className="flex gap-2 justify-between items-center">
+                            <div className="flex justify-between items-center">
 
                                 <div>
                                     {currentUser?.isSubscribed && (
@@ -116,7 +116,7 @@ export default function Home() {
                                         </span>
                                     )}
                                 </div>
-                                <div>
+                                <div className="flex gap-2">
                                     {user ? (
                                         <>
                                             {!isCvLoad ? (

@@ -151,12 +151,10 @@ export async function POST(req: Request) {
 
   if (event.type === "customer.subscription.created") {
     const subscription = event.data.object as Stripe.Subscription;
-
     const customerId = subscription.customer as string;
 
-    // Il faut récupérer le userId d'une autre manière
     const customer = await stripe.customers.retrieve(customerId);
-    const userId = (customer as any)?.metadata?.userId;
+    const userId = (customer as Stripe.Customer).metadata.userId;
 
     console.log("✅ Subscription créée pour user:", userId);
 

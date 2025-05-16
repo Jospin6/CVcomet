@@ -178,7 +178,7 @@ export default function Home() {
                                 </span>
                             )}
                             </div>
-                            <div>
+                            <div className="flex gap-2">
                                 {!isCvLoad ? (
                                 <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
                                     <Sparkles className="w-4 h-4" />
