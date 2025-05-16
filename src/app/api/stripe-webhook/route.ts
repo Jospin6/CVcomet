@@ -145,6 +145,25 @@ export async function POST(req: Request) {
       console.error("❌ Missing metadata.");
       return new NextResponse("Missing metadata", { status: 400 });
     }
-    return new Response(JSON.stringify({ received: true }));
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isSubscribed: true,
+        subscriptionId,
+        generationCount: 0,
+        lastGeneratedAt: new Date(),
+      },
+    });
   }
+
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription;
+
+    await prisma.user.updateMany({
+      where: { subscriptionId: subscription.id },
+      data: { isSubscribed: false },
+    });
+  }
+  return new NextResponse("✅ Webhook received", { status: 200 });
 }
