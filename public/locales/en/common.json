@@ -90,5 +90,7 @@
     "haveSignedup": "Already have an account?",
     "nonAccount": "Don't have an account?",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "limite": "The free plan of SmartCV is limited to 6 CV or cover letter generations per day.",
+    "ctUpgrade": "Upgrade to unlock unlimited access and premium features."
 }

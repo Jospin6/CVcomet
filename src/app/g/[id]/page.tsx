@@ -31,6 +31,7 @@ import { CoverLetterFive } from "@/components/templates/coverLetter/coverLetterF
 import { cover1, cover2, cover3, cover4, cover5, cv1, cv2, cv3, cv4, cv5 } from "@/helpers/constants";
 import { CoverLetterSkeleton } from "@/components/ui/coverLetterSkeleton";
 import { LoadingIcon } from "@/components/ui/loadingIcon";
+import Link from "next/link";
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
     [cv1]: CvOne,
@@ -64,12 +65,12 @@ export default function Home() {
     const [isCvLoad, setCvLoad] = useState<boolean>(false)
     const [isCoverLoad, setCoverLoad] = useState<boolean>(false)
 
-    const { object: cvObject, submit: cvSubmit, isLoading: isLoadingCv } = useObject({
+    const { object: cvObject, error: cvError, submit: cvSubmit, isLoading: isLoadingCv } = useObject({
         api: '/api/generate-cv',
         schema: cvSchema,
     });
 
-    const { object: coverLetterObject, submit: submitCoverLetter, isLoading: isLoadingCoverLetter } = useObject({
+    const { object: coverLetterObject, error: coverError, submit: submitCoverLetter, isLoading: isLoadingCoverLetter } = useObject({
         api: '/api/generate-cover-letter',
         schema: coverLetterSchema,
     });
@@ -106,7 +107,7 @@ export default function Home() {
                 inputRef.current.innerText = "";
             }
         } catch (error) {
-            console.error("Error submitting CV:", error);
+            console.log("Error submitting CV:", error);
             setCvLoad(false);
         }
     };
@@ -122,7 +123,7 @@ export default function Home() {
                 inputRef.current.innerText = "";
             }
         } catch (error) {
-            console.error("Error submitting Cover letter:", error);
+            console.log("Error submitting Cover letter:", error);
             setCoverLoad(false)
         }
     };
@@ -198,6 +199,15 @@ export default function Home() {
                     </motion.div>
                 </div>
             </motion.div>
+
+            {(cvError || coverError) && (
+                <div className="text-red-500 mt-2">
+                    <p>{t("limite")}</p>
+                    <Link href={"/upgrade"} className="text-sm text-blue-700 underline">
+                        {t("ctUpgrade")}
+                    </Link>
+                </div>
+            )}
 
             {(isLoadingCv || loadConversation) && <CvSkeleton />}
             {isLoadingCoverLetter && (<CoverLetterSkeleton />)}

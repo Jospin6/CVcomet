@@ -91,5 +91,7 @@
     "haveSignedup": "Avez-vous déjà un compte?",
     "nonAccount": "Vous n'avez pas encore de compte?",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "limite": "Le plan gratuit de SmartCV est limité à 6 générations de CV ou de lettres de motivation par jour.",
+    "ctUpgrade": "Passez à un plan supérieur pour débloquer un accès illimité et des fonctionnalités premium."
 }

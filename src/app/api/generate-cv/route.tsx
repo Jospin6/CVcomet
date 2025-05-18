@@ -18,7 +18,10 @@ export async function POST(req: Request) {
       today.toDateString() === new Date(user.lastGeneratedAt).toDateString();
 
     if (isSameDay && user.generationCount >= 6) {
-      throw new Error("Limite gratuite de 6 CV par jour atteinte. Abonnez-vous pour génération illimitée.");
+      return new NextResponse(
+        JSON.stringify({ error: "Limit to 6 generations a day" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
     await prisma.user.update({
       where: { id: user.id },
