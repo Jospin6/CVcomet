@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "../../../../prisma/prisma"
-import { CoreAssistantMessage, CoreMessage, CoreSystemMessage, CoreToolMessage, CoreUserMessage, streamObject } from "ai";
+import { CoreMessage, streamObject } from "ai";
 import { gemini } from "@/lib/gemini";
 import { generateCvPrompt, generateCvSystemPrompt, generatedLanguagePrompt } from "@/helpers/helpers";
 import { cvSchema } from "@/helpers/schema";
@@ -10,8 +10,6 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   const { description, user, conversationId, language } = await req.json();
   const curentLanguage = generatedLanguagePrompt(language)
-
-  type ChatMessage = CoreSystemMessage | CoreUserMessage | CoreAssistantMessage | CoreToolMessage;
 
   if (!user.isSubscribed) {
     const today = new Date();
