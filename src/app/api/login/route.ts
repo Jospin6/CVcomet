@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   })
 
   if (!user) {
-    throw new Error('Utilisateur non trouvé')
+    return NextResponse.json({ message: "Utilisateur non trouvé" }, { status: 400 });
   }
 
   if (!user.password) {

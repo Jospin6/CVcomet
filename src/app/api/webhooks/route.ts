@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     const buffer = await req.arrayBuffer();
     rawBody = Buffer.from(buffer);
   } catch (err) {
-    console.error("❌ Error getting raw body:", err);
+    console.log("❌ Error getting raw body:", err);
     return new Response("Failed to read request body", { status: 400 });
   }
 
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
-    console.error("❌ Stripe signature verification failed:", err.message);
+    console.log("❌ Stripe signature verification failed:", err.message);
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 

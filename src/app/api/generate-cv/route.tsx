@@ -99,7 +99,6 @@ export async function POST(req: Request) {
 
     return result.toTextStreamResponse();
   } catch (error) {
-    console.error("Error while generating the cv:", error);
     return new NextResponse(
       JSON.stringify({ error: "Failed to generate cv" }),
       { status: 500, headers: { "Content-Type": "application/json" } }

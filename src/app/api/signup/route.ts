@@ -19,8 +19,6 @@ export async function POST(req: NextRequest) {
     });
 
     const token = await generateToken(user);
-
-
     const response = NextResponse.json(user, { status: 200 });
 
     (await cookies()).set("token_cv", token, {
@@ -32,7 +30,6 @@ export async function POST(req: NextRequest) {
     });
     return response;
   } catch (error) {
-    console.error('Error creating chat:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }

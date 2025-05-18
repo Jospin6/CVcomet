@@ -23,7 +23,6 @@ export async function GET(req: NextRequest) {
 
         return new NextResponse(template.templateFile, { headers });
     } catch (error) {
-        console.error("Error in avatar API:", error);
         return new NextResponse("Server error", { status: 500 });
     }
 }

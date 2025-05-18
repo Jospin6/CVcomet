@@ -19,18 +19,17 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         type: type as "CV" | "COVER_LETTER",
-        templateFile: previewBuffer,  
+        templateFile: previewBuffer,
       },
     });
 
     return NextResponse.json(template, { status: 201 });
   } catch (error: any) {
-    console.error("Erreur lors de la création du template:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function GET(req: Request) {
-    const templates = await prisma.template.findMany()
-    return NextResponse.json(templates)
+  const templates = await prisma.template.findMany()
+  return NextResponse.json(templates)
 }
