@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const SECRET_KEY = "secret_key";
-
-const secret = new TextEncoder().encode("secret_key");
+const secret = new TextEncoder().encode(process.env.JWT_SECRET || "secret_key");
 
 async function verifyToken(token: string) {
     try {

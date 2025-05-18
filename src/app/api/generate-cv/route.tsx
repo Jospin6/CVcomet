@@ -1,9 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "../../../../prisma/prisma"
-import axios from "axios";
-import { generateObject, streamObject } from "ai";
+import { CoreAssistantMessage, CoreMessage, CoreSystemMessage, CoreToolMessage, CoreUserMessage, streamObject } from "ai";
 import { gemini } from "@/lib/gemini";
-import { z } from "zod";
 import { generateCvPrompt, generateCvSystemPrompt, generatedLanguagePrompt } from "@/helpers/helpers";
 import { cvSchema } from "@/helpers/schema";
 
@@ -13,12 +11,14 @@ export async function POST(req: Request) {
   const { description, user, conversationId, language } = await req.json();
   const curentLanguage = generatedLanguagePrompt(language)
 
+  type ChatMessage = CoreSystemMessage | CoreUserMessage | CoreAssistantMessage | CoreToolMessage;
+
   if (!user.isSubscribed) {
     const today = new Date();
     const isSameDay =
       user.lastGeneratedAt &&
       today.toDateString() === new Date(user.lastGeneratedAt).toDateString();
-  
+
     if (isSameDay && user.generationCount >= 6) {
       throw new Error("Limite gratuite de 6 CV par jour atteinte. Abonnez-vous pour génération illimitée.");
     }
@@ -30,22 +30,56 @@ export async function POST(req: Request) {
       },
     });
   }
-  
+
+  await prisma.message.create({
+    data: {
+      conversationId,
+      role: 'user',
+      content: description
+    }
+  });
+
   const prompt = generateCvPrompt({ description, user, curentLanguage })
   const system = generateCvSystemPrompt()
 
+  const messages = await prisma.message.findMany({
+    where: { conversationId },
+    select: {
+      role: true,
+      content: true
+    },
+    orderBy: { createdAt: 'asc' }
+  });
+
+  const chatHistory: CoreMessage[] = messages.map(m => ({
+    role: m.role as "user" | "assistant",
+    content: m.content,
+  }));
+
+  chatHistory.push({
+    role: "user",
+    content: prompt
+  });
+
   try {
-    const result = streamObject({
+    const result = await streamObject({
       model: gemini("gemini-1.5-flash"),
       output: 'object',
       schema: cvSchema,
       system: system,
-      prompt: prompt,
+      messages: chatHistory,
       async onFinish({ object, error }) {
         if (object === undefined) {
           console.error('Error:', error);
           return;
         }
+        await prisma.message.create({
+          data: {
+            conversationId,
+            role: 'assistant',
+            content: JSON.stringify(object.cvs)
+          }
+        });
         await prisma.cv.create({
           data: {
             title: object.cvs.title,
