@@ -58,11 +58,11 @@ export default function CertificationForm({ user }: { user?: User }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="border border-gray-500 p-3 rounded-2xl">
-      {successMessage ? (
+      {successMessage && (
         <div className="bg-green-100 text-green-800 px-4 py-2 rounded-md">
           {successMessage}
         </div>
-      ): (<div className="text-center text-red-400 bg-red-900 rounded-xl">Error</div>)}
+      )}
       <div className="md:grid md:grid-cols-6 gap-4">
         <InputField
           label={`${t("certificatName")}`}
