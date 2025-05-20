@@ -24,6 +24,14 @@ export async function POST(req: Request) {
 
 
 export async function GET(req: Request) {
-    const projects = await prisma.project.findMany()
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+    const projects = await prisma.project.findMany(
+        {
+            where: {
+                ...(userId ? { userId, } : {})
+            }
+        }
+    )
     return NextResponse.json(projects)
 }

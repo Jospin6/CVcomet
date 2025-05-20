@@ -3,7 +3,7 @@ import prisma from "../../../../prisma/prisma"
 
 
 export async function POST(req: Request) {
-    const { name, organization,description, date, userId } = await req.json()
+    const { name, organization, description, date, userId } = await req.json()
 
     try {
         const certifications = await prisma.certification.create({
@@ -23,6 +23,13 @@ export async function POST(req: Request) {
 
 
 export async function GET(req: Request) {
-    const certifications = await prisma.certification.findMany()
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+    
+    const certifications = await prisma.certification.findMany({
+        where: { 
+            ...(userId ? { userId, } : {}) 
+        }
+    })
     return NextResponse.json(certifications)
 }

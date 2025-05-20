@@ -28,4 +28,5 @@ export async function DELETE(req: Request) {
     const url = new URL(req.url)
     const id = url.pathname.split('/').pop() as string
     await prisma.experience.delete({where: {id,}})
+    return NextResponse.json({message: "Experience deleted"})
 }

@@ -8,12 +8,12 @@ export async function POST(req: Request) {
     try {
         const experiences = await prisma.experience.create({
             data: {
-                title, 
-                company, 
+                title,
+                company,
                 description,
-                location, 
-                start, 
-                end,  
+                location,
+                start,
+                end,
                 userId
             }
         })
@@ -25,6 +25,14 @@ export async function POST(req: Request) {
 
 
 export async function GET(req: Request) {
-    const experiences = await prisma.experience.findMany()
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+    const experiences = await prisma.experience.findMany(
+        {
+            where: {
+                ...(userId ? { userId, } : {})
+            }
+        }
+    )
     return NextResponse.json(experiences)
 }

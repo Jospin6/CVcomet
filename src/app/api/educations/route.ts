@@ -24,6 +24,14 @@ export async function POST(req: Request) {
 
 
 export async function GET(req: Request) {
-    const educations = await prisma.education.findMany()
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+    const educations = await prisma.education.findMany(
+        {
+            where: { 
+                ...(userId ? { userId, } : {}) 
+            }
+        }
+    )
     return NextResponse.json(educations)
 }

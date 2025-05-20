@@ -28,4 +28,5 @@ export async function DELETE(req: Request) {
     const url = new URL(req.url)
     const id = url.pathname.split('/').pop() as string
     await prisma.certification.delete({where: {id,}})
+    return NextResponse.json({message: "certification deleted"})
 }
