@@ -4,7 +4,7 @@ import TemplateCardList from "@/components/ui/templateCardList";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchTemplates } from "@/redux/template/templateSlice";
-import { fetchUser, selectUser } from "@/redux/user/userSlice";
+import { fetchUser, resetTemplateUpdated, selectUpdateCurrentTeplated, selectUser } from "@/redux/user/userSlice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,7 @@ export default function More() {
     const currentUser = useCurrentUser()
     const user = useSelector(selectUser)
     const { t } = useTranslation();
+    const templateUpdated = useSelector(selectUpdateCurrentTeplated)
 
     const cvs = templates.filter(cv => cv.type === "CV")
     const coverLetters = templates.filter(cv => cv.type === "COVER_LETTER")
@@ -28,12 +29,20 @@ export default function More() {
     }, [currentUser?.id, dispatch])
 
     useEffect(() => {
+        if (currentUser?.id && templateUpdated) {
+            dispatch(fetchUser(currentUser?.id))
+            dispatch(resetTemplateUpdated());
+            dispatch(fetchTemplates())
+        }
+    }, [templateUpdated, currentUser?.id, dispatch]);
+
+    useEffect(() => {
         dispatch(fetchTemplates())
     }, [dispatch])
 
     return <div>
 
-        {loadTemplates && (<TemplateItemSkeleton/>)}
+        {loadTemplates && (<TemplateItemSkeleton />)}
 
         {cvs.length > 0 && (
             <div>

@@ -16,10 +16,10 @@ import { redirect } from "next/navigation";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import CertificationForm from "@/components/forms/certificationForm";
 import { Badge } from "@/components/ui/badge";
-import { deleteExperience } from "@/redux/experience/experienceSlice";
-import { deleteEducation } from "@/redux/education/educationSlice";
-import { deleteProject } from "@/redux/project/projectSlice";
-import { deleteCertification } from "@/redux/certification/certificationSlice";
+import { deleteExperience, selectExperiences } from "@/redux/experience/experienceSlice";
+import { deleteEducation, selectEducation } from "@/redux/education/educationSlice";
+import { deleteProject, selectProjects } from "@/redux/project/projectSlice";
+import { deleteCertification, selectCertifications } from "@/redux/certification/certificationSlice";
 
 
 export default function Profil() {
@@ -31,6 +31,10 @@ export default function Profil() {
     const educations = user?.Education || []
     const projects = user?.Project || []
     const certifications = user?.certifications || []
+    const launchExperience = useSelector(selectExperiences)
+    const launchEducation = useSelector(selectEducation)
+    const launchProject = useSelector(selectProjects)
+    const launchCertification = useSelector(selectCertifications)
 
     const handleLogout = () => {
         dispatch(logout({ id: currentUser?.id || "" }))
@@ -41,7 +45,14 @@ export default function Profil() {
         if (currentUser?.id) {
             dispatch(fetchUser(currentUser.id))
         }
-    }, [currentUser?.id, dispatch])
+    }, [
+        currentUser?.id,
+        launchExperience,
+        launchEducation,
+        launchProject,
+        launchCertification,
+        dispatch
+    ])
 
     const handleDeleteExp = (id: string) => dispatch(deleteExperience(id))
     const handleDeleteEdu = (id: string) => dispatch(deleteEducation(id))
@@ -82,7 +93,7 @@ export default function Profil() {
                         <AccordionItem value="item-1">
                             <AccordionTrigger>
                                 <span>{formatDateToMonthYear(edu.start)} {edu.end && ` - ${formatDateToMonthYear(edu.end)}`}, {edu.school} {edu.degree}</span>
-                                
+
                             </AccordionTrigger>
                             <AccordionContent>
                                 {edu.description}
@@ -105,7 +116,7 @@ export default function Profil() {
                         <AccordionItem value="item-1">
                             <AccordionTrigger>
                                 {formatDateToMonthYear(proj.start)} {proj.end && ` - ${formatDateToMonthYear(proj.end)}`}, {proj.title} {proj.url}
-                                
+
                             </AccordionTrigger>
                             <AccordionContent>
                                 {proj.description}
@@ -128,7 +139,7 @@ export default function Profil() {
                         <AccordionItem value="item-1">
                             <AccordionTrigger>
                                 {formatDateToMonthYear(cert.date)} {cert.name} {cert.organization}
-                                
+
                             </AccordionTrigger>
                             <AccordionContent>
                                 {cert.description}

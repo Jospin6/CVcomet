@@ -28,12 +28,10 @@ export default function CertificationForm({ user }: { user?: User }) {
     resolver: zodResolver(certificationSchema),
   });
   const dispatch = useDispatch<AppDispatch>()
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const onSubmit = async (data: CertificationFormValues) => {
   
     if (!user?.id) {
-      setSuccessMessage(null);
       toast.error("Échec de l'ajout de la certification.");
       return;
     }
@@ -42,27 +40,18 @@ export default function CertificationForm({ user }: { user?: User }) {
       const resultAction = await dispatch(addCertification({ userId: user.id, ...data }));
 
       if (addCertification.fulfilled.match(resultAction)) {
-        setSuccessMessage("Certification added successfully!");
         reset();
         toast.success("Certification ajoutée avec succès !");
-        window.location.reload(); // Si ce reload est nécessaire
       } else {
-        setSuccessMessage(null);
         toast.error("Échec de l'ajout de la certification.");
       }
     } catch (error) {
-      setSuccessMessage(null);
       toast.error("Échec de l'ajout de la certification.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="border border-gray-500 p-3 rounded-2xl">
-      {successMessage && (
-        <div className="bg-green-100 text-green-800 px-4 py-2 rounded-md">
-          {successMessage}
-        </div>
-      )}
       <div className="md:grid md:grid-cols-6 gap-4">
         <InputField
           label={`${t("certificatName")}`}

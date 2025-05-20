@@ -33,7 +33,6 @@ export default function EducationForm({ user }: { user?: User }) {
   } = useForm<EducationFormValues>({
     resolver: zodResolver(educationSchema),
   });
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const onSubmit = async (data: EducationFormValues) => {
     if (!user?.id) {
       toast.error("User ID is missing");
@@ -46,23 +45,16 @@ export default function EducationForm({ user }: { user?: User }) {
       if (addEducation.fulfilled.match(result)) {
         toast.success("Education added successfully!");
         reset();
-        window.location.reload();
       } else {
         toast.error("Failed to add education.");
       }
     } catch (err) {
-      console.error(err);
       toast.error("An unexpected error occurred.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="border-[1px] border-gray-500 shadow p-4 rounded-xl space-y-4">
-      {successMessage && (
-        <div className="bg-green-100 text-green-800 px-4 py-2 rounded-md">
-          {successMessage}
-        </div>
-      )}
       <div className="md:grid md:grid-cols-8 gap-4">
         <InputField
           label={`${t("start")}`}

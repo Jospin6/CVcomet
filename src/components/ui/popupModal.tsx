@@ -14,7 +14,6 @@ export const PopupModal = ({ imageUrl, onClose, isSelected, template, user }: { 
     const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
     const userId = user.id!;
-    const isSubscribed = user.isSubscribed;
     const isAllowed = template.plan === "FREE" || user?.isSubscribed;
     const role = user.role;
 
@@ -22,7 +21,6 @@ export const PopupModal = ({ imageUrl, onClose, isSelected, template, user }: { 
         try {
             setIsLoading(true);
             await dispatch(updateCurrentTemplate({ id: userId, type: template.type, currentTemplateId: template.id }));
-            window.location.reload();
         } catch (error) {
             console.error("Erreur lors du changement de template", error);
         } finally {

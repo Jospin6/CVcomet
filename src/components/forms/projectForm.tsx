@@ -43,12 +43,10 @@ export default function ProjectForm({ user }: { user?: User }) {
       if (addProject.fulfilled.match(result)) {
         toast.success("Project added successfully!");
         reset();
-        window.location.reload();
       } else {
         toast.error("Failed to add project. Please try again.");
       }
     } catch (err) {
-      console.error(err);
       toast.error("An unexpected error occurred.");
     }
   };

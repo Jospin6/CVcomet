@@ -62,6 +62,7 @@ interface UserState {
   currentUser: User | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
+  templateUpdated: boolean;
 }
 
 // Initial state
@@ -71,6 +72,7 @@ const initialState: UserState = {
   users: [],
   status: 'idle',
   error: null,
+  templateUpdated: false,
 };
 
 // Thunks pour appeler l'API
@@ -119,7 +121,7 @@ export const fetchcurrentUser = createAsyncThunk(
   }
 );
 
-export const updateCurrentTemplate = createAsyncThunk("user/currentUser", async ({ id, type, currentTemplateId }: { id: string, type: string, currentTemplateId: string }, { rejectWithValue }) => {
+export const updateCurrentTemplate = createAsyncThunk("user/updateCurrentTemplate", async ({ id, type, currentTemplateId }: { id: string, type: string, currentTemplateId: string }, { rejectWithValue }) => {
   let url = ""
   if (type === "CV") {
     url = `/api/users/${id}/updateTemplate`
@@ -141,7 +143,11 @@ export const updateCurrentTemplate = createAsyncThunk("user/currentUser", async 
 const userSlice = createSlice({
   name: 'user',
   initialState,
-  reducers: {},
+  reducers: {
+    resetTemplateUpdated: (state) => {
+      state.templateUpdated = false;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchcurrentUser.pending, state => {
@@ -177,6 +183,9 @@ const userSlice = createSlice({
       .addCase(updateUser.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message || 'Failed to update user data';
+      })
+      .addCase(updateCurrentTemplate.fulfilled, (state) => {
+        state.templateUpdated = true;
       });
 
     builder.addCase(fetchUsers.pending, (state) => {
@@ -199,5 +208,7 @@ export const selectUsers = (state: RootState) => state.user.users;
 export const selectUserStatus = (state: RootState) => state.user.status;
 export const selectUserError = (state: RootState) => state.user.error;
 export const selectCurrentUser = (state: RootState) => state.user.currentUser
+export const selectUpdateCurrentTeplated = (state: RootState) => state.user.templateUpdated
 
+export const { resetTemplateUpdated } = userSlice.actions;
 export default userSlice.reducer;

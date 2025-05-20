@@ -49,12 +49,10 @@ export default function ExperienceForm({ user }: { user?: User }) {
       if (addExperience.fulfilled.match(result)) {
         toast.success("Experience added successfully!");
         reset();
-        window.location.reload();
       } else {
         toast.error("Failed to add experience. Please try again.");
       }
     } catch (err) {
-      console.error(err);
       toast.error("An unexpected error occurred.");
     }
   };
