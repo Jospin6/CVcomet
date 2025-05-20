@@ -12,6 +12,17 @@ import { transformStringToArray } from "@/lib/utils";
 import { UserProfilItem } from "../ui/userProfilItem";
 import { useTranslation } from 'react-i18next';
 import { toast } from "sonner";
+import { 
+  Mail,
+  User2,
+  Phone,
+  MapPin,
+  Languages,
+  Linkedin,
+  Github,
+  Globe,
+  BadgeCheck,
+ } from "lucide-react";
 
 const userSchema = z.object({
   email: z.string().email(),
@@ -98,7 +109,8 @@ export default function EditUserForm({ user }: { user?: User }) {
     <form onSubmit={handleSubmit(onSubmit)} className="shadow border-[1px] border-gray-500 p-4 rounded-xl w-full">
       <UserProfilItem
         subTitle={`${t("emailDescription")}`}
-        title={`✉️ ${t("email")}`} >
+        icon={<Mail className="text-[#C53030]" size={18}/>}
+        title={`${t("email")}`} >
         <InputField
           label=""
           name="email"
@@ -111,7 +123,8 @@ export default function EditUserForm({ user }: { user?: User }) {
 
       <UserProfilItem
         subTitle={`${t("nameDescription")}`}
-        title={`👤 ${t("name")}`} >
+        icon={<User2 size={18}/>}
+        title={`${t("name")}`} >
         <InputField
           label=""
           name="name"
@@ -123,7 +136,8 @@ export default function EditUserForm({ user }: { user?: User }) {
 
       <UserProfilItem
         subTitle={`${t("phoneDescription")}`}
-        title={`📞 ${t("phone")}`} >
+        icon={<Phone className="text-[#2B6CB0]" size={18}/>}
+        title={`${t("phone")}`} >
         <InputField
           label=""
           name="phone"
@@ -135,7 +149,8 @@ export default function EditUserForm({ user }: { user?: User }) {
 
       <UserProfilItem
         subTitle={`${t("addressDescription")}`}
-        title={`🏠 ${t("address")}`} >
+        icon={<MapPin className="text-[#805AD5]" size={18}/>}
+        title={`${t("address")}`} >
         <InputField
           label=""
           name="address"
@@ -147,7 +162,8 @@ export default function EditUserForm({ user }: { user?: User }) {
 
       <UserProfilItem
         subTitle={`${t("languageDescription")}`}
-        title={`🌐 ${t("languages")}`} >
+        icon={<Languages className="text-[#38A169]" size={18}/>}
+        title={`${t("languages")}`} >
         <div className="flex flex-wrap gap-2 mb-2">
           {transformStringToArray(user?.languages ?? "").map((language, index) => (
             <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border-[1px] border-gray-500">{language}</div>
@@ -165,7 +181,8 @@ export default function EditUserForm({ user }: { user?: User }) {
 
       <UserProfilItem
         subTitle={`${t("linkedinDescription")}`}
-        title={`🔗 ${t("linkedin")}`} >
+        icon={<Linkedin className="text-[#0A66C2]" size={18}/>}
+        title={`${t("linkedin")}`} >
         <InputField
           label=""
           name="linkedin"
@@ -177,7 +194,8 @@ export default function EditUserForm({ user }: { user?: User }) {
 
       <UserProfilItem
         subTitle={`${t("githubDescription")}`}
-        title={`🐙 ${t("github")}`} >
+        icon={<Github className="text-[#fff]" size={18}/>}
+        title={`${t("github")}`} >
         <InputField
           label=""
           name="github"
@@ -189,7 +207,8 @@ export default function EditUserForm({ user }: { user?: User }) {
 
       <UserProfilItem
         subTitle={`${t("websiteDescription")}`}
-        title={`🖼️ ${t("website")}`} >
+        icon={<Globe className="text-[#3270ee]" size={18}/>}
+        title={`${t("website")}`} >
         <InputField
           label=""
           name="portfolio"
@@ -201,7 +220,8 @@ export default function EditUserForm({ user }: { user?: User }) {
 
       <UserProfilItem
         subTitle={`${t("skillDescription")}`}
-        title={`🛠️ ${t("skills")}`} >
+        icon={<BadgeCheck className="text-[#D69E2E]" size={18}/>}
+        title={`${t("skills")}`} >
         <div className="flex flex-wrap gap-2 mb-2">
           {transformStringToArray(user?.skills ?? "").map((skill, index) => (
             <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border-[1px] border-gray-500">{skill}</div>
