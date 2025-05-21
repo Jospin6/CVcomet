@@ -16,10 +16,11 @@ export async function GET(req: Request) {
 export async function PUT(req: Request) {
     const pathUrl = new URL(req.url)
     const id = pathUrl.pathname.split('/').pop() as string
-    const { title, url, start, end, userId } = await req.json()
+    const { title, url, start, end, userId, description } = await req.json()
+    console.log("data", title, url, start, end, userId)
     const project = await prisma.project.update({
         where: { id, },
-        data: { title, url, start, end, userId }
+        data: { title, url, start, end, userId, description }
     })
     return NextResponse.json(project)
 }

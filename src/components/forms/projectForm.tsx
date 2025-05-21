@@ -5,11 +5,11 @@ import { Button } from "../ui/button";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { User } from "@/redux/user/userSlice";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { useTranslation } from 'react-i18next';
-import { addProject } from "@/redux/project/projectSlice";
+import { addProject, updateProject } from "@/redux/project/projectSlice";
 import { TextAreaField } from "../ui/textAreaField";
 import { toast } from "sonner";
 
@@ -23,13 +23,31 @@ const projectSchema = z.object({
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
-export default function ProjectForm({ user }: { user?: User }) {
+export default function ProjectForm({ user, initialData, id }: { id?: string, user?: User, initialData?: ProjectFormValues }) {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>()
   const { register, reset, handleSubmit, formState: { errors, isSubmitting } } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
+    defaultValues: {
+      title: "",
+      url: "",
+      start: "",
+      end: "",
+      description: "",
+    }
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        title: initialData.title,
+        url: initialData.url,
+        start: initialData.start,
+        end: initialData.end,
+        description: initialData.description,
+      });
+    }
+  }, [initialData, reset]);
 
   const onSubmit = async (data: ProjectFormValues) => {
     try {
@@ -38,13 +56,20 @@ export default function ProjectForm({ user }: { user?: User }) {
         return;
       }
 
-      const result = await dispatch(addProject({ userId: user.id, ...data }));
+      let result;
+      if (!initialData) {
+        result = await dispatch(addProject({ userId: user.id, ...data }));
+      } else {
+        if (id) {
+          result = await dispatch(updateProject({ userId: user.id, ...data, id }));
+        }
+      }
 
-      if (addProject.fulfilled.match(result)) {
-        toast.success("Project added successfully!");
+      if (addProject.fulfilled.match(result) || updateProject.fulfilled.match(result)) {
+        toast.success("Project added or updated successfully!");
         reset();
       } else {
-        toast.error("Failed to add project. Please try again.");
+        toast.error("Failed to add or update project. Please try again.");
       }
     } catch (err) {
       toast.error("An unexpected error occurred.");

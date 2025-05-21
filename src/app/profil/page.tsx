@@ -40,6 +40,19 @@ export default function Profil() {
 
     const hasFetched = useRef(false);
 
+    const [editItem, setEditItem] = useState<any>(null);
+    const [editType, setEditType] = useState<"exp" | "edu" | "proj" | "cert" | null>(null);
+
+    const handleEdit = (type: "exp" | "edu" | "proj" | "cert", item: any) => {
+        setEditItem(item);
+        setEditType(type);
+    };
+
+    const closeEditModal = () => {
+        setEditItem(null);
+        setEditType(null);
+    };
+
     useEffect(() => {
         if (currentUser?.id && !hasFetched.current) {
             dispatch(fetchUser(currentUser.id));
@@ -82,13 +95,19 @@ export default function Profil() {
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     {exp.description}
-                                    <div className="mt-3">
+                                    <div className="mt-3 flex gap-2">
                                         <Button
                                             disabled={loadingDeleteId === exp.id}
                                             onClick={() => handleDelete("exp", exp.id)}
-                                            className="text-white bg-red-600 py-1 cursor-pointer"
+                                            className="text-white bg-red-600 py-1"
                                         >
                                             {loadingDeleteId === exp.id ? "Deleting..." : "Delete"}
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleEdit("exp", exp)}
+                                            className="text-white bg-blue-600 py-1"
+                                        >
+                                            Edit
                                         </Button>
                                     </div>
                                 </AccordionContent>
@@ -111,13 +130,19 @@ export default function Profil() {
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     {edu.description}
-                                    <div className="mt-3">
+                                    <div className="mt-3 flex gap-2">
                                         <Button
                                             disabled={loadingDeleteId === edu.id}
                                             onClick={() => handleDelete("edu", edu.id)}
-                                            className="text-white bg-red-600 py-1 cursor-pointer"
+                                            className="text-white bg-red-600 py-1"
                                         >
                                             {loadingDeleteId === edu.id ? "Deleting..." : "Delete"}
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleEdit("edu", edu)}
+                                            className="text-white bg-blue-600 py-1"
+                                        >
+                                            Edit
                                         </Button>
                                     </div>
                                 </AccordionContent>
@@ -140,13 +165,19 @@ export default function Profil() {
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     {proj.description}
-                                    <div className="mt-3">
+                                    <div className="mt-3 flex gap-2">
                                         <Button
                                             disabled={loadingDeleteId === proj.id}
                                             onClick={() => handleDelete("proj", proj.id)}
-                                            className="text-white bg-red-600 py-1 cursor-pointer"
+                                            className="text-white bg-red-600 py-1"
                                         >
                                             {loadingDeleteId === proj.id ? "Deleting..." : "Delete"}
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleEdit("proj", proj)}
+                                            className="text-white bg-blue-600 py-1"
+                                        >
+                                            Edit
                                         </Button>
                                     </div>
                                 </AccordionContent>
@@ -169,13 +200,19 @@ export default function Profil() {
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     {cert.description}
-                                    <div className="mt-3">
+                                    <div className="mt-3 flex gap-2">
                                         <Button
                                             disabled={loadingDeleteId === cert.id}
                                             onClick={() => handleDelete("cert", cert.id!)}
-                                            className="text-white bg-red-600 py-1 cursor-pointer"
+                                            className="text-white bg-red-600 py-1"
                                         >
                                             {loadingDeleteId === cert.id ? "Deleting..." : "Delete"}
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleEdit("cert", cert)}
+                                            className="text-white bg-blue-600 py-1"
+                                        >
+                                            Edit
                                         </Button>
                                     </div>
                                 </AccordionContent>
@@ -189,6 +226,47 @@ export default function Profil() {
             <div>
                 <Button onClick={handleLogout} className="bg-red-700 text-gray-200">Logout</Button>
             </div>
+            {editItem && (
+                <div className="fixed inset-0 bg-black/70 bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-[#1a1a1a] rounded-lg p-6 w-full max-w-2xl relative">
+                        <button
+                            onClick={closeEditModal}
+                            className="absolute top-2 right-2 text-black bg-gray-200 px-3 py-1 rounded"
+                        >
+                            ✕
+                        </button>
+
+                        {editType === "exp" && (
+                            <ExperienceForm
+                                user={user || undefined}
+                                initialData={editItem}
+                                id={editItem.id}
+                            />
+                        )}
+                        {editType === "edu" && (
+                            <EducationForm
+                                user={user || undefined}
+                                initialData={editItem}
+                                id={editItem.id}
+                            />
+                        )}
+                        {editType === "proj" && (
+                            <ProjectForm
+                                user={user || undefined}
+                                initialData={editItem}
+                                id={editItem.id}
+                            />
+                        )}
+                        {editType === "cert" && (
+                            <CertificationForm
+                                user={user || undefined}
+                                initialData={editItem}
+                                id={editItem.id}
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

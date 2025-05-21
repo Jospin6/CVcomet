@@ -4,10 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { InputField } from "../ui/InputField";
 import { Button } from "../ui/button";
 import { User } from "@/redux/user/userSlice";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
-import { addEducation } from "@/redux/education/educationSlice";
+import { addEducation, updateEducation } from "@/redux/education/educationSlice";
 import { useTranslation } from 'react-i18next';
 import { TextAreaField } from "../ui/textAreaField";
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ const educationSchema = z.object({
 
 type EducationFormValues = z.infer<typeof educationSchema>;
 
-export default function EducationForm({ user }: { user?: User }) {
+export default function EducationForm({ user, initialData, id }: {id?: string, user?: User, initialData?: EducationFormValues }) {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>()
   const {
@@ -32,7 +32,25 @@ export default function EducationForm({ user }: { user?: User }) {
     formState: { errors, isSubmitting },
   } = useForm<EducationFormValues>({
     resolver: zodResolver(educationSchema),
+    defaultValues: {
+      degree: "",
+      school: "",
+      start: "",
+      end: "",
+      description: "",
+    }
   });
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        degree: initialData.degree,
+        school: initialData.school,
+        start: initialData.start,
+        end: initialData.end,
+        description: initialData.description,
+      });
+    }
+  }, [initialData, reset]);
   const onSubmit = async (data: EducationFormValues) => {
     if (!user?.id) {
       toast.error("User ID is missing");
@@ -40,9 +58,16 @@ export default function EducationForm({ user }: { user?: User }) {
     }
 
     try {
-      const result = await dispatch(addEducation({ userId: user.id, ...data }));
+      let result
+      if (!initialData) {
+        result = await dispatch(addEducation({ userId: user.id, ...data }));
+      } else {
+        if (id) {
+          result = await dispatch(updateEducation({ userId: user.id, ...data, id }));
+        }
+      }
 
-      if (addEducation.fulfilled.match(result)) {
+      if (addEducation.fulfilled.match(result) || updateEducation.fulfilled.match(result)) {
         toast.success("Education added successfully!");
         reset();
       } else {

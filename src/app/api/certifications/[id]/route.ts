@@ -16,10 +16,10 @@ export async function GET(req: Request) {
 export async function PUT(req: Request) {
     const url = new URL(req.url)
     const id = url.pathname.split('/').pop() as string
-    const { name, organization, date, userId } = await req.json()
+    const { name, organization, date, userId, description } = await req.json()
     const certification = await prisma.certification.update({
         where: {id,},
-        data: { name, organization, date, userId }
+        data: { name, organization, date, userId, description }
     })
     return NextResponse.json(certification)
 }

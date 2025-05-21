@@ -8,8 +8,8 @@ import { useTranslation } from 'react-i18next';
 import { User } from "@/redux/user/userSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
-import { addCertification } from "@/redux/certification/certificationSlice";
-import { useState } from "react";
+import { addCertification, updateCertification } from "@/redux/certification/certificationSlice";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 // Définir le schéma de validation
@@ -22,31 +22,55 @@ const certificationSchema = z.object({
 
 type CertificationFormValues = z.infer<typeof certificationSchema>;
 
-export default function CertificationForm({ user }: { user?: User }) {
+export default function CertificationForm({ user, initialData, id }: {id?: string, user?: User, initialData?: CertificationFormValues }) {
   const { t } = useTranslation();
   const { register, reset, handleSubmit, formState: { errors, isSubmitting } } = useForm<CertificationFormValues>({
     resolver: zodResolver(certificationSchema),
+    defaultValues: {
+      name: "",
+      organization: "",
+      date: "",
+      description: "",
+    }
   });
   const dispatch = useDispatch<AppDispatch>()
 
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        name: initialData.name,
+        organization: initialData.organization,
+        date: initialData.date,
+        description: initialData.description,
+      });
+    }
+  }, [initialData, reset]);
+
   const onSubmit = async (data: CertificationFormValues) => {
-  
+
     if (!user?.id) {
       toast.error("Échec de l'ajout de la certification.");
       return;
     }
 
     try {
-      const resultAction = await dispatch(addCertification({ userId: user.id, ...data }));
-
-      if (addCertification.fulfilled.match(resultAction)) {
-        reset();
-        toast.success("Certification ajoutée avec succès !");
+      let resultAction;
+      if (!initialData) {
+        resultAction = await dispatch(addCertification({ userId: user.id, ...data }));
       } else {
-        toast.error("Échec de l'ajout de la certification.");
+        if (id) {
+          resultAction = await dispatch(updateCertification({ userId: user.id, ...data, id }));
+        }
+      }
+
+      if (addCertification.fulfilled.match(resultAction) || updateCertification.fulfilled.match(resultAction)) {
+        reset();
+        toast.success("Certification added successfully!");
+      } else {
+        toast.error("Certification Failed to add.");
       }
     } catch (error) {
-      toast.error("Échec de l'ajout de la certification.");
+      toast.error("An unexpected error occurred.");
     }
   };
 

@@ -5,10 +5,10 @@ import { InputField } from "../ui/InputField";
 import { TextAreaField } from "../ui/textAreaField";
 import { Button } from "../ui/button";
 import { User } from "@/redux/user/userSlice";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
-import { addExperience } from "@/redux/experience/experienceSlice";
+import { addExperience, updateExperience } from "@/redux/experience/experienceSlice";
 import { useTranslation } from 'react-i18next';
 import { toast } from "sonner";
 
@@ -23,7 +23,7 @@ const experienceSchema = z.object({
 
 type ExperienceFormValues = z.infer<typeof experienceSchema>;
 
-export default function ExperienceForm({ user }: { user?: User }) {
+export default function ExperienceForm({ user, initialData, id }: { id?: string, user?: User, initialData?: ExperienceFormValues }) {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>()
   const {
@@ -33,9 +33,29 @@ export default function ExperienceForm({ user }: { user?: User }) {
     formState: { errors, isSubmitting },
   } = useForm<ExperienceFormValues>({
     resolver: zodResolver(experienceSchema),
-    // defaultValues,
+    defaultValues: {
+      title: "",
+      company: "",
+      location: "",
+      start: "",
+      end: "",
+      description: "",
+    }
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        title: initialData.title,
+        company: initialData.company,
+        location: initialData.location,
+        start: initialData.start,
+        end: initialData.end,
+        description: initialData.description,
+      });
+    }
+  }, [initialData, reset]);
 
   const onSubmit = async (data: ExperienceFormValues) => {
     if (!user?.id) {
@@ -44,10 +64,22 @@ export default function ExperienceForm({ user }: { user?: User }) {
     }
 
     try {
-      const result = await dispatch(addExperience({ userId: user.id, ...data }));
+      let result
+      if (!initialData) {
+        result = await dispatch(addExperience({ userId: user.id, ...data }));
+      } else {
+        if (id) {
+          result = await dispatch(updateExperience({
+          id,
+          userId: user.id,
+          ...data
+        }));
+        }
+      }
+      
 
-      if (addExperience.fulfilled.match(result)) {
-        toast.success("Experience added successfully!");
+      if (addExperience.fulfilled.match(result) || updateExperience.fulfilled.match(result)) {
+        toast.success("Experience added or updated successfully!");
         reset();
       } else {
         toast.error("Failed to add experience. Please try again.");

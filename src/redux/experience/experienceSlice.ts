@@ -44,9 +44,9 @@ export const addExperience = createAsyncThunk<Experience, Omit<Experience, 'id'>
   }
 );
 
-export const updateExperience = createAsyncThunk<Experience, Experience>(
+export const updateExperience = createAsyncThunk(
   'experience/updateExperience',
-  async (updatedExperience) => {
+  async (updatedExperience: Experience) => {
     const response = await axios.put(`/api/experiences/${updatedExperience.id}`, updatedExperience);
     return response.data;
   }
