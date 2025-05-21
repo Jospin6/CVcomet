@@ -94,5 +94,9 @@
     "inactive": "Inactive",
     "limite": "Le plan gratuit de SmartCV est limité à 6 générations de CV ou de lettres de motivation par jour.",
     "ctUpgrade": "Passez à un plan supérieur pour débloquer un accès illimité et des fonctionnalités premium.",
-    "remainingGenerations": "Dispo"
+    "remainingGenerations": "Dispo",
+    "unSubscribe": "Annuler l'abonnement",
+    "unSubscribeMessage": "Êtes-vous sûr de vouloir annuler votre abonnement ? Vous conserverez l'accès jusqu'à la fin de la période en cours.",
+    "discard": "Conserver l'abonnement",
+    "unSubscribeTitle": "Annuler votre abonnement"
 }

@@ -68,5 +68,20 @@ export async function POST(req: Request) {
     });
   }
 
+  if (event.type === "customer.subscription.updated") {
+    const subscription = event.data.object as Stripe.Subscription;
+
+    if (
+      subscription.status === "canceled" ||
+      subscription.status === "unpaid" ||
+      subscription.status === "incomplete_expired"
+    ) {
+      await prisma.user.updateMany({
+        where: { subscriptionId: subscription.id },
+        data: { isSubscribed: false },
+      });
+    }
+  }
+
   return new NextResponse("✅ Webhook received", { status: 200 });
 }

@@ -4,9 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { SubscribeButton } from "@/components/ui/subscribeButton";
 import { useTranslation } from 'react-i18next';
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useDispatch, useSelector } from "react-redux";
+import { deleteSubscription, fetchUser, selectUser } from "@/redux/user/userSlice";
+import { AppDispatch } from "@/redux/store";
+import { useEffect } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function UpgradePage() {
     const { t } = useTranslation();
+    const dispatch = useDispatch<AppDispatch>();
+    const user = useCurrentUser();
+    const currentUser = useSelector(selectUser)
+
+    const handleSubscriptionDeletion = () => {
+        if (currentUser?.id) {
+            dispatch(deleteSubscription(currentUser.id))
+        }
+    }
+
+    useEffect(() => {
+        if (user?.id) {
+            dispatch(fetchUser(user.id));
+        }
+    }, [user?.id, dispatch]);
+
     return (
         <div className="min-h-[90vh] flex items-center justify-center p-6">
             <div className="max-w-4xl w-full grid md:grid-cols-2 gap-8">
@@ -36,7 +58,34 @@ export default function UpgradePage() {
                             <li className="flex items-center gap-2"><Check className="text-green-500 w-5 h-5" />{`${t("premiumItemTree")}`}</li>
                             <li className="flex items-center gap-2"><Check className="text-green-500 w-5 h-5" />{`${t("premiumItemFour")}`}</li>
                         </ul>
-                        <SubscribeButton/>
+                        {!currentUser?.isSubscribed ? (
+                            <SubscribeButton />
+                        ) : (<>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button className="w-full text-white bg-red-600">{`${t("unSubscribe")}`}</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                    <DialogHeader>
+                                        <DialogTitle>{t("unSubscribeTitle")}</DialogTitle>
+                                        <DialogDescription className="text-gray-600">
+                                            {t("unSubscribeMessage")}
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="md:flex md:justify-between md:items-center">
+                                        <DialogTrigger asChild className="block md:inline mb-2 md:mb-0 w-full md:w-auto">
+                                            <Button>{`${t("discard")}`}</Button>
+                                        </DialogTrigger>
+                                        <Button 
+                                            className="text-white bg-red-600 w-full md:w-auto" 
+                                            onClick={handleSubscriptionDeletion}>
+                                                {`${t("unSubscribe")}`}
+                                        </Button>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </>
+                        )}
                     </CardContent>
                 </Card>
             </div>

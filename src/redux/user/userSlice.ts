@@ -77,6 +77,13 @@ const initialState: UserState = {
   templateUpdated: false,
 };
 
+export const deleteSubscription = createAsyncThunk<User, string>(
+  'user/deleteSubscription',
+  async (userId: string) => {
+    const response = await axios.post(`/api/stripe/cancel-subscription`, {userId});
+    return response.data;
+  }
+);
 // Thunks pour appeler l'API
 export const fetchUser = createAsyncThunk<User, string>(
   'user/fetchUser',
