@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Sparkles, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { LoadingIcon } from "@/components/ui/loadingIcon";
+import { getTodayGenerationCount } from "@/lib/utils";
 
 export default function Home() {
     const { t } = useTranslation();
@@ -52,7 +53,6 @@ export default function Home() {
             dispatch(fetchUser(user.id));
         }
     }, [user?.id, dispatch]);
-
 
 
     return (
@@ -110,9 +110,19 @@ export default function Home() {
                             <div className="flex justify-between items-center">
 
                                 <div>
-                                    {currentUser?.isSubscribed && (
+                                    {currentUser?.isSubscribed ? (
                                         <span className="text-xs text-gray-400">
-                                            {currentUser?.isSubscribed ? t("active") : t("inactive")}
+                                            {t("active")}
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs text-gray-400">
+                                            {(currentUser?.lastGeneratedAt && currentUser?.generationCount) && 
+                                                (
+                                                    <span>
+                                                        {t("remainingGenerations")}: {getTodayGenerationCount(currentUser?.lastGeneratedAt, currentUser?.generationCount)}
+                                                    </span>
+                                                )
+                                            } 
                                         </span>
                                     )}
                                 </div>

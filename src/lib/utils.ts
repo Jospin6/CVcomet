@@ -58,3 +58,16 @@ export async function generateToken(user: any) {
 
   return token;
 }
+
+export function getTodayGenerationCount(lastGeneratedAt: string, generationCount: number): number {
+    const MAX_GENERATIONS = 6;
+
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+
+  const lastGeneratedDate = new Date(lastGeneratedAt).toISOString().split('T')[0];
+
+  return lastGeneratedDate === today
+    ? Math.max(0, MAX_GENERATIONS - generationCount)
+    : MAX_GENERATIONS;
+}

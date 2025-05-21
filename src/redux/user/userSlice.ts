@@ -54,6 +54,8 @@ export interface User {
   Experience?: Experience[];
   certifications?: Certification[];
   createdAt?: string;
+  lastGeneratedAt?: string;
+  generationCount?: number;
 }
 
 interface UserState {

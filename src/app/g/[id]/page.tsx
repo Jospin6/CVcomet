@@ -32,6 +32,7 @@ import { cover1, cover2, cover3, cover4, cover5, cv1, cv2, cv3, cv4, cv5 } from 
 import { CoverLetterSkeleton } from "@/components/ui/coverLetterSkeleton";
 import { LoadingIcon } from "@/components/ui/loadingIcon";
 import Link from "next/link";
+import { getTodayGenerationCount } from "@/lib/utils";
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
     [cv1]: CvOne,
@@ -167,9 +168,19 @@ export default function Home() {
                         />
                         <div className="flex gap-2 justify-between items-center">
                             <div>
-                                {currentUser?.isSubscribed && (
+                                {currentUser?.isSubscribed ? (
                                     <span className="text-xs text-gray-400">
-                                        {currentUser?.isSubscribed ? t("active") : t("inactive")}
+                                        {t("active")}
+                                    </span>
+                                ) : (
+                                    <span className="text-xs text-gray-400">
+                                        {(currentUser?.lastGeneratedAt && currentUser?.generationCount) &&
+                                            (
+                                                <span>
+                                                    {t("remainingGenerations")}: {getTodayGenerationCount(currentUser?.lastGeneratedAt, currentUser?.generationCount)}
+                                                </span>
+                                            )
+                                        }
                                     </span>
                                 )}
                             </div>
