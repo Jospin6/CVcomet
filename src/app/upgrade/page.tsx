@@ -10,6 +10,7 @@ import { deleteSubscription, fetchUser, selectUser } from "@/redux/user/userSlic
 import { AppDispatch } from "@/redux/store";
 import { useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function UpgradePage() {
     const { t } = useTranslation();
@@ -17,11 +18,20 @@ export default function UpgradePage() {
     const user = useCurrentUser();
     const currentUser = useSelector(selectUser)
 
-    const handleSubscriptionDeletion = () => {
-        if (currentUser?.id) {
-            dispatch(deleteSubscription(currentUser.id))
+    const handleSubscriptionDeletion = async () => {
+        if (!currentUser?.id) return;
+
+        try {
+            await dispatch(deleteSubscription(currentUser.id)).unwrap();
+            toast("Abonnement annulé",{
+                description: "Votre abonnement a bien été annulé.",
+            });
+        } catch (error) {
+            toast("Erreur", {
+                description: "Une erreur est survenue lors de l'annulation de votre abonnement.",
+            });
         }
-    }
+    };
 
     useEffect(() => {
         if (user?.id) {
@@ -76,10 +86,10 @@ export default function UpgradePage() {
                                         <DialogTrigger asChild className="block md:inline mb-2 md:mb-0 w-full md:w-auto">
                                             <Button>{`${t("discard")}`}</Button>
                                         </DialogTrigger>
-                                        <Button 
-                                            className="text-white bg-red-600 w-full md:w-auto" 
+                                        <Button
+                                            className="text-white bg-red-600 w-full md:w-auto"
                                             onClick={handleSubscriptionDeletion}>
-                                                {`${t("unSubscribe")}`}
+                                            {`${t("unSubscribe")}`}
                                         </Button>
                                     </div>
                                 </DialogContent>
