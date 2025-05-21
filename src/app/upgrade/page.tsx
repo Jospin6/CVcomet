@@ -23,12 +23,12 @@ export default function UpgradePage() {
 
         try {
             await dispatch(deleteSubscription(currentUser.id)).unwrap();
-            toast("Abonnement annulé",{
-                description: "Votre abonnement a bien été annulé.",
+            toast(`${t("unSubscribeSuccessTitle")}`,{
+                description: `${t("unSubscribeSuccess")}`,
             });
         } catch (error) {
-            toast("Erreur", {
-                description: "Une erreur est survenue lors de l'annulation de votre abonnement.",
+            toast(`${t("error")}`, {
+                description: `${t("errorMessage")}`,
             });
         }
     };

@@ -97,5 +97,9 @@
     "unSubscribe": "Cancel Subscription",
     "unSubscribeMessage": "Are you sure you want to cancel your subscription? You will still have access until the end of your current billing period.",
     "discard": "Keep Subscription",
-    "unSubscribeTitle": "Cancel Your Subscription"
+    "unSubscribeTitle": "Cancel Your Subscription",
+    "unSubscribeSuccess": "Your subscription has been successfully cancelled.",
+    "unSubscribeSuccessTitle": "Subscription Cancelled",
+    "error": "Error",
+    "errorMessage": "An error occurred while cancelling your subscription."
 }
