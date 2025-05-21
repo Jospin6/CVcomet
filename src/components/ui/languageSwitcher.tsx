@@ -17,15 +17,15 @@ export default function LanguageSwitcher() {
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng);
 
-        const segments = pathname.split('/');
-        if (segments[1] === 'en' || segments[1] === 'fr') {
-            segments[1] = lng;
-        } else {
-            segments.splice(1, 0, lng);
-        }
-        const newPath = segments.join('/');
+        // const segments = pathname.split('/');
+        // if (segments[1] === 'en' || segments[1] === 'fr') {
+        //     segments[1] = lng;
+        // } else {
+        //     segments.splice(1, 0, lng);
+        // }
+        // const newPath = segments.join('/');
 
-        router.push(newPath);
+        // router.push(newPath);
     };
 
     return (
