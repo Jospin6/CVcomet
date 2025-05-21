@@ -29,7 +29,7 @@ export const AccountNav = () => {
                     {!loading ? (
                         <Link href="/profil">
                             <AvatarFallback className="font-bold w-full h-full flex items-center justify-center text-white">
-                                {currentUser.email.charAt(0).toUpperCase()}
+                                {currentUser.email && currentUser.email.charAt(0).toUpperCase()}
                             </AvatarFallback>
                         </Link>
                     ) : (

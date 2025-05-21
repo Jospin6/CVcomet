@@ -22,7 +22,7 @@ export const PopupModal = ({ imageUrl, onClose, isSelected, template, user }: { 
             setIsLoading(true);
             await dispatch(updateCurrentTemplate({ id: userId, type: template.type, currentTemplateId: template.id }));
         } catch (error) {
-            console.error("Erreur lors du changement de template", error);
+            console.log("Erreur lors du changement de template", error);
         } finally {
             setIsLoading(false);
         }
