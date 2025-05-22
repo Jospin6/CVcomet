@@ -101,5 +101,7 @@
     "unSubscribeSuccess": "Your subscription has been successfully cancelled.",
     "unSubscribeSuccessTitle": "Subscription Cancelled",
     "error": "Error",
-    "errorMessage": "An error occurred while cancelling your subscription."
+    "errorMessage": "An error occurred while cancelling your subscription.",
+    "moreInfos": "Read more",
+    "lessInfos": "Read less"
 }

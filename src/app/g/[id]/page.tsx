@@ -135,6 +135,12 @@ export default function Home() {
         }
     }, [user?.id, dispatch]);
 
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const toggleText = () => setIsExpanded(!isExpanded);
+
+    const longText = conversation?.content;
+
     return (
         <div className="pb-20">
             <motion.div
@@ -210,6 +216,23 @@ export default function Home() {
                     </motion.div>
                 </div>
             </motion.div>
+
+            <div className=" max-w-3xl mx-auto px-4 text-gray-300">
+                <p
+                    className={`transition-all text-sm duration-500 ease-in-out leading-relaxed tracking-wide ${isExpanded ? '' : 'line-clamp-3'}`}
+                >
+                    {longText}
+                </p>
+
+                <div className="flex justify-end">
+                    <button
+                        onClick={toggleText}
+                        className="mt-2 text-sm text-blue-600 hover:underline focus:outline-none"
+                    >
+                        {isExpanded ? `${t("lessInfos")}` : `${t("moreInfos")}`}
+                    </button>
+                </div>
+            </div>
 
             {(cvError || coverError) && (
                 <div className="text-red-500 mt-2">

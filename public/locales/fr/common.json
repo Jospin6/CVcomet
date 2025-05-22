@@ -102,5 +102,7 @@
     "unSubscribeSuccess": "Votre abonnement a été annulé avec succès.",
     "unSubscribeSuccessTitle": "Abonnement annulé",
     "error": "Erreur",
-    "errorMessage": "Une erreur est survenue lors de l'annulation de votre abonnement."
+    "errorMessage": "Une erreur est survenue lors de l'annulation de votre abonnement.",
+    "moreInfos": "Lire plus",
+    "lessInfos": "Lire moins"
 }
