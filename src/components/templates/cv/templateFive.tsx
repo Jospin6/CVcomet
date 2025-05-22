@@ -95,7 +95,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                             <div key={index} className={index > 0 ? "mt-2" : ""}>
                                 <h3 className="font-semibold text-sm">{project.title}</h3>
                                 <p className="text-xs text-black">{project.description}</p>
-                                <p className="text-xs text-black">Tools: {project.technologies}</p>
+                                <p className="text-xs text-black">Tech: {project.technologies}</p>
                             </div>
                         ))}
                     </section>
@@ -127,7 +127,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         <ul className="text-xs">
                             {(cv.languages && cv.languages?.length > 0) && (
                                 <li>
-                                    <span className="font-medium">Languages: </span>
+                                    <span className="font-medium">{t("languages")}: </span>
                                     {cv.languages && cv.languages.map((lang, index) => (
                                         <span key={index} >
                                             {lang.language}
@@ -137,7 +137,7 @@ export const CvFive = ({ cv, user }: { cv: CvProps, user?: User }) => {
                             )}
                             {(cv.certifications && cv.certifications.length > 0) && (
                                 <li>
-                                    <span className="font-medium">Certifications: </span>
+                                    <span className="font-medium">{t("certifications")}: </span>
                                     {cv.certifications.map((cert, index) => (
                                         <span key={index} >
                                             {cert.title}, {cert.issuer}

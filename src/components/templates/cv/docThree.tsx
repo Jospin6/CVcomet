@@ -66,9 +66,9 @@ const DocThree = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) =
           <Text style={styles.bold}>{t("skills")}</Text>
           {cv.skills.map((skill, index) => (
             <View key={index}>
-              {skill.hardskills && <Text>Technical: {skill.hardskills}</Text>}
-              {skill.softskills && <Text>Soft: {skill.softskills}</Text>}
-              {skill.tools && <Text>Tools: {skill.tools}</Text>}
+              {skill.hardskills && <Text>{t("technical")}: {skill.hardskills}</Text>}
+              {skill.softskills && <Text>{t("soft")}: {skill.softskills}</Text>}
+              {skill.tools && <Text>{t("tools")}: {skill.tools}</Text>}
             </View>
           ))}
         </View>
@@ -130,10 +130,10 @@ const DocThree = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) =
         <View>
           <Text style={styles.bold}>{t("additional")}</Text>
           {cv.languages && (
-            <Text>Languages: {cv.languages.map(lang => lang.language).join(", ")}</Text>
+            <Text>{t("languages")}: {cv.languages.map(lang => lang.language).join(", ")}</Text>
           )}
           {(cv.certifications && cv.certifications.length > 0) && (
-            <Text>Certifications: {cv.certifications.map(cert => `${cert.title}, ${cert.issuer}`).join("; ")}</Text>
+            <Text>{t("certifications")}: {cv.certifications.map(cert => `${cert.title}, ${cert.issuer}`).join("; ")}</Text>
           )}
         </View>
       )}

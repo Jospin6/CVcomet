@@ -128,7 +128,7 @@ export const CvFour = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         <ul className="text-xs">
                             {(cv.languages && cv.languages?.length > 0) && (
                                 <li>
-                                    <span className="font-medium">Languages: </span>
+                                    <span className="font-medium">{t("languages")}: </span>
                                     {cv.languages && cv.languages.map((lang, index) => (
                                         <span key={index} >
                                             {lang.language}
@@ -138,7 +138,7 @@ export const CvFour = ({ cv, user }: { cv: CvProps, user?: User }) => {
                             )}
                             {(cv.certifications && cv.certifications.length > 0) && (
                                 <li>
-                                    <span className="font-medium">Certifications: </span>
+                                    <span className="font-medium">{t("certifications")}: </span>
                                     {cv.certifications.map((cert, index) => (
                                         <span key={index} >
                                             {cert.title}, {cert.issuer}

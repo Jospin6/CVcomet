@@ -168,7 +168,7 @@ const DocFour = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) =>
                     <Text style={styles.heading}>{t("additional")}</Text>
                     {cv.languages && cv.languages.length > 0 && (
                         <Text>
-                            <Text style={{ fontWeight: 'bold' }}>Languages: </Text>
+                            <Text style={{ fontWeight: 'bold' }}>{t("languages")}</Text>
                             {cv.languages.map((lang, index) => (
                                 <Text key={index}>{lang.language}{index < (cv.languages ?? []).length - 1 ? ', ' : ''}</Text>
                             ))}
@@ -176,7 +176,7 @@ const DocFour = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) =>
                     )}
                     {cv.certifications?.length > 0 && (
                         <Text>
-                            <Text style={{ fontWeight: 'bold' }}>Certifications: </Text>
+                            <Text style={{ fontWeight: 'bold' }}>{t("certifications")}</Text>
                             {cv.certifications.map((cert, index) => (
                                 <Text key={index}>{cert.title}, {cert.issuer}{index < (cv.certifications?.length ?? 0) - 1 ? '; ' : ''}</Text>
                             ))}

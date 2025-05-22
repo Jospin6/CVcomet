@@ -111,18 +111,18 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                                     {cv.skills.map((skill, i) => (
                                         <li key={i}>
                                             {skill.hardskills && (<div className="mb-2">
-                                                <div className="font-medium">Technical</div>
+                                                <div className="font-medium">{t("technical")}</div>
                                                 <p className="text-xs">{skill.hardskills}</p>
                                             </div>)}
                                             {skill.softskills && (
                                                 <div className="mb-2">
-                                                    <div className="font-medium">Soft</div>
+                                                    <div className="font-medium">{t("soft")}</div>
                                                     <p className="text-xs">{skill.softskills}</p>
                                                 </div>
                                             )}
                                             {skill.tools && (
                                                 <div className="mb-2">
-                                                    <div className="font-medium">Tools</div>
+                                                    <div className="font-medium">{t("tools")}</div>
                                                     <p className="text-xs">{skill.tools}</p>
                                                 </div>
                                             )}

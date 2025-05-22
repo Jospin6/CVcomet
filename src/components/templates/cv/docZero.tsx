@@ -90,9 +90,9 @@ const DocZero = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) =>
                     <Text style={styles.sectionTitle}>{t("skills")}</Text>
                     {cv.skills.map((skill, index) => (
                         <View key={index}>
-                            {skill.hardskills && <Text><Text style={{ fontWeight: 'bold' }}>Technical:</Text> {skill.hardskills}</Text>}
-                            {skill.softskills && <Text><Text style={{ fontWeight: 'bold' }}>Soft:</Text> {skill.softskills}</Text>}
-                            {skill.tools && <Text><Text style={{ fontWeight: 'bold' }}>Tools:</Text> {skill.tools}</Text>}
+                            {skill.hardskills && <Text><Text style={{ fontWeight: 'bold' }}>{t("technical")}:</Text> {skill.hardskills}</Text>}
+                            {skill.softskills && <Text><Text style={{ fontWeight: 'bold' }}>{t("soft")}:</Text> {skill.softskills}</Text>}
+                            {skill.tools && <Text><Text style={{ fontWeight: 'bold' }}>{t("tools")}:</Text> {skill.tools}</Text>}
                         </View>
                     ))}
                 </View>
@@ -163,13 +163,13 @@ const DocZero = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) =>
                     <Text style={styles.sectionTitle}>{t("additional")}</Text>
                     {(cv.languages ?? []).length > 0 && (
                         <Text>
-                            <Text style={{ fontWeight: "bold" }}>Languages: </Text>
+                            <Text style={{ fontWeight: "bold" }}>{t("languages")}: </Text>
                             {(cv.languages ?? []).map((lang, index) => lang.language).join(", ")}
                         </Text>
                     )}
                     {(cv.certifications ?? []).length > 0 && (
                         <Text>
-                            <Text style={{ fontWeight: "bold" }}>Certifications: </Text>
+                            <Text style={{ fontWeight: "bold" }}>{t("certifications")}: </Text>
                             {(cv.certifications ?? []).map((cert, index) => `${cert.title} (${cert.issuer})`).join(", ")}
                         </Text>
                     )}

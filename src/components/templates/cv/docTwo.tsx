@@ -123,9 +123,9 @@ const DocTwo = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: string) => 
             <Text style={styles.subtitle}>{t("skills")}</Text>
             {cv.skills.map((skill, i) => (
               <View key={i}>
-                {skill.hardskills && <Text style={{ fontWeight: '200', fontSize: 10 }}><Text style={{ fontWeight: 'bold', fontSize: 10 }}>Technical:</Text> {skill.hardskills}</Text>}
-                {skill.softskills && <Text style={{ fontWeight: '200', fontSize: 10 }}><Text style={{ fontWeight: 'bold', fontSize: 10 }}>Soft:</Text> {skill.softskills}</Text>}
-                {skill.tools && <Text style={{ fontWeight: '200', fontSize: 10 }}><Text style={{ fontWeight: 'bold', fontSize: 10 }}>Tools:</Text> {skill.tools}</Text>}
+                {skill.hardskills && <Text style={{ fontWeight: '200', fontSize: 10 }}><Text style={{ fontWeight: 'bold', fontSize: 10 }}>{t("technical")}:</Text> {skill.hardskills}</Text>}
+                {skill.softskills && <Text style={{ fontWeight: '200', fontSize: 10 }}><Text style={{ fontWeight: 'bold', fontSize: 10 }}>{t("soft")}:</Text> {skill.softskills}</Text>}
+                {skill.tools && <Text style={{ fontWeight: '200', fontSize: 10 }}><Text style={{ fontWeight: 'bold', fontSize: 10 }}>{t("tools")}:</Text> {skill.tools}</Text>}
               </View>
             ))}
           </View>

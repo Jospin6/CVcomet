@@ -137,12 +137,12 @@ export const DocFive = ({ user, cv, t }: { user: User, cv: CvProps, t: (key: str
                     <Text style={styles.subtitle}>{t('additional')}</Text>
                     {(cv.languages ?? []).length > 0 && (
                         <Text>
-                            Languages: {(cv.languages ?? []).map((lang: any) => lang.language).join(', ')}
+                            {t("languages")}: {(cv.languages ?? []).map((lang: any) => lang.language).join(', ')}
                         </Text>
                     )}
                     {cv.certifications && cv.certifications.length > 0 && (
                         <Text>
-                            Certifications: {cv.certifications.map((cert: any) => `${cert.title}, ${cert.issuer}`).join(' | ')}
+                            {t("certifications")}: {cv.certifications.map((cert: any) => `${cert.title}, ${cert.issuer}`).join(' | ')}
                         </Text>
                     )}
                 </View>

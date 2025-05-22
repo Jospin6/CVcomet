@@ -103,5 +103,8 @@
     "error": "Error",
     "errorMessage": "An error occurred while cancelling your subscription.",
     "moreInfos": "Read more",
-    "lessInfos": "Read less"
+    "lessInfos": "Read less",
+    "technical": "Technical",
+    "soft": "Soft",
+    "tools": "Tools"
 }

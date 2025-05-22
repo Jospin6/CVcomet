@@ -59,9 +59,9 @@ export const CvOne = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         <div className="text-[12px]">
                             {cv.skills.map((skill, index) => (
                                 <div key={index} className="inline-block rounded-full text-[12px] text-black ">
-                                    {skill.hardskills && (<p> <span className="font-semibold">Technical: </span> {skill.hardskills}</p>)}
-                                    {skill.softskills && (<p><span className="font-semibold">Soft: </span>  {skill.softskills}</p>)}
-                                    {skill.tools && (<p><span className="font-semibold">Tools: </span> {skill.tools}</p>)}
+                                    {skill.hardskills && (<p> <span className="font-semibold">{t("technical")}: </span> {skill.hardskills}</p>)}
+                                    {skill.softskills && (<p><span className="font-semibold">{t("soft")}: </span>  {skill.softskills}</p>)}
+                                    {skill.tools && (<p><span className="font-semibold">{t("tools")}: </span> {skill.tools}</p>)}
                                 </div>
                             ))}
                         </div>
@@ -128,7 +128,7 @@ export const CvOne = ({ cv, user }: { cv: CvProps, user?: User }) => {
                         <ul className="text-xs">
                             {(cv.languages && cv.languages?.length > 0) && (
                                 <li>
-                                    <span className="font-medium">Languages: </span>
+                                    <span className="font-medium">{t("languages")}: </span>
                                     {cv.languages && cv.languages.map((lang, index) => (
                                         <span key={index} >
                                             {lang.language}
@@ -138,7 +138,7 @@ export const CvOne = ({ cv, user }: { cv: CvProps, user?: User }) => {
                             )}
                             {(cv.certifications && cv.certifications.length > 0) && (
                                 <li>
-                                    <span className="font-medium">Certifications: </span>
+                                    <span className="font-medium">{t("certifications")}: </span>
                                     {cv.certifications.map((cert, index) => (
                                         <span key={index} >
                                             {cert.title}, {cert.issuer}

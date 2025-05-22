@@ -104,5 +104,8 @@
     "error": "Erreur",
     "errorMessage": "Une erreur est survenue lors de l'annulation de votre abonnement.",
     "moreInfos": "Lire plus",
-    "lessInfos": "Lire moins"
+    "lessInfos": "Lire moins",
+    "technical": "Techniques",
+    "soft": "Soft",
+    "tools": "Outils"
 }
