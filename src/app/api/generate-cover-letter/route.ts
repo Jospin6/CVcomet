@@ -43,6 +43,10 @@ export async function POST(req: Request) {
     orderBy: { createdAt: 'asc' }
   });
 
+  const conversationContent = await prisma.conversation.findUnique({
+    where: { id: conversationId }
+  })
+
   const chatHistory: CoreMessage[] = messages.map(m => ({
     role: m.role as "user" | "assistant",
     content: m.content,
@@ -52,6 +56,13 @@ export async function POST(req: Request) {
     role: "user",
     content: prompt
   });
+
+  if (conversationContent?.content) {
+    chatHistory.push({
+      role: "user",
+      content: conversationContent.content
+    });
+  }
 
   try {
     const result = await streamObject({

@@ -43,6 +43,10 @@ export async function POST(req: Request) {
   const prompt = generateCvPrompt({ description, user, curentLanguage })
   const system = generateCvSystemPrompt()
 
+  const conversationContent = await prisma.conversation.findUnique({
+    where: { id: conversationId }
+  })
+
   const messages = await prisma.message.findMany({
     where: { conversationId },
     select: {
@@ -61,6 +65,13 @@ export async function POST(req: Request) {
     role: "user",
     content: prompt
   });
+
+  if (conversationContent?.content) {
+    chatHistory.push({
+      role: "user",
+      content: conversationContent.content
+    });
+  }
 
   try {
     const result = await streamObject({
