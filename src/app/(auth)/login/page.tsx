@@ -48,7 +48,7 @@ export default function Login() {
   return (
     <div className="md:w-[400px] w-[90%] bg-[#1a1a1a] shadow-amber-600 shadow-2xs mx-auto p-6">
       <div className="py-4">
-        <div className="font-bold text-gray-200 flex items-center justify-center"><FileText size={30}/> <span className="text-3xl">SmartCV</span></div>
+        <div className="font-bold text-gray-200 flex items-center justify-center"><FileText size={30}/> <span className="text-3xl">CVcomet</span></div>
           <h2 className="text-2xl text-center font-bold mb-4 text-gray-200">{t("login")}</h2>
       </div>
       {error && <p className="text-red-500">{error}</p>}
