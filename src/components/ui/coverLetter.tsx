@@ -1,51 +1,30 @@
 import { CoverLetterProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
-import { Download, RefreshCcw } from "lucide-react";
-import html2canvas from "html2canvas-pro"
-import jsPDF from "jspdf"
-import { useRef } from "react"
-import { useTranslation } from 'react-i18next'
+import { Download } from "lucide-react";
+import CoverZero from "../templates/coverLetter/coverZero";
+import { CurrentFormatDate } from "@/components/ui/currentFormatDate";
+import { DownLoadPdf } from "@/lib/downloadPdf";
+import { useTranslation } from "react-i18next";
 
 export const CoverLetter = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?: User }) => {
     const { t } = useTranslation();
-    const date = new Date(Date.now());
-    const cvRef = useRef<HTMLDivElement>(null);
-
-    const handleDownload = async () => {
-        const element = cvRef.current;
-        if (!element) return;
-
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4");
-
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save("cover_letter.pdf");
+     const onClickDownload = () => {
+        DownLoadPdf({
+            pdfElement: <CoverZero user={user!} coverLetter={coverLetter} />,
+            filename: `${user!.name}_cover_letter.pdf`,
+        });
     };
-
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
                 <h2 className="text-xl font-bold">{t("coverLetter")}</h2>
                 <div className="flex gap-4">
-                    <button
-                        onClick={handleDownload}
-                        className="p-1 rounded hover:border-[1px] cursor-pointer"
-                        aria-label="Download Cover Letter"
-                    >
-                        <Download className="w-5 h-5" />
-                    </button>
+                    {(user && coverLetter) && (
+                        <Download className="w-5 h-5 cursor-pointer" onClick={onClickDownload} />
+                    )}
                 </div>
             </div>
             <div
-                ref={cvRef}
                 className="mx-auto bg-white flex flex-col justify-start shadow-lg"
                 style={{
                     width: "210mm",
@@ -68,7 +47,7 @@ export const CoverLetter = ({ coverLetter, user }: { coverLetter: CoverLetterPro
                         {coverLetter.companyAddress && <p>{coverLetter.companyAddress}</p>}
                     </div>
 
-                    <p className="mt-8">{`${day}/${month}/${year}`}</p>
+                    <p className="mt-8"><CurrentFormatDate/></p>
 
                     {coverLetter.recipientName && (
                         <p className="mt-8">{coverLetter.recipientName},</p>

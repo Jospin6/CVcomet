@@ -1,49 +1,33 @@
 "use client"
 import { CvProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
-import { Download, RefreshCcw } from "lucide-react"
-import html2canvas from "html2canvas-pro"
-import jsPDF from "jspdf"
-import { useRef } from "react"
+import { Download } from "lucide-react"
 import { useTranslation } from 'react-i18next'
+import DocZero from "../templates/cv/docZero"
+import { DownLoadPdf } from "@/lib/downloadPdf"
 
 
 
 export const Cv = ({ cv, user }: { cv: CvProps, user?: User }) => {
     const { t } = useTranslation();
-    const cvRef = useRef<HTMLDivElement>(null);
-
-    const handleDownload = async () => {
-        const element = cvRef.current;
-        if (!element) return;
-
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4");
-
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save("cv.pdf");
+    const onClickDownload = () => {
+        DownLoadPdf({
+            pdfElement: <DocZero user={user!} cv={cv} t={t} />,
+            filename: `${user!.name}_resume.pdf`,
+        });
     };
 
     return (
         <>
             <div className="flex items-center text-white justify-between mb-4">
-                <h2 className="text-xl font-bold">Resume</h2>
+                <h2 className="text-xl font-bold">{t("resume")}</h2>
                 <div className="flex gap-4">
-                    <button
-                        onClick={handleDownload}
-                        className="p-1 rounded hover:border-[1px] cursor-pointer"
-                        aria-label="Download CV"
-                    >
-                        <Download className="w-5 h-5" />
-                    </button>
+                    {(user && cv) && (
+                       <Download className="w-5 h-5 cursor-pointer" onClick={onClickDownload} />
+                    )}
                 </div>
             </div>
-            <div ref={cvRef} className="max-w-[794px] mx-auto p-8 bg-white shadow-lg" style={{ width: "210mm", minHeight: "297mm" }}>
+            <div className="max-w-[794px] mx-auto p-8 bg-white shadow-lg" style={{ width: "210mm", minHeight: "297mm" }}>
                 <header className="text-center mb-6">
                     <h1 className="text-3xl font-bold uppercase">{user?.name ?? "No name"}</h1>
                     <p className="text-sm">
