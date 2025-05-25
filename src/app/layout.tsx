@@ -57,7 +57,7 @@ export default function RootLayout({
                   <SidebarTrigger className="text-white" />
                   <AccountNav />
                 </div>
-                <div className="w-10/12 m-auto">
+                <div className="md:w-10/12 md:m-auto w-full px-2 md:px-0">
                   {children}
                   {modal}
                   <Toaster richColors position="bottom-right" />
