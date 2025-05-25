@@ -68,14 +68,14 @@ export default function Home() {
                     >
                         {t("bigTitle")}
                     </motion.h1>
-                    <motion.p
+                    <motion.h2
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
                         className="text-gray-400 text-sm leading-relaxed"
                     >
                         {t("bigDescription")}
-                    </motion.p>
+                    </motion.h2>
                 </div>
 
                 <motion.div

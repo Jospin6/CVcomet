@@ -45,7 +45,11 @@ export function AppSidebar() {
       <SidebarContent className="bg-[#1a1a1a] text-white">
         <SidebarGroup>
           <div className="h-16 flex items-center ">
-            <SidebarGroupLabel className="text-2xl text-white font-bold">CVcomet</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-2xl text-white font-bold">
+              <Link href={"/"}>
+                {t("cvcomet")}
+              </Link>
+            </SidebarGroupLabel>
           </div>
           <SidebarGroupContent>
             <SidebarMenu>

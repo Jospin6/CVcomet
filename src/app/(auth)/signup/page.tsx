@@ -48,8 +48,8 @@ export default function RegisterForm() {
   return (
     <div className="md:w-[400px] w-[90%] bg-[#1a1a1a] shadow-amber-600 shadow-2xs mx-auto p-6">
       <div className="py-4">
-        <div className="font-bold text-gray-200 text-xl flex items-center justify-start">CVcomet</div>
-        <h2 className="text-4xl font-bold mb-4 text-gray-200">{t("signup")}</h2>
+        <div className="font-bold text-gray-200 md:text-xl text-lg flex items-center justify-start">{t("cvcomet")}</div>
+        <h2 className="md:text-4xl text-2xl font-bold mb-4 text-gray-200">{t("signup")}</h2>
       </div>
       {error && <p className="text-red-500">{error}</p>}
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -71,7 +71,7 @@ export default function RegisterForm() {
           register={register}
           errors={errors}
         />
-        <Button className="w-4/12 bg-black">{isSubmitting ? "Loading..." : "Signup"}</Button>
+        <Button className="w-4/12 bg-black">{isSubmitting ? "Loading..." : `${t("signup")}`}</Button>
       </form>
       <div className="mt-4 flex text-sm justify-center">
         <span className="pr-2 text-gray-300">{t("haveSignedup")}</span>
