@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { selectCvState } from "@/redux/cv/cvSlice";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppDispatch } from "@/redux/store";
 import { Button } from "@/components/ui/button";
@@ -19,9 +18,8 @@ import { getTodayGenerationCount } from "@/lib/utils";
 export default function Home() {
     const { t } = useTranslation();
     const inputRef = useRef<HTMLDivElement>(null);
-    const [input, setInput] = useState("");
+    const [input, setInput] = useState<string>("");
     const dispatch = useDispatch<AppDispatch>();
-    const cv = useSelector(selectCvState)
     const user = useCurrentUser();
     const currentUser = useSelector(selectUser)
     const currentConversationId = useSelector(selectConversationId)

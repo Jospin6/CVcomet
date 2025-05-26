@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../prisma/prisma"
+import { z } from "zod";
 
+const schema = z.object({
+  content: z.string(),
+  userId: z.string().uuid()
+});
 
 export async function POST(req: Request) {
-    const { content, userId } = await req.json()
-
     try {
+        const body = await req.json();
+        const { content, userId } = schema.parse(body);
+
         const conversations = await prisma.conversation.create({
             data: {
                 content,

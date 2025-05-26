@@ -81,11 +81,11 @@ export default function AdminDashboard() {
         <StatCard title="Subscribed Users" value={`${subscribedUsers}`} />
       </div>
 
-      {templates.length > 0 && (
+      {/* {templates.length > 0 && (
         <div className="my-3">
           <TemplateCardList templates={templates} user={user || undefined}  />
         </div>
-      )}
+      )} */}
 
       <div className="mt-10">
         <Card className="shadow-md">
