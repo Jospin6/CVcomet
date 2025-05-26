@@ -33,6 +33,7 @@ import { CoverLetterSkeleton } from "@/components/ui/coverLetterSkeleton";
 import { LoadingIcon } from "@/components/ui/loadingIcon";
 import Link from "next/link";
 import { getTodayGenerationCount } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
     [cv1]: CvOne,
@@ -246,108 +247,135 @@ export default function Home() {
             {(isLoadingCv || loadConversation) && <CvSkeleton />}
             {isLoadingCoverLetter && (<CoverLetterSkeleton />)}
 
-            {cvObject?.cvs && (
-                <div className="mb-6">
-                    {SelectedCvComponent ? (
-                        <SelectedCvComponent
-                            cv={{
-                                ...cvObject.cvs,
-                                skills: (cvObject.cvs.skills ?? []).filter((skill): skill is NonNullable<typeof skill> => skill !== undefined), // Ensure no undefined values
-                                educations: (cvObject.cvs.educations ?? []).filter((education): education is {
-                                    degree: string;
-                                    school: string;
-                                    location: string;
-                                    start: string;
-                                    end?: string;
-                                    description?: string[];
-                                } => education !== undefined && education.degree !== undefined && education.school !== undefined && education.location !== undefined && education.start !== undefined),
-                                projects: (cvObject.cvs.projects ?? []).filter((project): project is {
-                                    title: string;
-                                    description: string;
-                                    technologies: string;
-                                    link?: string;
-                                } => project !== undefined && project.title !== undefined && project.description !== undefined && project.technologies !== undefined),
-                                experiences: (cvObject.cvs.experiences ?? []).filter((experience): experience is {
-                                    title: string;
-                                    company: string;
-                                    location: string;
-                                    start: string;
-                                    end?: string;
-                                    description?: string[];
-                                } => experience !== undefined && experience.title !== undefined && experience.company !== undefined && experience.location !== undefined && experience.start !== undefined),
-                                certifications: (cvObject.cvs.certifications ?? []).filter((certification): certification is {
-                                    title: string;
-                                    issuer: string;
-                                    date: string;
-                                    description?: string;
-                                } => certification !== undefined && certification.title !== undefined && certification.issuer !== undefined && certification.date !== undefined),
-                                languages: (cvObject.cvs.languages ?? []).filter((language): language is { language: string; level: "Basic" | "Professional" | "Fluent" | "Native"; } => language !== undefined && language.language !== undefined && language.level !== undefined),
-                            }}
-                            user={currentUser ?? undefined}
-                        />
-                    ) : (
-                        <Cv
-                            cv={{
-                                ...cvObject.cvs,
-                                skills: (cvObject.cvs.skills ?? []).filter((skill): skill is NonNullable<typeof skill> => skill !== undefined), // Ensure no undefined values
-                                educations: (cvObject.cvs.educations ?? []).filter((education): education is {
-                                    degree: string;
-                                    school: string;
-                                    location: string;
-                                    start: string;
-                                    end?: string;
-                                    description?: string[];
-                                } => education !== undefined && education.degree !== undefined && education.school !== undefined && education.location !== undefined && education.start !== undefined),
-                                projects: (cvObject.cvs.projects ?? []).filter((project): project is {
-                                    title: string;
-                                    description: string;
-                                    technologies: string;
-                                    link?: string;
-                                } => project !== undefined && project.title !== undefined && project.description !== undefined && project.technologies !== undefined),
-                                experiences: (cvObject.cvs.experiences ?? []).filter((experience): experience is {
-                                    title: string;
-                                    company: string;
-                                    location: string;
-                                    start: string;
-                                    end?: string;
-                                    description?: string[];
-                                } => experience !== undefined && experience.title !== undefined && experience.company !== undefined && experience.location !== undefined && experience.start !== undefined),
-                                certifications: (cvObject.cvs.certifications ?? []).filter((certification): certification is {
-                                    title: string;
-                                    issuer: string;
-                                    date: string;
-                                    description?: string;
-                                } => certification !== undefined && certification.title !== undefined && certification.issuer !== undefined && certification.date !== undefined),
-                                languages: (cvObject.cvs.languages ?? []).filter((language): language is { language: string; level: "Basic" | "Professional" | "Fluent" | "Native"; } => language !== undefined && language.language !== undefined && language.level !== undefined),
-                            }}
-                            user={currentUser ?? undefined}
-                        />
+
+            <Tabs defaultValue="all" className="w-full mt-4">
+                <div className="md:w-[400px] w-3/4 m-auto">
+                    <TabsList className="grid w-full grid-cols-3 bg-[#1a1a1a] text-gray-300">
+                        <TabsTrigger className="text-white" value="all">{t("all")}</TabsTrigger>
+                        <TabsTrigger className="text-white" value="cv">{t("resume")}</TabsTrigger>
+                        <TabsTrigger className="text-white" value="cover">{t("letter")}</TabsTrigger>
+                    </TabsList>
+                </div>
+                <TabsContent value="all">
+                    {cvObject?.cvs && (
+                        <div className="mb-6">
+                            {SelectedCvComponent ? (
+                                <SelectedCvComponent
+                                    cv={{
+                                        ...cvObject.cvs,
+                                        skills: (cvObject.cvs.skills ?? []).filter((skill): skill is NonNullable<typeof skill> => skill !== undefined), // Ensure no undefined values
+                                        educations: (cvObject.cvs.educations ?? []).filter((education): education is {
+                                            degree: string;
+                                            school: string;
+                                            location: string;
+                                            start: string;
+                                            end?: string;
+                                            description?: string[];
+                                        } => education !== undefined && education.degree !== undefined && education.school !== undefined && education.location !== undefined && education.start !== undefined),
+                                        projects: (cvObject.cvs.projects ?? []).filter((project): project is {
+                                            title: string;
+                                            description: string;
+                                            technologies: string;
+                                            link?: string;
+                                        } => project !== undefined && project.title !== undefined && project.description !== undefined && project.technologies !== undefined),
+                                        experiences: (cvObject.cvs.experiences ?? []).filter((experience): experience is {
+                                            title: string;
+                                            company: string;
+                                            location: string;
+                                            start: string;
+                                            end?: string;
+                                            description?: string[];
+                                        } => experience !== undefined && experience.title !== undefined && experience.company !== undefined && experience.location !== undefined && experience.start !== undefined),
+                                        certifications: (cvObject.cvs.certifications ?? []).filter((certification): certification is {
+                                            title: string;
+                                            issuer: string;
+                                            date: string;
+                                            description?: string;
+                                        } => certification !== undefined && certification.title !== undefined && certification.issuer !== undefined && certification.date !== undefined),
+                                        languages: (cvObject.cvs.languages ?? []).filter((language): language is { language: string; level: "Basic" | "Professional" | "Fluent" | "Native"; } => language !== undefined && language.language !== undefined && language.level !== undefined),
+                                    }}
+                                    user={currentUser ?? undefined}
+                                />
+                            ) : (
+                                <Cv
+                                    cv={{
+                                        ...cvObject.cvs,
+                                        skills: (cvObject.cvs.skills ?? []).filter((skill): skill is NonNullable<typeof skill> => skill !== undefined), // Ensure no undefined values
+                                        educations: (cvObject.cvs.educations ?? []).filter((education): education is {
+                                            degree: string;
+                                            school: string;
+                                            location: string;
+                                            start: string;
+                                            end?: string;
+                                            description?: string[];
+                                        } => education !== undefined && education.degree !== undefined && education.school !== undefined && education.location !== undefined && education.start !== undefined),
+                                        projects: (cvObject.cvs.projects ?? []).filter((project): project is {
+                                            title: string;
+                                            description: string;
+                                            technologies: string;
+                                            link?: string;
+                                        } => project !== undefined && project.title !== undefined && project.description !== undefined && project.technologies !== undefined),
+                                        experiences: (cvObject.cvs.experiences ?? []).filter((experience): experience is {
+                                            title: string;
+                                            company: string;
+                                            location: string;
+                                            start: string;
+                                            end?: string;
+                                            description?: string[];
+                                        } => experience !== undefined && experience.title !== undefined && experience.company !== undefined && experience.location !== undefined && experience.start !== undefined),
+                                        certifications: (cvObject.cvs.certifications ?? []).filter((certification): certification is {
+                                            title: string;
+                                            issuer: string;
+                                            date: string;
+                                            description?: string;
+                                        } => certification !== undefined && certification.title !== undefined && certification.issuer !== undefined && certification.date !== undefined),
+                                        languages: (cvObject.cvs.languages ?? []).filter((language): language is { language: string; level: "Basic" | "Professional" | "Fluent" | "Native"; } => language !== undefined && language.language !== undefined && language.level !== undefined),
+                                    }}
+                                    user={currentUser ?? undefined}
+                                />
+                            )}
+
+                        </div>
                     )}
 
-                </div>
-            )}
+                    {coverLetterObject?.coverLetter && (
+                        <div>
+                            {SelectedCoverLetterComponent ? (
+                                <SelectedCoverLetterComponent coverLetter={{ ...coverLetterObject.coverLetter }} user={currentUser!} />
+                            ) : (
+                                <CoverLetter coverLetter={{ ...coverLetterObject.coverLetter }} user={currentUser ?? undefined} />
+                            )}
 
-            {coverLetterObject?.coverLetter && (
-                <div>
-                    {SelectedCoverLetterComponent ? (
-                        <SelectedCoverLetterComponent coverLetter={{ ...coverLetterObject.coverLetter }} user={currentUser!} />
-                    ) : (
-                        <CoverLetter coverLetter={{ ...coverLetterObject.coverLetter }} user={currentUser ?? undefined} />
+                        </div>
                     )}
 
-                </div>
-            )}
+                    <div>
+                        {
+                            conversation?.Cv && (<CvItems cv={conversation.Cv} user={currentUser!} />)
+                        }
+                    </div>
+                    <div>
+                        {
+                            conversation?.CoverLetter && (<CoverLetterItems coverLetters={conversation.CoverLetter} user={currentUser!} />)
+                        }
+                    </div>
 
-            <div>
-                {
-                    conversation?.Cv && (<CvItems cv={conversation.Cv} user={currentUser!} />)
-                }
-            </div>
-            <div>
-                {
-                    conversation?.CoverLetter && (<CoverLetterItems coverLetters={conversation.CoverLetter} user={currentUser!} />)
-                }
-            </div>
+                </TabsContent>
+                <TabsContent value="cv">
+                    <div>
+                        {
+                            conversation?.Cv && (<CvItems cv={conversation.Cv} user={currentUser!} />)
+                        }
+                    </div>
+                </TabsContent>
+                <TabsContent value="cover">
+                    <div>
+                        {
+                            conversation?.CoverLetter && (<CoverLetterItems coverLetters={conversation.CoverLetter} user={currentUser!} />)
+                        }
+                    </div>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
