@@ -57,9 +57,9 @@ export default function Home() {
 
     return (
         <>
-            <div className="flex flex-col items-center justify-center min-h-[90vh] gap-4">
+            <div className="flex flex-col items-center justify-center min-h-[90vh] gap-2">
 
-                <div className="text-center max-w-2xl mx-auto  px-4">
+                <div className="text-center max-w-2xl mx-auto md:px-4">
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -81,9 +81,9 @@ export default function Home() {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-full max-w-3xl px-4 pb-4 pt-2"
+                    className="w-full md:max-w-3xl md:px-4 pb-4 pt-2"
                 >
-                    <div className="max-w-3xl mx-auto px-4">
+                    <div className="md:max-w-3xl md:mx-auto md:px-4">
                         <motion.div
                             animate={{ height: "auto" }}
                             whileFocus={{ scale: 1.01 }}

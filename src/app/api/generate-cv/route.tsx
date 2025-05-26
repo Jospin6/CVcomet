@@ -4,6 +4,7 @@ import { CoreMessage, streamObject } from "ai";
 import { gemini } from "@/lib/gemini";
 import { generateCvPrompt, generateCvSystemPrompt, generatedLanguagePrompt } from "@/helpers/helpers";
 import { cvSchema } from "@/helpers/schema";
+import { dayLimit } from "@/helpers/constants";
 
 export const maxDuration = 30;
 
@@ -17,9 +18,9 @@ export async function POST(req: Request) {
       user.lastGeneratedAt &&
       today.toDateString() === new Date(user.lastGeneratedAt).toDateString();
 
-    if (isSameDay && user.generationCount >= 6) {
+    if (isSameDay && user.generationCount >= dayLimit) {
       return new NextResponse(
-        JSON.stringify({ error: "Limit to 6 generations a day" }),
+        JSON.stringify({ error: `Limit to ${dayLimit} generations a day` }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }

@@ -1,3 +1,4 @@
+import { dayLimit } from "@/helpers/constants";
 import { clsx, type ClassValue } from "clsx"
 import { SignJWT } from "jose";
 import { twMerge } from "tailwind-merge"
@@ -60,7 +61,7 @@ export async function generateToken(user: any) {
 }
 
 export function getTodayGenerationCount(lastGeneratedAt: string, generationCount: number): number {
-    const MAX_GENERATIONS = 6;
+    const MAX_GENERATIONS = dayLimit;
 
   const now = new Date();
   const today = now.toISOString().split('T')[0];

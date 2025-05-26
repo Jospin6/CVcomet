@@ -148,7 +148,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full pb-4 pt-2 mt-auto"
             >
-                <div className="max-w-3xl mx-auto px-4">
+                <div className="md:max-w-3xl md:mx-auto md:px-4">
                     <motion.div
                         animate={{ height: "auto" }}
                         whileFocus={{ scale: 1.01 }}
@@ -192,22 +192,22 @@ export default function Home() {
                             </div>
                             <div className="flex gap-2">
                                 {!isCvLoad ? (
-                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
-                                        <Sparkles className="w-4 h-4" />
+                                    <Button className="cursor-pointer bg-transparent border-[1px] py-1 border-gray-500 text-xs md:text-sm" onClick={handleSend}>
+                                        <Sparkles className="md:w-4 md:h-4 w-2 h-2" />
                                         <span>Cv</span>
                                     </Button>
                                 ) : (
-                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-xs md:text-sm">
                                         <LoadingIcon />
                                     </Button>
                                 )}
                                 {!isCoverLoad ? (
-                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
-                                        <Wand2 className="w-4 h-4" />
+                                    <Button className="cursor-pointer bg-transparent py-1 border-[1px] border-gray-500 text-xs md:text-sm" onClick={handleCoverLetter}>
+                                        <Wand2 className="md:w-4 md:h-4 w-2 h-2" />
                                         <span>Cover letter</span>
                                     </Button>
                                 ) : (
-                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-xs md:text-sm">
                                         <LoadingIcon />
                                     </Button>
                                 )}
@@ -235,7 +235,7 @@ export default function Home() {
             </div>
 
             {(cvError || coverError) && (
-                <div className="text-red-500 mt-2">
+                <div className="text-red-500 bg-black/50 mb-4 rounded-lg text-sm p-2 mt-2">
                     <p>{t("limite")}</p>
                     <Link href={"/upgrade"} className="text-sm text-blue-700 underline">
                         {t("ctUpgrade")}

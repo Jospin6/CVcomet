@@ -4,6 +4,7 @@ import { gemini } from "@/lib/gemini";
 import prisma from "../../../../prisma/prisma"
 import { generateCoverLetterPrompt, generateCoverLetterSystemPrompt, generatedLanguagePrompt } from "@/helpers/helpers";
 import { coverLetterSchema } from "@/helpers/schema";
+import { dayLimit } from "@/helpers/constants";
 export async function POST(req: Request) {
   const { description, user, conversationId, language } = await req.json()
   const curentLanguage = generatedLanguagePrompt(language)
@@ -14,9 +15,9 @@ export async function POST(req: Request) {
       user.lastGeneratedAt &&
       today.toDateString() === new Date(user.lastGeneratedAt).toDateString();
 
-    if (isSameDay && user.generationCount >= 6) {
+    if (isSameDay && user.generationCount >= dayLimit) {
       return new NextResponse(
-        JSON.stringify({ error: "Limit to 6 generations a day" }),
+        JSON.stringify({ error: `Limit to ${dayLimit} generations a day` }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }

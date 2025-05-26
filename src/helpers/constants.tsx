@@ -28,4 +28,6 @@ export const cover3 = "900e3d34-e1f6-43a9-9016-de5d7489af48"
 export const cover4 = "592a4ff3-3994-4826-856d-b791b4b5b139"
 export const cover5 = "1f2ffed3-6999-4bed-95b3-b354daf62822"
 
+export const dayLimit = 6
+
 export const mainUrl = "https://www.cvcomet.com"
