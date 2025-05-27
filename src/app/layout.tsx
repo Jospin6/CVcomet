@@ -5,7 +5,8 @@ import "./globals.css";
 import { ReduxProvider } from "@/redux/provider";
 import { AccountNav } from "@/components/navbar/accountNav";
 import { LanguageProviderWrapper } from "@/components/LanguageProviderWrapper";
-import { Toaster } from '@/components/ui/sonner' 
+import { Toaster } from '@/components/ui/sonner'
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: {
@@ -46,7 +47,20 @@ export default function RootLayout({
 }>) {
   return (
     <html>
-      
+
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=G-NEY0HEKQYN`}
+        strategy="afterInteractive"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-NEY0HEKQYN');
+        `}
+      </Script>
+
       <body className="overflow-x-hidden">
         <ReduxProvider>
           <LanguageProviderWrapper>
