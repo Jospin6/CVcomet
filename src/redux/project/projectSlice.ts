@@ -8,7 +8,7 @@ export type Project = {
   start: string;
   end?: string;
   title: string;
-  url: string;
+  url?: string;
   userId: string;
   description?: string
 };

@@ -14,7 +14,7 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { content, userId } = schema.parse(body);
 
-        const title = await generateText({
+        const titleResponse = await generateText({
             model: gemini("gemini-1.5-flash"),
             prompt: `Create a very short and catchy summary title (max 28 characters) for the following conversation:\n\n${content}\n\nOnly return the title.`,
             maxTokens: 20,
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
         const conversations = await prisma.conversation.create({
             data: {
-                title,
+                title: titleResponse.text,
                 content,
                 userId
             }

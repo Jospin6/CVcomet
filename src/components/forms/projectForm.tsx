@@ -17,7 +17,7 @@ const projectSchema = z.object({
   start: z.string().min(1, "Start date is required"),
   end: z.string().optional(),
   title: z.string().min(1, "Project title is required"),
-  url: z.string().url("Enter a valid URL").min(1, "Project URL is required"),
+  url: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -83,7 +83,7 @@ export default function ProjectForm({ user, initialData, id }: { id?: string, us
           {successMessage}
         </div>
       )}
-      <div className="md:grid md:grid-cols-8 gap-4">
+      <div className="md:grid md:grid-cols-6 gap-4">
         <InputField
           label={`${t("start")}`}
           className="col-span-2"
@@ -111,7 +111,7 @@ export default function ProjectForm({ user, initialData, id }: { id?: string, us
           errors={errors}
         />
 
-        <InputField
+        {/* <InputField
           label={`${t("url")}`}
           className="col-span-2"
           type="url"
@@ -119,7 +119,7 @@ export default function ProjectForm({ user, initialData, id }: { id?: string, us
           placeholder="Enter project URL"
           register={register}
           errors={errors}
-        />
+        /> */}
       </div>
       <div>
         <TextAreaField

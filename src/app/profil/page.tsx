@@ -161,7 +161,7 @@ export default function Profil() {
                         <Accordion key={proj.id} type="single" collapsible>
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>
-                                    {formatDateToMonthYear(proj.start)} {proj.end && ` - ${formatDateToMonthYear(proj.end)}`}, {proj.title} {proj.url}
+                                    {formatDateToMonthYear(proj.start)} {proj.end && ` - ${formatDateToMonthYear(proj.end)}`}, {proj.title}
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     {proj.description}

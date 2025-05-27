@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppDispatch } from "@/redux/store";
@@ -25,26 +25,46 @@ export default function Home() {
     const currentConversationId = useSelector(selectConversationId)
     const [isCvLoad, setCvLoad] = useState<boolean>(false)
     const [isCoverLoad, setCoverLoad] = useState<boolean>(false)
+    const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
+    const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
+    const [conversationStarted, setConversationStarted] = useState(false);
 
 
 
     const handleSend = () => {
-        dispatch(addConversation({ content: input, userId: user?.id }))
-        dispatch(setTypeGeneration("cv"))
-        setCvLoad(!isCvLoad)
+        if (input.trim() === "") {
+            setIsInputEmpty(true);
+            if (inputRef.current) inputRef.current.focus();
+            return;
+        }
+
+        dispatch(addConversation({ content: input, userId: user?.id }));
+        dispatch(setTypeGeneration("cv"));
+        setCvLoad(true);
+        setConversationStarted(true); // ✅
+        setInput("");
     };
 
     const handleCoverLetter = () => {
-        dispatch(addConversation({ content: input, userId: user?.id }))
-        dispatch(setTypeGeneration("coverLetter"))
-        setCoverLoad(!isCoverLoad)
+        if (input.trim() === "") {
+            setIsInputEmpty(true);
+            if (inputRef.current) inputRef.current.focus();
+            return;
+        }
+
+        dispatch(addConversation({ content: input, userId: user?.id }));
+        dispatch(setTypeGeneration("coverLetter"));
+        setCoverLoad(true);
+        setConversationStarted(true); // ✅
+        setInput("");
     };
 
     useEffect(() => {
-        if (currentConversationId != null) {
+        // ✅ redirige uniquement si la conversation est volontairement lancée
+        if (conversationStarted && currentConversationId) {
             redirect(`/g/${currentConversationId}`);
         }
-    }, [currentConversationId])
+    }, [currentConversationId, conversationStarted]);
 
     useEffect(() => {
         if (user?.id) {
@@ -114,13 +134,13 @@ export default function Home() {
                                         </span>
                                     ) : (
                                         <span className="text-xs text-gray-400">
-                                            {(currentUser?.lastGeneratedAt && currentUser?.generationCount) && 
+                                            {(currentUser?.lastGeneratedAt && currentUser?.generationCount) &&
                                                 (
                                                     <span>
                                                         {t("remainingGenerations")}: {getTodayGenerationCount(currentUser?.lastGeneratedAt, currentUser?.generationCount)}
                                                     </span>
                                                 )
-                                            } 
+                                            }
                                         </span>
                                     )}
                                 </div>
@@ -169,6 +189,11 @@ export default function Home() {
                                 </div>
 
                             </div>
+                            {isInputEmpty && (
+                                <p className="text-red-500 text-xs mt-2">
+                                    {t("inputRequired")}
+                                </p>
+                            )}
                         </motion.div>
                     </div>
                 </motion.div>

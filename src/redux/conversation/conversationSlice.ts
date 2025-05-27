@@ -141,8 +141,8 @@ const conversationSlice = createSlice({
             state.error = null;
         });
         builder.addCase(fetchConversations.fulfilled, (state, action) => {
-            state.conversations = action.payload;
             state.loading = false;
+            state.conversations = action.payload;
         });
         builder.addCase(fetchConversations.rejected, (state, action) => {
             state.loading = false;
@@ -155,8 +155,8 @@ const conversationSlice = createSlice({
             state.error = null;
         });
         builder.addCase(getConversation.fulfilled, (state, action: PayloadAction<Conversation>) => {
-            state.currentConversation = action.payload;
             state.loading = false;
+            state.currentConversation = action.payload;
         });
         builder.addCase(getConversation.rejected, (state, action) => {
             state.loading = false;
@@ -165,7 +165,7 @@ const conversationSlice = createSlice({
 
         // add
         builder.addCase(addConversation.fulfilled, (state, action) => {
-            state.conversations.push(action.payload);
+            state.conversations.unshift(action.payload);
             state.currentConversation = action.payload;
             state.currentConversationId = action.payload.id
         });

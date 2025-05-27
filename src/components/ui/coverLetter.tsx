@@ -25,14 +25,8 @@ export const CoverLetter = ({ coverLetter, user }: { coverLetter: CoverLetterPro
                 </div>
             </div>
             <div
-                className="mx-auto bg-white flex flex-col justify-start shadow-lg"
-                style={{
-                    width: "210mm",
-                    height: "297mm",
-                    padding: "20mm",
-                    boxSizing: "border-box",
-                    fontFamily: "Arial, sans-serif",
-                }}
+                className="md:w-[794px] w-full mx-auto md:p-8 md:h-[1123px] h-[auto] p-2 bg-white shadow-lg"
+                
             >
                 <div className="text-sm leading-relaxed">
                     <p>{user?.name}</p>

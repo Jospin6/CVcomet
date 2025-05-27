@@ -46,9 +46,9 @@
     "companyDescription": "The name of your current or previous company helps provide context for your professional experience.",
     "languageDescription": "Listing your languages is important for positions requiring language skills. ex: English, French, Spanish",
     "skillDescription": "Your key skills are crucial to tailor your CV and cover letter to the job requirements. ex: JavaScript, Python, Project Management",
-    "freemiumDescription": "Generate up to 6 CVs & Cover Letters per day for free.",
-    "freeItemOne": "Up to 6 CVs/day",
-    "freeItemTwo": "Up to 6 Cover Letters/day",
+    "freemiumDescription": "Generate up to 20 CVs & Cover Letters per day for free.",
+    "freeItemOne": "Up to 20 CVs/day",
+    "freeItemTwo": "Up to 20 Cover Letters/day",
     "freeItemTree": "Unlimited generations",
     "freeItemFour": "Priority support",
     "freeButton": "Current Plan",
@@ -74,7 +74,7 @@
     "plan": "CVcomet Plans",
     "planDescription": "Create a resume that opens doors. CVcomet helps you land the opportunity you deserve.",
     "free": "Free",
-    "freeDetail": "6 resumes or cover letters per day + 2 templates available.",
+    "freeDetail": "20 resumes or cover letters per day + 2 templates available.",
     "pro": "Pro",
     "amountMonth": "$9.99/month",
     "premiumDetail": "Unlimited generation + access to all templates.",
@@ -91,7 +91,7 @@
     "nonAccount": "Don't have an account?",
     "active": "Active",
     "inactive": "Inactive",
-    "limite": "The free plan of CVcomet is limited to 6 CV or cover letter generations per day.",
+    "limite": "The free plan of CVcomet is limited to 20 CV or cover letter generations per day.",
     "ctUpgrade": "Upgrade to unlock unlimited access and premium features.",
     "remainingGenerations": "Left",
     "unSubscribe": "Cancel Subscription",
@@ -109,5 +109,9 @@
     "tools": "Tools",
     "cvcomet": "CVcomet",
     "all": "All",
-    "letter": "Cover letter"
+    "letter": "Cover letter",
+    "welcome": "Welcome to CVcomet",
+    "welcomeBack": "Welcome back to CVcomet",
+    "inputRequired": "The Job Description is required."
+
 }

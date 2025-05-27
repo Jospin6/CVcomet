@@ -11,7 +11,6 @@ import { AppDispatch } from "@/redux/store";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/InputField";
 import { login } from "@/redux/auth/authSlice";
-import { FileText } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
@@ -48,8 +47,8 @@ export default function Login() {
   return (
     <div className="md:w-[400px] w-[90%] bg-[#1a1a1a] shadow-amber-600 shadow-2xs mx-auto p-6">
       <div className="py-4">
-        <div className="font-bold text-gray-200 md:text-xl text-lg flex items-center justify-start">{t("cvcomet")}</div>
-          <h2 className="md:text-4xl text-2xl font-bold mb-4 text-gray-200">{t("login")}</h2>
+        <div className="font-bold text-gray-200 md:text-xl text-lg flex items-center justify-start">{t("welcomeBack")}</div>
+        <h2 className="md:text-2xl text-2xl font-bold mb-4 text-gray-200">{t("login")}</h2>
       </div>
       {error && <p className="text-red-500">{error}</p>}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
