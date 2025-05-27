@@ -62,17 +62,17 @@ export async function POST(req: Request) {
     content: m.content,
   }));
 
+  if (conversationContent?.content) {
+    chatHistory.push({
+      role: "user",
+      content: generateCvPrompt({ description: conversationContent.content, user, curentLanguage })
+    });
+  }
+
   chatHistory.push({
     role: "user",
     content: prompt
   });
-
-  if (conversationContent?.content) {
-    chatHistory.push({
-      role: "user",
-      content: conversationContent.content
-    });
-  }
 
   try {
     const result = await streamObject({

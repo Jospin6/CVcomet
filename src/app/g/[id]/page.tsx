@@ -66,6 +66,7 @@ export default function Home() {
     let language = i18n.language === 'fr' ? 'French' : 'English'
     const [isCvLoad, setCvLoad] = useState<boolean>(false)
     const [isCoverLoad, setCoverLoad] = useState<boolean>(false)
+    const hasFetchedConversation = useRef(false);
 
     const { object: cvObject, error: cvError, submit: cvSubmit, isLoading: isLoadingCv } = useObject({
         api: '/api/generate-cv',
@@ -79,6 +80,12 @@ export default function Home() {
 
     const SelectedCvComponent = currentUser?.currentTemplateId && templateComponentMap[currentUser.currentTemplateId];
     const SelectedCoverLetterComponent = currentUser?.currentCoverLetterId && templateComponentMap[currentUser.currentCoverLetterId];
+
+    useEffect(() => {
+        if (input === "" && conversation?.content) {
+            setInput(conversation.content);
+        }
+    }, [input, conversation?.content]);
 
     useEffect(() => {
         if (!hasGenerated && conversation && convId) {
@@ -97,6 +104,16 @@ export default function Home() {
             dispatch(getConversation({ id }));
         }
     }, [dispatch, id]);
+
+    useEffect(() => {
+        if (cvObject && !cvError && !hasFetchedConversation.current) {
+            hasFetchedConversation.current = true;
+
+            if (typeof id === "string") {
+                dispatch(getConversation({ id }));
+            }
+        }
+    }, [cvObject, cvError, id, dispatch]);
 
     const handleSend = async () => {
         if (!input.trim()) return;

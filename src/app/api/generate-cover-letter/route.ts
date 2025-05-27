@@ -47,23 +47,25 @@ export async function POST(req: Request) {
   const conversationContent = await prisma.conversation.findUnique({
     where: { id: conversationId }
   })
-
+  
   const chatHistory: CoreMessage[] = messages.map(m => ({
     role: m.role as "user" | "assistant",
     content: m.content,
   }));
+
+  if (conversationContent?.content) {
+    chatHistory.push({
+      role: "user",
+      content: generateCoverLetterPrompt({ description: conversationContent.content, user, curentLanguage })
+    });
+  }
 
   chatHistory.push({
     role: "user",
     content: prompt
   });
 
-  if (conversationContent?.content) {
-    chatHistory.push({
-      role: "user",
-      content: conversationContent.content
-    });
-  }
+
 
   try {
     const result = await streamObject({
