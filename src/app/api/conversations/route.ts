@@ -32,7 +32,11 @@ export async function GET(req: Request) {
         {
             where: {
                 ...(userId ? { userId } : {}),
-            }
+            },
+            take: 20,
+            orderBy: {
+                createdAt: "desc",
+            },
         }
     )
     return NextResponse.json(conversation)
