@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../prisma/prisma"
 import { z } from "zod";
+import { generateText } from "ai";
+import { gemini } from "@/lib/gemini";
 
 const schema = z.object({
   content: z.string(),
@@ -12,8 +14,16 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { content, userId } = schema.parse(body);
 
+        const title = await generateText({
+            model: gemini("gemini-1.5-flash"),
+            prompt: `Create a very short and catchy summary title (max 28 characters) for the following conversation:\n\n${content}\n\nOnly return the title.`,
+            maxTokens: 20,
+            temperature: 0.7,
+        })
+
         const conversations = await prisma.conversation.create({
             data: {
+                title,
                 content,
                 userId
             }

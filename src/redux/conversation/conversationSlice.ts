@@ -5,6 +5,7 @@ import { CoverLetterProps, CvProps } from '@/helpers/schema';
 
 export interface Conversation {
     id?: string;
+    title?: string;
     content: string;
     userId: string;
     Cv?: CvProps[];

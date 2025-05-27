@@ -5,6 +5,7 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { SidebarMenuButton, SidebarMenuItem } from "./sidebar";
+import { capitalize } from "@/lib/utils";
 
 export const ConversationList = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -24,7 +25,7 @@ export const ConversationList = () => {
         <SidebarMenuItem key={item.id}>
           <SidebarMenuButton asChild>
             <a href={`/g/${item.id}`}>
-              <span>{`${item.content.slice(0, 30)}...`}</span>
+              <span>{capitalize(item.title) ?? "New chat"}</span>
             </a>
           </SidebarMenuButton>
         </SidebarMenuItem>

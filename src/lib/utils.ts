@@ -72,3 +72,8 @@ export function getTodayGenerationCount(lastGeneratedAt: string, generationCount
     ? Math.max(0, MAX_GENERATIONS - generationCount)
     : MAX_GENERATIONS;
 }
+
+export function capitalize(text?: string): string {
+  if (!text) return "";
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}
