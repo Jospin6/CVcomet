@@ -64,7 +64,7 @@ const CoverZero = ({ coverLetter, user }: { coverLetter: CoverLetterProps, user?
 
             <View style={styles.dateAndRecipient}>
                 <Text><CurrentDate/></Text>
-                {coverLetter.recipientName && <Text>{coverLetter.recipientName},</Text>}
+                {coverLetter.recipientName && <Text>{coverLetter.recipientName}</Text>}
             </View>
 
             <View style={styles.body}>
