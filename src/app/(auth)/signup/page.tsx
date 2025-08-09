@@ -12,6 +12,8 @@ import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { signUp } from "@/actions/register";
+import { signIn } from "@/lib/auth";
 
 const schema = z.object({
   email: z.string().email("Invalid email"),
@@ -34,13 +36,25 @@ export default function RegisterForm() {
   const onSubmit = async (data: signupFormData) => {
     setError("");
     try {
-      const response = await dispatch(signup(data)).unwrap();
-      if (response.message) {
+      const response = await signUp(data = { email: data.email, password: data.password });
+      if (response?.message && !response?.data) {
         setError(response.message);
+        return;
+      }
+      // Connexion automatique après inscription
+      const loginResult = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+      if (loginResult?.error) {
+        setError(loginResult.error);
         return;
       }
     } catch (error) {
       console.log("Error connexion :", error);
+      setError("Erreur lors de l'inscription.");
+      return;
     }
     redirect("/");
   };

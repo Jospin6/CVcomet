@@ -1,21 +1,17 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
+import { getToken } from "next-auth/jwt";
 
-const SECRET_KEY = process.env.JWT_SECRET || "secret_key";
-const secret = new TextEncoder().encode(SECRET_KEY);
+const secret = process.env.NEXTAUTH_SECRET || "secret_key";
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const token = (await cookies()).get("token_cv")?.value;
+        const token = await getToken({ req: request, secret });
 
         if (!token) {
             return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
         }
 
-        const { payload } = await jwtVerify(token, secret);
-
-        return NextResponse.json(payload, { status: 200 });
+        return NextResponse.json(token, { status: 200 });
     } catch (error) {
         return NextResponse.json({ error: "Token invalide ou expiré" }, { status: 401 });
     }

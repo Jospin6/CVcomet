@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/InputField";
 import { login } from "@/redux/auth/authSlice";
 import { useTranslation } from 'react-i18next';
+import { signIn } from "@/lib/auth";
 
 const schema = z.object({
   email: z.string().email("Invalide email"),
@@ -33,10 +34,14 @@ export default function Login() {
     setError("");
 
     try {
-      const response = await dispatch(login(data)).unwrap();
-      if (response.message) {
-        setError(response.message);
-        return
+      const response = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+      if (response?.error) {
+        setError(response.error);
+        return;
       }
     } catch (error) {
       console.log("Error connexion :", error);

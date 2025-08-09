@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
+import { getToken } from "next-auth/jwt";
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || "secret_key");
-
-async function verifyToken(token: string) {
-    try {
-        const { payload } = await jwtVerify(token, secret);
-        return payload;
-    } catch (e) {
-        return null;
-    }
-}
+const secret = process.env.NEXTAUTH_SECRET || "secret_key";
 
 // Routes nécessitant des rôles spécifiques
 const routePermissions: Record<string, ("USER" | "ADMIN")[]> = {
@@ -22,30 +13,27 @@ const routePermissions: Record<string, ("USER" | "ADMIN")[]> = {
 };
 
 export async function middleware(request: NextRequest) {
-    const token = request.cookies.get("token_cv")?.value || "";
     const path = request.nextUrl.pathname;
 
     if (path === "/login" || path === "/unauthorized") return NextResponse.next();
+
+    // Utilise getToken d'Auth.js pour récupérer le token et le payload
+    const token = await getToken({ req: request, secret });
 
     if (!token) {
         console.log("❌ Pas de token → redirection login");
         return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    const decoded = await verifyToken(token);
-    if (!decoded) {
-        console.log("❌ Token invalide ou expiré");
-        return NextResponse.redirect(new URL("/login", request.url));
-    }
-
     const requiredRoles = getRequiredRoles(path);
 
-    if (requiredRoles.length && !requiredRoles.includes(decoded.role as any)) {
-        console.log(`🚫 Accès refusé pour le rôle ${decoded.role} sur ${path}`);
+    // On suppose que le rôle est stocké dans token.role
+    if (requiredRoles.length && !requiredRoles.includes(token.role as any)) {
+        console.log(`🚫 Accès refusé pour le rôle ${token.role} sur ${path}`);
         return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
 
-    console.log(`✅ Accès autorisé à ${path} pour rôle ${decoded.role}`);
+    console.log(`✅ Accès autorisé à ${path} pour rôle ${token.role}`);
     return NextResponse.next();
 }
 
