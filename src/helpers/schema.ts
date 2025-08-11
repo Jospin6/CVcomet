@@ -151,3 +151,10 @@ export type CoverLetterProps = {
     senderPhone?: string;
     sendertitle?: string;
 };
+
+export const authSchema = z.object({
+    email: z.string().email({ message: "Email invalide" }),
+    password: z
+        .string()
+        .min(6, { message: "Le mot de passe doit contenir au moins 6 caractères" }),
+});

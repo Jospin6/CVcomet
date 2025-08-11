@@ -3,8 +3,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { redirect } from "next/navigation";
-import { useState } from "react";
+import { redirect, useSearchParams } from "next/navigation";
+import { startTransition, useActionState, useCallback, useState } from "react";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
@@ -13,6 +13,7 @@ import { InputField } from "@/components/ui/InputField";
 import { login } from "@/redux/auth/authSlice";
 import { useTranslation } from 'react-i18next';
 import { signIn } from "@/lib/auth";
+import { authenticate } from "@/lib/authenticate";
 
 const schema = z.object({
   email: z.string().email("Invalide email"),
@@ -26,28 +27,24 @@ export default function Login() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(schema) });
-  const dispatch = useDispatch<AppDispatch>();
+  const [errorMessage, formAction, isPending] = useActionState(
+    authenticate,
+    undefined
+  );
 
-  const [error, setError] = useState("");
+  const searchparams = useSearchParams();
 
-  const onSubmit = async (data: any) => {
-    setError("");
-
-    try {
-      const response = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
+  const onSubmit = useCallback(
+    (data: z.infer<typeof schema>) => {
+      startTransition(() => {
+        formAction({
+          ...data,
+          redirect: searchparams.get('redirect') || undefined,
+        });
       });
-      if (response?.error) {
-        setError(response.error);
-        return;
-      }
-    } catch (error) {
-      console.log("Error connexion :", error);
-    }
-    redirect("/");
-  };
+    },
+    [formAction, searchparams]
+  );
 
   return (
     <div className="md:w-[400px] w-[90%] bg-[#1a1a1a] shadow-amber-600 shadow-2xs mx-auto p-6">
@@ -55,7 +52,6 @@ export default function Login() {
         <div className="font-bold text-gray-200 md:text-xl text-lg flex items-center justify-start">{t("welcomeBack")}</div>
         <h2 className="md:text-2xl text-2xl font-bold mb-4 text-gray-200">{t("login")}</h2>
       </div>
-      {error && <p className="text-red-500">{error}</p>}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <InputField
           label={"Email"}

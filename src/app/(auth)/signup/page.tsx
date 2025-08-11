@@ -3,17 +3,22 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import Link from "next/link"; import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { redirect } from "next/navigation";
 import { signup } from "@/redux/auth/authSlice";
 import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
 import { useTranslation } from 'react-i18next';
-import { signUp } from "@/actions/register";
 import { signIn } from "@/lib/auth";
+import { signUp } from "@/lib/actions";
 
 const schema = z.object({
   email: z.string().email("Invalid email"),
@@ -21,43 +26,20 @@ const schema = z.object({
 });
 
 type signupFormData = z.infer<typeof schema>;
+type SignUpResponse = {
+  message: string;
+  data: z.infer<typeof schema> | null;
+};
 
 export default function RegisterForm() {
   const { t } = useTranslation()
-  const dispatch = useDispatch<AppDispatch>();
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<signupFormData>({ resolver: zodResolver(schema) });
 
-  const [error, setError] = useState("");
-
-  const onSubmit = async (data: signupFormData) => {
-    setError("");
-    try {
-      const response = await signUp(data = { email: data.email, password: data.password });
-      if (response?.message && !response?.data) {
-        setError(response.message);
-        return;
-      }
-      // Connexion automatique après inscription
-      const loginResult = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      });
-      if (loginResult?.error) {
-        setError(loginResult.error);
-        return;
-      }
-    } catch (error) {
-      console.log("Error connexion :", error);
-      setError("Erreur lors de l'inscription.");
-      return;
-    }
-    redirect("/");
-  };
+  const [prevState, formAction, isPending] = useActionState(signUp, undefined);
 
   return (
     <div className="md:w-[400px] w-[90%] bg-[#1a1a1a] shadow-amber-600 shadow-2xs mx-auto p-6">
@@ -65,8 +47,11 @@ export default function RegisterForm() {
         <div className="font-bold text-gray-200 md:text-xl text-lg flex items-center justify-start">{t("welcome")}</div>
         <h2 className="md:text-2xl text-2xl font-bold mb-4 text-gray-200">{t("signup")}</h2>
       </div>
-      {error && <p className="text-red-500">{error}</p>}
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(async (data) => {
+        startTransition(() => {
+          formAction(data);
+        });
+      })}>
         <InputField
           label={"email"}
           name={"email"}
