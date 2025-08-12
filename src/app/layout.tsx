@@ -7,6 +7,7 @@ import { AccountNav } from "@/components/navbar/accountNav";
 import { LanguageProviderWrapper } from "@/components/LanguageProviderWrapper";
 import { Toaster } from '@/components/ui/sonner'
 import Script from 'next/script';
+import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -62,24 +63,26 @@ export default function RootLayout({
       </Script>
 
       <body className="overflow-x-hidden">
-        <ReduxProvider>
-          <LanguageProviderWrapper>
-            <SidebarProvider className="">
-              <AppSidebar />
-              <main className="w-full bg-[#282828]">
-                <div className="w-full flex justify-between items-center h-10 px-3">
-                  <SidebarTrigger className="text-white" />
-                  <AccountNav />
-                </div>
-                <div className="md:w-10/12 md:m-auto w-full px-2 md:px-0">
-                  {children}
-                  {modal}
-                  <Toaster richColors position="bottom-right" />
-                </div>
-              </main>
-            </SidebarProvider>
-          </LanguageProviderWrapper>
-        </ReduxProvider>
+        <AuthProvider>
+          <ReduxProvider>
+            <LanguageProviderWrapper>
+              <SidebarProvider className="">
+                <AppSidebar />
+                <main className="w-full bg-[#282828]">
+                  <div className="w-full flex justify-between items-center h-10 px-3">
+                    <SidebarTrigger className="text-white" />
+                    <AccountNav />
+                  </div>
+                  <div className="md:w-10/12 md:m-auto w-full px-2 md:px-0">
+                    {children}
+                    <Toaster richColors position="bottom-right" />
+                  </div>
+                </main>
+              </SidebarProvider>
+            </LanguageProviderWrapper>
+          </ReduxProvider>
+        </AuthProvider>
+
       </body>
     </html>
 
