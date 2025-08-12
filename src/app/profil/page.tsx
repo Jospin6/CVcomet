@@ -20,6 +20,7 @@ import { deleteExperience, fetchExperiences, selectExperiences } from "@/redux/e
 import { deleteEducation, fetchEducation, selectEducation } from "@/redux/education/educationSlice";
 import { deleteProject, fetchProjects, selectProjects } from "@/redux/project/projectSlice";
 import { deleteCertification, fetchCertifications, selectCertifications } from "@/redux/certification/certificationSlice";
+import { signOut } from 'next-auth/react'
 
 export default function Profil() {
     const { t } = useTranslation();
@@ -33,8 +34,8 @@ export default function Profil() {
 
     const [loadingDeleteId, setLoadingDeleteId] = useState<string | null>(null);
 
-    const handleLogout = () => {
-        dispatch(logout({ id: currentUser?.id || "" }));
+    const handleLogout = async () => {
+        await signOut();
         redirect("/login");
     };
 
