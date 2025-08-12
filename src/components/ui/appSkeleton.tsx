@@ -1,7 +1,4 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SidebarProvider } from "../sidebar-provider"
-import { SidebarTrigger } from "../sidebar-trigger"
-import { Bot, Search, User } from "lucide-react"
 
 export function AppSkeleton() {
   return (
