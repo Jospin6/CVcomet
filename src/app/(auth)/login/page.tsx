@@ -14,6 +14,7 @@ import { login } from "@/redux/auth/authSlice";
 import { useTranslation } from 'react-i18next';
 import { signIn } from "@/lib/auth";
 import { authenticate } from "@/lib/authenticate";
+import { GoogleAuthBtn } from "@/components/forms/googleAuthBtn";
 
 const schema = z.object({
   email: z.string().email("Invalide email"),
@@ -46,7 +47,7 @@ export default function Login() {
     [formAction, searchparams]
   );
 
-  return (
+  return (<>
     <div className="md:w-[400px] w-[90%] bg-[#1a1a1a] shadow-amber-600 shadow-2xs mx-auto p-6">
       <div className="py-4">
         <div className="font-bold text-gray-200 md:text-xl text-lg flex items-center justify-start">{t("welcomeBack")}</div>
@@ -73,6 +74,7 @@ export default function Login() {
         />
         <Button className="w-4/12 bg-black">{isSubmitting ? "Connexion..." : `${t("login")}`}</Button>
       </form>
+
       <div className="mt-4 flex text-sm justify-center">
         <span className="pr-2 text-gray-300">{t("nonAccount")}</span>
         <Link href="/signup" className="text-blue-500 hover:underline">
@@ -80,5 +82,6 @@ export default function Login() {
         </Link>
       </div>
     </div>
-  );
+    <GoogleAuthBtn/>
+  </>);
 }

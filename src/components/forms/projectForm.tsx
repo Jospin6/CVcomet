@@ -23,7 +23,7 @@ const projectSchema = z.object({
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
-export default function ProjectForm({ user, initialData, id }: { id?: string, user?: User, initialData?: ProjectFormValues }) {
+export default function ProjectForm({ user, initialData, id, onSuccess }: { id?: string, onSuccess?: () => void, user?: User, initialData?: ProjectFormValues }) {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>()
   const { register, reset, handleSubmit, formState: { errors, isSubmitting } } = useForm<ProjectFormValues>({
@@ -67,6 +67,9 @@ export default function ProjectForm({ user, initialData, id }: { id?: string, us
 
       if (addProject.fulfilled.match(result) || updateProject.fulfilled.match(result)) {
         toast.success("Project added or updated successfully!");
+        if (onSuccess) {
+          onSuccess()
+        }
         reset();
       } else {
         toast.error("Failed to add or update project. Please try again.");

@@ -23,7 +23,7 @@ const experienceSchema = z.object({
 
 type ExperienceFormValues = z.infer<typeof experienceSchema>;
 
-export default function ExperienceForm({ user, initialData, id }: { id?: string, user?: User, initialData?: ExperienceFormValues }) {
+export default function ExperienceForm({ user, initialData, id, onSuccess }: { id?: string, onSuccess?: () => void, user?: User, initialData?: ExperienceFormValues }) {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>()
   const {
@@ -80,6 +80,9 @@ export default function ExperienceForm({ user, initialData, id }: { id?: string,
 
       if (addExperience.fulfilled.match(result) || updateExperience.fulfilled.match(result)) {
         toast.success("Experience added or updated successfully!");
+        if (onSuccess) {
+          onSuccess()
+        }
         reset();
       } else {
         toast.error("Failed to add experience. Please try again.");

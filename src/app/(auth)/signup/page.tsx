@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
 import { signIn } from "@/lib/auth";
 import { signUp } from "@/lib/actions";
+import { GoogleAuthBtn } from "@/components/forms/googleAuthBtn";
 
 const schema = z.object({
   email: z.string().email("Invalid email"),
@@ -41,7 +42,7 @@ export default function RegisterForm() {
 
   const [prevState, formAction, isPending] = useActionState(signUp, undefined);
 
-  return (
+  return (<>
     <div className="md:w-[400px] w-[90%] bg-[#1a1a1a] shadow-amber-600 shadow-2xs mx-auto p-6">
       <div className="py-4">
         <div className="font-bold text-gray-200 md:text-xl text-lg flex items-center justify-start">{t("welcome")}</div>
@@ -79,5 +80,6 @@ export default function RegisterForm() {
         </Link>
       </div>
     </div>
-  );
+    <GoogleAuthBtn/>
+  </>);
 }

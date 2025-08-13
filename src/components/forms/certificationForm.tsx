@@ -22,7 +22,7 @@ const certificationSchema = z.object({
 
 type CertificationFormValues = z.infer<typeof certificationSchema>;
 
-export default function CertificationForm({ user, initialData, id }: {id?: string, user?: User, initialData?: CertificationFormValues }) {
+export default function CertificationForm({ user, initialData, id, onSuccess }: {id?: string, onSuccess?: () => void, user?: User, initialData?: CertificationFormValues }) {
   const { t } = useTranslation();
   const { register, reset, handleSubmit, formState: { errors, isSubmitting } } = useForm<CertificationFormValues>({
     resolver: zodResolver(certificationSchema),
@@ -64,6 +64,9 @@ export default function CertificationForm({ user, initialData, id }: {id?: strin
       }
 
       if (addCertification.fulfilled.match(resultAction) || updateCertification.fulfilled.match(resultAction)) {
+        if (onSuccess) {
+          onSuccess()
+        }
         reset();
         toast.success("Certification added successfully!");
       } else {

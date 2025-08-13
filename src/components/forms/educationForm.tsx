@@ -22,7 +22,7 @@ const educationSchema = z.object({
 
 type EducationFormValues = z.infer<typeof educationSchema>;
 
-export default function EducationForm({ user, initialData, id }: {id?: string, user?: User, initialData?: EducationFormValues }) {
+export default function EducationForm({ user, initialData, id, onSuccess }: {id?: string, onSuccess?: () => void, user?: User, initialData?: EducationFormValues }) {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>()
   const {
@@ -69,6 +69,9 @@ export default function EducationForm({ user, initialData, id }: {id?: string, u
 
       if (addEducation.fulfilled.match(result) || updateEducation.fulfilled.match(result)) {
         toast.success("Education added successfully!");
+        if (onSuccess) {
+          onSuccess()
+        }
         reset();
       } else {
         toast.error("Failed to add education.");

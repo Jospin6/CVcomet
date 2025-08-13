@@ -3,6 +3,8 @@ import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import prisma from "../../prisma/prisma";
 import { User } from '@/redux/user/userSlice';
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import GoogleProvider from "next-auth/providers/google";
 
 export const BASE_PATH = '/api/auth';
 
@@ -30,7 +32,12 @@ declare module "next-auth" {
 }
  
 export const { handlers, signIn, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     Credentials({
       name: 'Credentials',
       credentials: {

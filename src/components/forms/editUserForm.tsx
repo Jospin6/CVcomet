@@ -38,7 +38,12 @@ const userSchema = z.object({
 
 type UserFormValues = z.infer<typeof userSchema>;
 
-export default function EditUserForm({ user }: { user?: User }) {
+interface EditUserFormProps {
+    user: User | undefined;
+    onSuccess?: () => void;
+}
+
+export default function EditUserForm({ user, onSuccess }: EditUserFormProps) {
   const { t } = useTranslation();
   const {
     register,
@@ -90,6 +95,9 @@ export default function EditUserForm({ user }: { user?: User }) {
         // Succès
         console.log("User updated successfully");
         toast.success("User updated successfully");
+        if (onSuccess) {
+          onSuccess()
+        }
         reset();
       } else {
         // Échec logique (ex: erreur 400 ou 500)

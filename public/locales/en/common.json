@@ -112,6 +112,7 @@
     "letter": "Cover letter",
     "welcome": "Welcome to CVcomet",
     "welcomeBack": "Welcome back to CVcomet",
-    "inputRequired": "The Job Description is required."
+    "inputRequired": "The Job Description is required.",
+    "signinwithgoogle": "Signin with Google"
 
 }
