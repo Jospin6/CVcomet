@@ -6,20 +6,16 @@ import { z } from "zod";
 import {
   startTransition,
   useActionState,
-  useCallback,
   useEffect,
-  useState,
 } from 'react';
-import Link from "next/link"; import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
-import { redirect } from "next/navigation";
-import { signup } from "@/redux/auth/authSlice";
+import Link from "next/link";
 import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
-import { signIn } from "@/lib/auth";
+import { toast } from "sonner";
 import { signUp } from "@/lib/actions";
 import { GoogleAuthBtn } from "@/components/forms/googleAuthBtn";
+import { redirect } from "next/navigation";
 
 const schema = z.object({
   email: z.string().email("Invalid email"),
@@ -27,10 +23,6 @@ const schema = z.object({
 });
 
 type signupFormData = z.infer<typeof schema>;
-type SignUpResponse = {
-  message: string;
-  data: z.infer<typeof schema> | null;
-};
 
 export default function RegisterForm() {
   const { t } = useTranslation()
@@ -42,6 +34,19 @@ export default function RegisterForm() {
 
   const [prevState, formAction, isPending] = useActionState(signUp, undefined);
 
+  useEffect(() => {
+    if (prevState?.data) {
+      toast.success("Inscription réussie !", {
+        description: "Un code de vérification a été envoyé.",
+      });
+      redirect("/verifyEmail");
+    } else if (prevState && !prevState.data) {
+      toast.error("Erreur d’inscription", {
+        description: prevState.message,
+      });
+    }
+  }, [prevState]);
+
   return (<>
     <div className="md:w-[400px] w-[90%] bg-[#1a1a1a] shadow-amber-600 shadow-2xs mx-auto p-6">
       <div className="py-4">
@@ -49,7 +54,7 @@ export default function RegisterForm() {
         <h2 className="md:text-2xl text-2xl font-bold mb-4 text-gray-200">{t("signup")}</h2>
       </div>
       <form onSubmit={handleSubmit(async (data) => {
-        startTransition(() => {
+        startTransition(async () => {
           formAction(data);
         });
       })}>
@@ -80,6 +85,6 @@ export default function RegisterForm() {
         </Link>
       </div>
     </div>
-    <GoogleAuthBtn/>
+    <GoogleAuthBtn />
   </>);
 }

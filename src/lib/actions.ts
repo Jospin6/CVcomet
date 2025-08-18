@@ -33,8 +33,8 @@ export async function signUp(
 
         await signIn("credentials", {
             email: user.email,
-            password: user.password,
-            redirect: true,
+            password: register.data.password,
+            redirect: false,
         });
 
         return { message: 'Registration successful', data: register.data };
