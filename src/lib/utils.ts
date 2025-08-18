@@ -77,3 +77,12 @@ export function capitalize(text?: string): string {
   if (!text) return "";
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
+
+export const generateVerifyCode = (length: number = 6): string => {
+  const digits = "0123456789";
+  let code = "";
+  for (let i = 0; i < length; i++) {
+    code += digits[Math.floor(Math.random() * digits.length)];
+  }
+  return code;
+};

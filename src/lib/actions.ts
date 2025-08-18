@@ -5,6 +5,8 @@ import prisma from "../../prisma/prisma";
 import { z } from "zod";
 import { signIn } from "./auth";
 import { authSchema } from "@/helpers/schema";
+import { generateVerifyCode } from "./utils";
+import { sendVerificationEmail } from "./resend";
 
 export async function signUp(
     _prevState:
@@ -26,10 +28,15 @@ export async function signUp(
         }
 
         const hashedPassword = await bcrypt.hash(register.data.password, 10);
+        const verifyCode = generateVerifyCode()
 
         const user = await prisma.user.create({
-            data: { ...register.data, password: hashedPassword },
+            data: { ...register.data, password: hashedPassword, verificationCode: verifyCode },
         });
+
+        if (user) {
+            await sendVerificationEmail(user.email, verifyCode);
+        }
 
         await signIn("credentials", {
             email: user.email,
