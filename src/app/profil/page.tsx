@@ -105,7 +105,7 @@ export default function Profil() {
                                             onClick={() => handleEdit("exp", exp)}
                                             className="text-white bg-blue-600 py-1"
                                         >
-                                            Edit
+                                            {t("edit")} 
                                         </Button>
                                     </div>
                                 </AccordionContent>
@@ -140,7 +140,7 @@ export default function Profil() {
                                             onClick={() => handleEdit("edu", edu)}
                                             className="text-white bg-blue-600 py-1"
                                         >
-                                            Edit
+                                            {t("edit")} 
                                         </Button>
                                     </div>
                                 </AccordionContent>
@@ -175,7 +175,7 @@ export default function Profil() {
                                             onClick={() => handleEdit("proj", proj)}
                                             className="text-white bg-blue-600 py-1"
                                         >
-                                            Edit
+                                            {t("edit")} 
                                         </Button>
                                     </div>
                                 </AccordionContent>
@@ -210,7 +210,7 @@ export default function Profil() {
                                             onClick={() => handleEdit("cert", cert)}
                                             className="text-white bg-blue-600 py-1"
                                         >
-                                            Edit
+                                            {t("edit")} 
                                         </Button>
                                     </div>
                                 </AccordionContent>

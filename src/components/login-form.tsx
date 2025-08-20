@@ -29,6 +29,7 @@ import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import Link from "next/link"
+import { useTranslation } from 'react-i18next';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -46,6 +47,7 @@ export function LoginForm({
       password: ""
     },
   })
+  const { t } = useTranslation('common')
   const [isLoading, setIsLoading] = useState(false)
   const route = useRouter()
 
@@ -73,9 +75,9 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Welcome back</CardTitle>
+          <CardTitle className="text-xl">{t("wellcomBack")}</CardTitle>
           <CardDescription>
-            Login with your Google account
+            {t("logMessage")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -90,12 +92,12 @@ export function LoginForm({
                         fill="currentColor"
                       />
                     </svg>
-                    Login with Google
+                    {t("logWithGoogle")}
                   </Button>
                 </div>
                 <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                   <span className="bg-card text-muted-foreground relative z-10 px-2">
-                    Or continue with
+                    {t("continueWith")}
                   </span>
                 </div>
                 <div className="grid gap-6">
@@ -105,7 +107,7 @@ export function LoginForm({
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>{t("email")}</FormLabel>
                           <FormControl>
                             <Input placeholder="johndoe@gmail.com" {...field} />
                           </FormControl>
@@ -129,7 +131,7 @@ export function LoginForm({
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>{t("password")}</FormLabel>
                           <FormControl>
                             <Input type="password" placeholder="*******" {...field} />
                           </FormControl>
@@ -143,9 +145,9 @@ export function LoginForm({
                   </Button>
                 </div>
                 <div className="text-center text-sm">
-                  Don&apos;t have an account?{" "}
+                  {t("dontHaveAcount")}{" "}
                   <Link href="/signup" className="underline underline-offset-4">
-                    Sign up
+                    {t("signup")}
                   </Link>
                 </div>
               </div>
@@ -153,10 +155,6 @@ export function LoginForm({
           </Form>
         </CardContent>
       </Card>
-      {/* <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </div> */}
     </div>
   )
 }

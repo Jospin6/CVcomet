@@ -114,6 +114,19 @@
     "welcomeBack": "Welcome back to CVcomet",
     "inputRequired": "The Job Description is required.",
     "signinwithgoogle": "Signin with Google",
-    "fillProfile": "Please fill your profile"
+    "fillProfile": "Please fill your profile",
+    "edit": "Edit",
+    "delete": "Delete",
+    "premium": "Premium",
+    "wellcom": "Welcome to CVcomet",
+    "wellcomBack": "Welcome back to CVcomet",
+    "logMessage": "Login with your Google account",
+    "logWithGoogle": "Login with Google",
+    "signupWithGoogle": "Signup with your Google account",
+    "continueWith": "Or continue with",
+    "password": "Password",
+    "dontHaveAcount": "Don't have an account?",
+    "fullName": "Full name",
+    "alreadyHaveAcount": "Already have an account?"
 
 }

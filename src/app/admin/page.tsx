@@ -1,5 +1,6 @@
 "use client"
 import AddTemplatePage from "@/components/forms/templeteForm";
+import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DialogHeader, DialogTitle, Dialog, DialogTrigger, DialogContent, } from "@/components/ui/dialog";
@@ -10,6 +11,7 @@ import { fetchCvs } from "@/redux/cv/cvSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchTemplates } from "@/redux/template/templateSlice";
 import { fetchUser, fetchUsers, selectUser } from "@/redux/user/userSlice";
+import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -39,6 +41,7 @@ export default function AdminDashboard() {
   const subscribedUsers = users.filter(user => user.isSubscribed).length;
   const templates = useSelector((state: RootState) => state.template.templates);
   const { user: currentUser, loading } = useCurrentUser()
+  const user = useSelector(selectUser);
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -53,6 +56,10 @@ export default function AdminDashboard() {
     dispatch(fetchTemplates())
   }, [dispatch])
 
+  if (loading) {
+    return <AdminSkeleton/>;
+  }
+  if(user?.role !== "ADMIN") return redirect("/unauthorized"); 
   return (
     <div className="">
       <h1 className="text-2xl text-white font-bold mb-8">Admin Dashboard</h1>
@@ -79,13 +86,6 @@ export default function AdminDashboard() {
         <StatCard title="Generated Cover Letters" value={`${letters.length}`} />
         <StatCard title="Subscribed Users" value={`${subscribedUsers}`} />
       </div>
-
-      {/* {templates.length > 0 && (
-        <div className="my-3">
-          <TemplateCardList templates={templates} user={user || undefined}  />
-        </div>
-      )} */}
-
       <div className="mt-10">
         <Card className="shadow-md">
           <CardHeader>

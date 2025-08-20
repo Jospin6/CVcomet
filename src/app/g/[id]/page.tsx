@@ -111,19 +111,6 @@ export default function Home() {
         }
     }, [dispatch, id]);
 
-    // useEffect(() => {
-    //     if (cvObject && !cvError && !hasFetchedConversation.current) {
-    //         hasFetchedConversation.current = true;
-
-    //         if (typeof id === "string") {
-    //             dispatch(getConversation({ id }));
-    //         }
-    //     }
-    // }, [cvObject, cvError, id, dispatch]);
-    console.log("putain", isLoadingCv)
-    console.log("putain2", loadConversation)
-    console.log("putain3", isLoadingCoverLetter)
-
     const handleSend = async () => {
         if (!input.trim()) return;
         setCvLoad(true);
@@ -231,7 +218,7 @@ export default function Home() {
                                 {!isCoverLoad ? (
                                     <Button className="cursor-pointer bg-transparent py-1 border-[1px] border-gray-500 text-xs md:text-sm" onClick={handleCoverLetter}>
                                         <Wand2 className="md:w-4 md:h-4 w-2 h-2" />
-                                        <span>Cover letter</span>
+                                        <span>{t('coverLetter')}</span>
                                     </Button>
                                 ) : (
                                     <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-xs md:text-sm">

@@ -29,6 +29,7 @@ import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import Link from "next/link"
+import { useTranslation } from 'react-i18next';
 
 const formSchema = z.object({
     name: z.string().min(3, "Name is required"),
@@ -50,6 +51,7 @@ export function SignupForm({
     })
     const [isLoading, setIsLoading] = useState(false)
     const route = useRouter()
+    const { t } = useTranslation('common')
 
     const googleAuth = async () => {
         await authClient.signIn.social({
@@ -75,9 +77,9 @@ export function SignupForm({
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
                 <CardHeader className="text-center">
-                    <CardTitle className="text-xl">Welcome</CardTitle>
+                    <CardTitle className="text-xl">{t("welcome")}</CardTitle>
                     <CardDescription>
-                        Signup with your Google account
+                        {t("signupWithGoogle")}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -92,12 +94,12 @@ export function SignupForm({
                                                 fill="currentColor"
                                             />
                                         </svg>
-                                        Signup with Google
+                                        {t("logWithGoogle")}
                                     </Button>
                                 </div>
                                 <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                                     <span className="bg-card text-muted-foreground relative z-10 px-2">
-                                        Or continue with
+                                        {t("continueWith")}
                                     </span>
                                 </div>
                                 <div className="grid gap-6">
@@ -107,7 +109,7 @@ export function SignupForm({
                                             name="name"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Full name</FormLabel>
+                                                    <FormLabel>{t("fullName")}</FormLabel>
                                                     <FormControl>
                                                         <Input placeholder="john doe" {...field} />
                                                     </FormControl>
@@ -122,7 +124,7 @@ export function SignupForm({
                                             name="email"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Email</FormLabel>
+                                                    <FormLabel>{t("email")}</FormLabel>
                                                     <FormControl>
                                                         <Input placeholder="johndoe@gmail.com" {...field} />
                                                     </FormControl>
@@ -132,21 +134,12 @@ export function SignupForm({
                                         />
                                     </div>
                                     <div className="grid gap-3">
-                                        {/* <div className="flex items-center">
-                      <Label htmlFor="password">Password</Label>
-                      <a
-                        href="#"
-                        className="ml-auto text-sm underline-offset-4 hover:underline"
-                      >
-                        Forgot your password?
-                      </a>
-                    </div> */}
                                         <FormField
                                             control={form.control}
                                             name="password"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Password</FormLabel>
+                                                    <FormLabel>{t("password")}</FormLabel>
                                                     <FormControl>
                                                         <Input type="password" placeholder="*******" {...field} />
                                                     </FormControl>
@@ -160,9 +153,9 @@ export function SignupForm({
                                     </Button>
                                 </div>
                                 <div className="text-center text-sm">
-                                    Already have an account?{" "}
+                                    {t("alreadyHaveAcount")}{" "}
                                     <Link href="/login" className="underline underline-offset-4">
-                                        Sign in
+                                        {t("login")}
                                     </Link>
                                 </div>
                             </div>
@@ -170,10 +163,6 @@ export function SignupForm({
                     </Form>
                 </CardContent>
             </Card>
-            {/* <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </div> */}
         </div>
     )
 }
