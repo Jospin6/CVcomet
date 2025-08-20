@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppDispatch, RootState } from "@/redux/store";
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { coverLetterSchema, cvSchema } from "@/helpers/schema";
@@ -34,6 +33,7 @@ import { LoadingIcon } from "@/components/ui/loadingIcon";
 import Link from "next/link";
 import { getTodayGenerationCount } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
     [cv1]: CvOne,
@@ -59,7 +59,7 @@ export default function Home() {
     const [input, setInput] = useState(conversation?.content ?? "");
     const dispatch = useDispatch<AppDispatch>();
     const convId = useSelector(selectConversationId)
-    const user = useCurrentUser();
+    const { user, loading } = useCurrentUser()
     const currentUser = useSelector(selectUser)
     const typeGeneration = useSelector(selectTypeGeneration)
     const [hasGenerated, setHasGenerated] = useState(false);

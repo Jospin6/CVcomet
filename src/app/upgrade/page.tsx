@@ -8,22 +8,22 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteSubscription, fetchUser, selectUser } from "@/redux/user/userSlice";
 import { AppDispatch } from "@/redux/store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export default function UpgradePage() {
     const { t } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
-    const user = useCurrentUser();
     const currentUser = useSelector(selectUser)
+    const { user, loading } = useCurrentUser()
 
     const handleSubscriptionDeletion = async () => {
         if (!currentUser?.id) return;
 
         try {
             await dispatch(deleteSubscription(currentUser.id)).unwrap();
-            toast(`${t("unSubscribeSuccessTitle")}`,{
+            toast(`${t("unSubscribeSuccessTitle")}`, {
                 description: `${t("unSubscribeSuccess")}`,
             });
         } catch (error) {

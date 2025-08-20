@@ -1,23 +1,23 @@
 "use client"
 
 import TemplateCardList from "@/components/ui/templateCardList";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchTemplates } from "@/redux/template/templateSlice";
 import { fetchUser, resetTemplateUpdated, selectUpdateCurrentTeplated, selectUser } from "@/redux/user/userSlice";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
 import { TemplateItemSkeleton } from "@/components/ui/templateItemSkeleton";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function More() {
     const dispatch = useDispatch<AppDispatch>();
     const templates = useSelector((state: RootState) => state.template.templates);
     const loadTemplates = useSelector((state: RootState) => state.template.loading)
-    const currentUser = useCurrentUser()
     const user = useSelector(selectUser)
     const { t } = useTranslation();
     const templateUpdated = useSelector(selectUpdateCurrentTeplated)
+    const { user: currentUser, loading } = useCurrentUser();
 
     const cvs = templates.filter(cv => cv.type === "CV")
     const coverLetters = templates.filter(cv => cv.type === "COVER_LETTER")

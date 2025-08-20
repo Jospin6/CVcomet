@@ -17,7 +17,7 @@ model User {
   id                   String          @id @default(uuid())
   email                String          @unique
   name                 String?
-  emailVerified        DateTime?
+  emailVerified        Boolean         @default(false)
   verificationCode     String?
   image                String?
   phone                String?
@@ -47,12 +47,11 @@ model User {
   Conversation         Conversation[]
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   Account Account[]
 
   Session Session[]
-
-  Authenticator Authenticator[]
 }
 
 enum UserRole {
@@ -61,10 +60,22 @@ enum UserRole {
 }
 
 model Account {
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Champs communs
+  type       String?
+  providerId String
+  accountId  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Pour credentials
+  password String?
+
+  // Pour OAuth
+  providerAccountId String?
   refresh_token     String?
   access_token      String?
   expires_at        Int?
@@ -73,46 +84,31 @@ model Account {
   id_token          String?
   session_state     String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([provider, providerAccountId])
+  @@unique([providerId, accountId])
 }
 
 model Session {
-  sessionToken String   @unique
+  id           String   @id @default(uuid())
+  token        String?   @unique @map("sessionToken")
   userId       String
-  expires      DateTime
+  expires      DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  ipAddress    String?
+  userAgent    String?
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@index([userId])
 }
 
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
-
-  @@id([identifier, token])
-}
-
-// Optional for WebAuthn support
-model Authenticator {
-  credentialID         String  @unique
-  userId               String
-  providerAccountId    String
-  credentialPublicKey  String
-  counter              Int
-  credentialDeviceType String
-  credentialBackedUp   Boolean
-  transports           String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([userId, credentialID])
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String?
+  value      String?
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Conversation {

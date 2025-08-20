@@ -31,3 +31,4 @@ export const cover5 = "dbbf4cba-e5d8-481a-a1e9-2e8bb360c01b"
 export const dayLimit = 20
 
 export const mainUrl = "https://www.cvcomet.com"
+export const localurl = "http://localhost:3000/"

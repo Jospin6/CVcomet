@@ -10,7 +10,8 @@ import { LoadingIcon } from "../ui/loadingIcon"
 
 export const AccountNav = () => {
 
-    const currentUser = useCurrentUser()
+    
+    const {user, loading: log} = useCurrentUser();
 
     const [loading, setLoading] = useState<boolean>(false)
     const handleLoading = () => {
@@ -24,12 +25,12 @@ export const AccountNav = () => {
     return <div className="flex items-center gap-4">
         <LanguageSwitcher />
         {
-            currentUser ? (
+            user ? (
                 <Avatar asChild className="cursor-pointer size-[30px] bg-yellow-800 rounded-full" onClick={handleLoading}>
                     {!loading ? (
                         <Link href="/profil">
                             <AvatarFallback className="font-bold w-full h-full flex items-center justify-center text-white">
-                                {currentUser.email && currentUser.email.charAt(0).toUpperCase()}
+                                {user.email && user.email.charAt(0).toUpperCase()}
                             </AvatarFallback>
                         </Link>
                     ) : (

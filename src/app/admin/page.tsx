@@ -10,7 +10,7 @@ import { fetchCvs } from "@/redux/cv/cvSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchTemplates } from "@/redux/template/templateSlice";
 import { fetchUser, fetchUsers, selectUser } from "@/redux/user/userSlice";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 type StatCardProps = {
@@ -38,8 +38,7 @@ export default function AdminDashboard() {
   const letters = useSelector((state: RootState) => state.coverLetter.letters);
   const subscribedUsers = users.filter(user => user.isSubscribed).length;
   const templates = useSelector((state: RootState) => state.template.templates);
-  const currentUser = useCurrentUser()
-  const user = useSelector(selectUser)
+  const { user: currentUser, loading } = useCurrentUser()
 
   useEffect(() => {
     if (currentUser?.id) {

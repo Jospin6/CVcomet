@@ -114,5 +114,6 @@
     "welcome": "Bienvenue sur CVcomet",
     "welcomeBack": "Bon retour sur CVcomet",
     "inputRequired": "Veuillez entrer la description du poste.",
-    "signinwithgoogle": "Se connecter avec Google"
+    "signinwithgoogle": "Se connecter avec Google",
+    "fillProfile": "Veuillez remplir votre profil"
 }

@@ -1,16 +1,12 @@
-"use client"
-import { AppDispatch } from "@/redux/store";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchcurrentUser, selectCurrentUser } from "@/redux/user/userSlice"
+"use client";
+
+import { useEffect, useState } from "react";
+import { getCurrentUser } from "@/lib/auth";
+import { authClient } from "@/lib/auth-client";
 
 export function useCurrentUser() {
-  const user = useSelector(selectCurrentUser);
-  const dispatch = useDispatch<AppDispatch>();
+  const [loading, setLoading] = useState(true);
+  const { data: session } = authClient.useSession()
 
-  useEffect(() => {
-    dispatch(fetchcurrentUser())
-  }, [dispatch]);
-
-  return user;
+  return { user: session?.user, loading };
 }

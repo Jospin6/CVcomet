@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from 'react-i18next';
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { AppDispatch, RootState } from "@/redux/store";
+import { AppDispatch } from "@/redux/store";
 import { fetchUser } from "@/redux/user/userSlice";
 import { formatDateToMonthYear } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,28 +21,25 @@ import { deleteEducation, fetchEducation, selectEducation } from "@/redux/educat
 import { deleteProject, fetchProjects, selectProjects } from "@/redux/project/projectSlice";
 import { deleteCertification, fetchCertifications, selectCertifications } from "@/redux/certification/certificationSlice";
 import { signOut } from 'next-auth/react'
+import { Logout } from "@/components/logout";
 
 export default function Profil() {
     const { t } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
-    const currentUser = useCurrentUser();
-    const user = useSelector((state: RootState) => state.user.user);
+    // const user = useSelector((state: RootState) => state.user.user);
     const experiences = useSelector(selectExperiences);
     const educations = useSelector(selectEducation);
     const projects = useSelector(selectProjects);
     const certifications = useSelector(selectCertifications);
+    const user = useSelector((state: any) => state.user.user);
 
     const [loadingDeleteId, setLoadingDeleteId] = useState<string | null>(null);
-
-    const handleLogout = async () => {
-        await signOut();
-        redirect("/login");
-    };
 
     const hasFetched = useRef(false);
 
     const [editItem, setEditItem] = useState<any>(null);
     const [editType, setEditType] = useState<"exp" | "edu" | "proj" | "cert" | null>(null);
+    const {user: currentuser, loading} = useCurrentUser();
 
     const handleEdit = (type: "exp" | "edu" | "proj" | "cert", item: any) => {
         setEditItem(item);
@@ -55,15 +52,15 @@ export default function Profil() {
     };
 
     useEffect(() => {
-        if (currentUser?.id && !hasFetched.current) {
-            dispatch(fetchUser(currentUser.id));
-            dispatch(fetchExperiences(currentUser.id));
-            dispatch(fetchEducation(currentUser.id));
-            dispatch(fetchProjects(currentUser.id));
-            dispatch(fetchCertifications(currentUser.id));
+        if (currentuser?.id && !hasFetched.current) {
+            dispatch(fetchUser(currentuser.id));
+            dispatch(fetchExperiences(currentuser.id));
+            dispatch(fetchEducation(currentuser.id));
+            dispatch(fetchProjects(currentuser.id));
+            dispatch(fetchCertifications(currentuser.id));
             hasFetched.current = true;
         }
-    }, [currentUser?.id]);
+    }, [currentuser?.id]);
 
     const handleDelete = async (type: "exp" | "edu" | "proj" | "cert", id: string) => {
         setLoadingDeleteId(id);
@@ -225,7 +222,7 @@ export default function Profil() {
             </div>
 
             <div>
-                <Button onClick={handleLogout} className="bg-red-700 text-gray-200">Logout</Button>
+                <Logout />
             </div>
             {editItem && (
                 <div className="fixed inset-0 bg-black/70 bg-opacity-50 flex justify-center items-center z-50">

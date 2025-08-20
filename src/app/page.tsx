@@ -20,7 +20,6 @@ export default function Home() {
     const inputRef = useRef<HTMLDivElement>(null);
     const [input, setInput] = useState<string>("");
     const dispatch = useDispatch<AppDispatch>();
-    const user = useCurrentUser();
     const currentUser = useSelector(selectUser)
     const currentConversationId = useSelector(selectConversationId)
     const [isCvLoad, setCvLoad] = useState<boolean>(false)
@@ -29,7 +28,7 @@ export default function Home() {
     const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
     const [conversationStarted, setConversationStarted] = useState(false);
 
-
+    const { user, loading } = useCurrentUser()
 
     const handleSend = () => {
         if (input.trim() === "") {
@@ -44,6 +43,15 @@ export default function Home() {
         setConversationStarted(true); // ✅
         setInput("");
     };
+
+    const isUserReadyToGenDoc = () => {
+        if (currentUser?.Experience && currentUser?.Education && currentUser?.skills) {
+            return true;
+
+        } else {
+            return false;
+        }
+    }
 
     const handleCoverLetter = () => {
         if (input.trim() === "") {
@@ -146,29 +154,36 @@ export default function Home() {
                                 </div>
                                 <div className="flex gap-2">
                                     {user ? (
-                                        <>
-                                            {!isCvLoad ? (
-                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
-                                                    <Sparkles className="w-4 h-4" />
-                                                    <span>Cv</span>
-                                                </Button>
-                                            ) : (
-                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
-                                                    <LoadingIcon />
-                                                </Button>
-                                            )}
-                                            {!isCoverLoad ? (
-                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
-                                                    <Wand2 className="w-4 h-4" />
-                                                    <span>Cover letter</span>
-                                                </Button>
-                                            ) : (
-                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
-                                                    <LoadingIcon />
-                                                </Button>
-                                            )}
+                                        isUserReadyToGenDoc() ? (
+                                            <>
+                                                {!isCvLoad ? (
 
-                                        </>
+                                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
+                                                        <Sparkles className="w-4 h-4" />
+                                                        <span>Cv</span>
+                                                    </Button>
+                                                ) : (
+                                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                                        <LoadingIcon />
+                                                    </Button>
+                                                )}
+                                                {!isCoverLoad ? (
+                                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
+                                                        <Wand2 className="w-4 h-4" />
+                                                        <span>Cover letter</span>
+                                                    </Button>
+                                                ) : (
+                                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
+                                                        <LoadingIcon />
+                                                    </Button>
+                                                )}
+
+                                            </>
+                                        ) : (
+                                            <Link href={"/profil"} className="cursor-pointer bg-transparent text-blue-500 underline text-sm">
+                                                {t("fillProfile")}
+                                            </Link>
+                                        )
                                     ) : (
                                         <>
                                             <Link href={"/login"}>
