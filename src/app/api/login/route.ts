@@ -1,40 +1,24 @@
-import bcrypt from "bcryptjs";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { authSchema } from "@/helpers/schema";
+import { auth, sanitizeUser } from "@/lib/auth";
+import { prepareLegacyCredential } from "@/lib/credentials";
 import prisma from "../../../../prisma/prisma";
-import { SignJWT } from "jose";
-import { cookies } from "next/headers";
-import { generateToken } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
-  const { email, password } = await req.json();
-  const user = await prisma.user.findUnique({
-    where: { email },
-  })
+  let data;
+  try { data = await req.json(); }
+  catch { return NextResponse.json({ message: "Invalid JSON" }, { status: 400 }); }
 
-  if (!user) {
-    return NextResponse.json({ message: "Utilisateur non trouvé" }, { status: 400 });
-  }
-
-  if (!user.password) {
-    return NextResponse.json({ message: "Mot de passe non défini" }, { status: 400 });
-  }
-
-  const isPasswordValid = await bcrypt.compare(password, user.password)
-
-  if (!isPasswordValid) {
-    throw new Error('Mot de passe incorrect')
-  }
-
-  const token = await generateToken(user);
-  
-  const response = NextResponse.json(user, { status: 200 });
-  
-  (await cookies()).set("token_cv", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    path: "/",
-    maxAge: 100 * 365 * 24 * 60 * 60, 
+  const parsed = authSchema.safeParse(data);
+  if (!parsed.success) return NextResponse.json({ message: parsed.error.errors[0].message }, { status: 400 });
+  const email = parsed.data.email.trim().toLowerCase();
+  await prepareLegacyCredential(email, parsed.data.password);
+  const response = await auth.api.signInEmail({
+    body: { ...parsed.data, email },
+    headers: req.headers,
+    asResponse: true,
   });
-  return response;
+  if (!response.ok) return response;
+  const user = await prisma.user.findUniqueOrThrow({ where: { email } });
+  return NextResponse.json(sanitizeUser(user), { headers: response.headers });
 }

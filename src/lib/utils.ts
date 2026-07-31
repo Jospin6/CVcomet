@@ -3,6 +3,9 @@ import { clsx, type ClassValue } from "clsx"
 import { SignJWT } from "jose";
 import { twMerge } from "tailwind-merge"
 
+export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+export const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET || "secret_key");
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -43,9 +46,6 @@ export function formatDateToFullYear(dateInput: string | number, language: strin
   return date.toLocaleDateString(lang, options);
 }
 
-// Define your secret key here or import it from your environment/config
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || "secret_key");
-
 export async function generateToken(user: any) {
   const token = await new SignJWT({
     id: user.id,
@@ -54,19 +54,24 @@ export async function generateToken(user: any) {
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(100 * 365 * 24 * 60 * 60)
-    .sign(secret);
+    .setExpirationTime(SESSION_MAX_AGE_SECONDS)
+    .sign(jwtSecret);
 
   return token;
 }
 
 export function getTodayGenerationCount(lastGeneratedAt: string, generationCount: number): number {
-    const MAX_GENERATIONS = dayLimit;
+  const MAX_GENERATIONS = dayLimit;
 
   const now = new Date();
   const today = now.toISOString().split('T')[0];
 
-  const lastGeneratedDate = new Date(lastGeneratedAt).toISOString().split('T')[0];
+  const lastGeneratedDateValue = new Date(lastGeneratedAt);
+  if (Number.isNaN(lastGeneratedDateValue.getTime())) {
+    return MAX_GENERATIONS;
+  }
+
+  const lastGeneratedDate = lastGeneratedDateValue.toISOString().split('T')[0];
 
   return lastGeneratedDate === today
     ? Math.max(0, MAX_GENERATIONS - generationCount)

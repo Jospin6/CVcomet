@@ -1,69 +1,33 @@
 "use server";
 
-import { auth } from "@/lib/auth"
-import prisma from "../../prisma/prisma";
-import bcrypt from "bcryptjs";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { authSchema } from "@/helpers/schema";
+import { prepareLegacyCredential } from "@/lib/credentials";
 
-export const signIn = async (email: string, password: string) => {
-    try {
-        await auth.api.signInEmail({
-            body: {
-                email,
-                password,
-            }
-        })
-        return {
-            success: true,
-            message: "Sign in successful"
-        }
-    } catch (error) {
-        return {
-            success: false,
-            message: error instanceof Error ? error.message : "Unknown error",
-        }
-    }
+export async function signIn(email: string, password: string) {
+  const parsed = authSchema.safeParse({ email: email.trim().toLowerCase(), password });
+  if (!parsed.success) return { success: false, message: parsed.error.errors[0].message };
+  try {
+    await prepareLegacyCredential(parsed.data.email, parsed.data.password);
+    await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
+    return { success: true, message: "Sign in successful" };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : "Sign in failed" };
+  }
 }
 
-export const signUp = async (email: string, password: string, name: string) => {
+export async function signUp(email: string, password: string, name: string) {
+  const parsed = authSchema.safeParse({ email: email.trim().toLowerCase(), password });
+  if (!parsed.success) return { success: false, message: parsed.error.errors[0].message };
+  if (name.trim().length < 3) return { success: false, message: "Name is required" };
   try {
-    // 1️⃣ Créer l'utilisateur avec Better Auth
-    const res = await auth.api.signUpEmail({
-      body: { name, email, password },
+    await auth.api.signUpEmail({
+      body: { ...parsed.data, name: name.trim() },
+      headers: await headers(),
     });
-
-    if (!res.user) {
-      return { success: false, message: "User not created" };
-    }
-
-    // 2️⃣ Créer explicitement l'account dans Prisma avec type = "credentials"
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    await prisma.account.create({
-      data: {
-        userId: res.user.id,
-        type: "credentials",
-        providerId: "credentials",
-        accountId: res.user.id, // ou email
-        password: hashedPassword,
-      },
-    });
-
-    // 3️⃣ Vérifier si token existe pour auto-login
-    if (!res.token) {
-      return {
-        success: true,
-        message: "Signup succeeded but no session created (token is null).",
-      };
-    }
-
-    return {
-      success: true,
-      message: "Sign up successful",
-    };
+    return { success: true, message: "Sign up successful" };
   } catch (error) {
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : "Unknown error",
-    };
+    return { success: false, message: error instanceof Error ? error.message : "Sign up failed" };
   }
-};
+}

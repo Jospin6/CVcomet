@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../../prisma/prisma"
+import prisma from "../../../../prisma/prisma";
+import { getSessionUser, isAdmin } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
+  const session = await getSessionUser();
+
+  if (!isAdmin(session)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const formData = await req.formData();
 
     const name = formData.get("name") as string;
     const type = formData.get("type") as string;
-    const templateFile = formData.get("templateFile") as File; // l'image uploadée
+    const templateFile = formData.get("templateFile") as File;
 
     if (!templateFile) {
       return NextResponse.json({ error: "Preview image is required" }, { status: 400 });
@@ -29,7 +36,13 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req: Request) {
-  const templates = await prisma.template.findMany()
-  return NextResponse.json(templates)
+export async function GET() {
+  const session = await getSessionUser();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const templates = await prisma.template.findMany();
+  return NextResponse.json(templates);
 }

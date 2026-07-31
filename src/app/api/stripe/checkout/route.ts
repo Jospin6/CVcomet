@@ -3,13 +3,27 @@ import { mainUrl } from "@/helpers/constants";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import prisma from "../../../../../prisma/prisma"
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-04-30.basil",
-});
+import { canAccessUser, getSessionUser } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return new NextResponse("Missing STRIPE_SECRET_KEY", { status: 500 });
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2025-04-30.basil",
+  });
+
+  const session = await getSessionUser();
+  if (!session) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
   const { priceId, userId } = await req.json();
+
+  if (!canAccessUser(session, userId)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
 
   try {
     // 1. Vérifie si l'utilisateur a déjà un customerId Stripe

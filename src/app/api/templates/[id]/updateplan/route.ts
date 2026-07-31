@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
-import prisma from "../../../../../../prisma/prisma"
+import prisma from "../../../../../../prisma/prisma";
+import { getSessionUser, isAdmin } from "@/lib/auth";
 
 export async function PUT(req: Request) {
-    const { id, plan } = await req.json()
+  const session = await getSessionUser();
 
-    const updateTemplatePlan = await prisma.template.update({
-        where: { id: id },
-        data: { plan }
-    })
-    return NextResponse.json(updateTemplatePlan)
+  if (!isAdmin(session)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
+  const { id, plan } = await req.json();
+
+  const updateTemplatePlan = await prisma.template.update({
+    where: { id },
+    data: { plan },
+  });
+  return NextResponse.json(updateTemplatePlan);
 }

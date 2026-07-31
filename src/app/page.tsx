@@ -7,8 +7,8 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppDispatch } from "@/redux/store";
 import { Button } from "@/components/ui/button";
 import { fetchUser, selectUser } from "@/redux/user/userSlice";
-import { addConversation, selectConversationId, setTypeGeneration } from "@/redux/conversation/conversationSlice";
-import { redirect } from "next/navigation";
+import { addConversation, clearConversationId, selectConversationId, setTypeGeneration } from "@/redux/conversation/conversationSlice";
+import { useRouter } from "next/navigation";
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Wand2 } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +20,7 @@ export default function Home() {
     const inputRef = useRef<HTMLDivElement>(null);
     const [input, setInput] = useState<string>("");
     const dispatch = useDispatch<AppDispatch>();
+    const router = useRouter();
     const currentUser = useSelector(selectUser)
     const currentConversationId = useSelector(selectConversationId)
     const [isCvLoad, setCvLoad] = useState<boolean>(false)
@@ -37,6 +38,7 @@ export default function Home() {
             return;
         }
 
+        dispatch(clearConversationId());
         dispatch(addConversation({ content: input, userId: user?.id }));
         dispatch(setTypeGeneration("cv"));
         setCvLoad(true);
@@ -60,6 +62,7 @@ export default function Home() {
             return;
         }
 
+        dispatch(clearConversationId());
         dispatch(addConversation({ content: input, userId: user?.id }));
         dispatch(setTypeGeneration("coverLetter"));
         setCoverLoad(true);
@@ -70,9 +73,9 @@ export default function Home() {
     useEffect(() => {
         // ✅ redirige uniquement si la conversation est volontairement lancée
         if (conversationStarted && currentConversationId) {
-            redirect(`/g/${currentConversationId}`);
+            router.replace(`/g/${currentConversationId}`);
         }
-    }, [currentConversationId, conversationStarted]);
+    }, [currentConversationId, conversationStarted, router]);
 
     useEffect(() => {
         if (user?.id) {

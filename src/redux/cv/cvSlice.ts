@@ -33,14 +33,14 @@ export const generateCv = createAsyncThunk(
 
 export const fetchCvs = createAsyncThunk(
     "cv/fetchCvs",
-    async () => {
+    async (_, { rejectWithValue }) => {
         let url = "/api/cvs";
         try {
             const res = await axios.get(url)
 
             return res.data
         } catch (error: any) {
-            return rejectWithValue(error.message || 'Erreur inconnue')
+            return rejectWithValue(error.response?.data || error.message || 'Erreur inconnue')
         }
     })
 
@@ -95,7 +95,4 @@ const cvSlice = createSlice({
 export const selectCvState = (state: RootState) => state.cv
 
 export default cvSlice.reducer
-function rejectWithValue(arg0: any): any {
-    throw new Error('Function not implemented.')
-}
 

@@ -9,7 +9,7 @@ import { capitalize } from "@/lib/utils";
 
 export const ConversationList = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const user = useCurrentUser();
+  const { user } = useCurrentUser();
   const conversations = useSelector((state: RootState) => state.conversation.conversations)
 
 

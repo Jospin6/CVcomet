@@ -77,11 +77,18 @@ const initialState: UserState = {
   templateUpdated: false,
 };
 
-export const deleteSubscription = createAsyncThunk<User, string>(
+export const deleteSubscription = createAsyncThunk<string, string>(
   'user/deleteSubscription',
-  async (userId: string) => {
-    const response = await axios.post(`/api/stripe/cancel-subscription`, {userId});
-    return response.data;
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`/api/stripe/cancel-subscription`, { userId });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(error.response?.data || "Erreur inconnue");
+      }
+      return rejectWithValue("Erreur inconnue");
+    }
   }
 );
 // Thunks pour appeler l'API
@@ -94,7 +101,7 @@ export const fetchUser = createAsyncThunk<User, string>(
 );
 
 // Thunks pour appeler l'API
-export const fetchUsers = createAsyncThunk<User>(
+export const fetchUsers = createAsyncThunk<User[]>(
   'user/fetchUsers',
   async () => {
     const response = await axios.get(`/api/users`);
@@ -200,7 +207,7 @@ const userSlice = createSlice({
     builder.addCase(fetchUsers.pending, (state) => {
       state.status = 'loading';
     })
-      .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<any>) => {
+      .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
         state.status = 'succeeded';
         state.users = action.payload;
       })

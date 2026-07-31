@@ -1,3 +1,5 @@
+"use client";
+
 import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "./button";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -8,7 +10,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 
 export const SubscribeButton = () => {
   const { t } = useTranslation();
-  const user = useCurrentUser();
+  const { user } = useCurrentUser();
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const handleSubscribe = async () => {
     setIsLoading(true)

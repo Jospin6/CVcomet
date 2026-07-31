@@ -14,19 +14,15 @@ import EducationForm from "@/components/forms/educationForm";
 import ExperienceForm from "@/components/forms/experienceForm";
 import ProjectForm from "@/components/forms/projectForm";
 import CertificationForm from "@/components/forms/certificationForm";
-import { logout } from "@/redux/auth/authSlice";
-import { redirect } from "next/navigation";
 import { deleteExperience, fetchExperiences, selectExperiences } from "@/redux/experience/experienceSlice";
 import { deleteEducation, fetchEducation, selectEducation } from "@/redux/education/educationSlice";
 import { deleteProject, fetchProjects, selectProjects } from "@/redux/project/projectSlice";
 import { deleteCertification, fetchCertifications, selectCertifications } from "@/redux/certification/certificationSlice";
-import { signOut } from 'next-auth/react'
 import { Logout } from "@/components/logout";
 
 export default function Profil() {
     const { t } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
-    // const user = useSelector((state: RootState) => state.user.user);
     const experiences = useSelector(selectExperiences);
     const educations = useSelector(selectEducation);
     const projects = useSelector(selectProjects);
@@ -60,7 +56,7 @@ export default function Profil() {
             dispatch(fetchCertifications(currentuser.id));
             hasFetched.current = true;
         }
-    }, [currentuser?.id]);
+    }, [currentuser?.id, dispatch]);
 
     const handleDelete = async (type: "exp" | "edu" | "proj" | "cert", id: string) => {
         setLoadingDeleteId(id);

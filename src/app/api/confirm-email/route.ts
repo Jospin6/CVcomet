@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   }
 
   // 2. Vérifier si le code correspond
-  if (user.verificationCode !== code) {
+  if (!user.verificationCode || typeof code !== "string" || user.verificationCode !== code) {
     return NextResponse.json(
       { error: "Code invalide" },
       { status: 400 }
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   // 3. Marquer l'email comme vérifié
   await prisma.user.update({
     where: { email },
-    data: { emailVerified: new Date(), verificationCode: null },
+    data: { emailVerified: true, verificationCode: null },
   });
 
   return NextResponse.json({ success: true });

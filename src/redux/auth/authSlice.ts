@@ -22,12 +22,12 @@ const initialState: initialStateProps = {
 
 export const fetchcurrentUser = createAsyncThunk(
     "auth/fetchcurrentUser",
-    async () => {
+    async (_, { rejectWithValue }) => {
         try {
             const response = await axios.get("/api/me");
             return response.data;
         } catch (error: any) {
-            throw new Error("Error", error)
+            return rejectWithValue(error.response?.data || "Erreur inconnue");
         }
     }
 );
@@ -52,9 +52,9 @@ export const login = createAsyncThunk("auth/login", async ({ email, password }: 
     }
 })
 
-export const logout = createAsyncThunk("auth/logout", async ({ id }: { id: string }, { rejectWithValue }) => {
+export const logout = createAsyncThunk("auth/logout", async (_, { rejectWithValue }) => {
     try {
-        const response = await axios.delete(`/api/logout/${id}`);
+        const response = await axios.delete(`/api/logout`);
 
         return response.data;
     } catch (error: any) {

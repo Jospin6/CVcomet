@@ -1,54 +1,101 @@
 import { NextResponse } from "next/server";
 import { CoreMessage, streamObject } from "ai";
 import { gemini } from "@/lib/gemini";
-import prisma from "../../../../prisma/prisma"
+import prisma from "../../../../prisma/prisma";
 import { generateCoverLetterPrompt, generateCoverLetterSystemPrompt, generatedLanguagePrompt } from "@/helpers/helpers";
 import { coverLetterSchema } from "@/helpers/schema";
 import { dayLimit } from "@/helpers/constants";
-export async function POST(req: Request) {
-  const { description, user, conversationId, language } = await req.json()
-  const curentLanguage = generatedLanguagePrompt(language)
+import { canAccessUser, getSessionUser, sanitizeUser } from "@/lib/auth";
 
-  if (!user.isSubscribed) {
+export async function POST(req: Request) {
+  const session = await getSessionUser();
+
+  if (!session) {
+    return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const { description, conversationId, language } = await req.json();
+  const curentLanguage = generatedLanguagePrompt(language);
+
+  const conversationContent = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+  });
+
+  if (!conversationContent) {
+    return new NextResponse(JSON.stringify({ error: "Conversation not found" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  if (!canAccessUser(session, conversationContent.userId)) {
+    return new NextResponse(JSON.stringify({ error: "Forbidden" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const fullUser = await prisma.user.findUnique({
+    where: { id: session.id },
+    include: {
+      Experience: true,
+      Education: true,
+      Project: true,
+      certifications: true,
+    },
+  });
+
+  if (!fullUser) {
+    return new NextResponse(JSON.stringify({ error: "User not found" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const user = sanitizeUser(fullUser);
+
+  if (!fullUser.isSubscribed) {
     const today = new Date();
     const isSameDay =
-      user.lastGeneratedAt &&
-      today.toDateString() === new Date(user.lastGeneratedAt).toDateString();
+      fullUser.lastGeneratedAt &&
+      today.toDateString() === new Date(fullUser.lastGeneratedAt).toDateString();
 
-    if (isSameDay && user.generationCount >= dayLimit) {
+    if (isSameDay && fullUser.generationCount >= dayLimit) {
       return new NextResponse(
         JSON.stringify({ error: `Limit to ${dayLimit} generations a day` }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
+
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id: fullUser.id },
       data: {
         generationCount: isSameDay ? { increment: 1 } : 1,
         lastGeneratedAt: today,
       },
     });
   }
+
   await prisma.message.create({
     data: {
       conversationId,
-      role: 'user',
-      content: description
-    }
+      role: "user",
+      content: description,
+    },
   });
-  const prompt = generateCoverLetterPrompt({ description, user, curentLanguage })
-  const system = generateCoverLetterSystemPrompt()
+
+  const prompt = generateCoverLetterPrompt({ description, user: user as any, curentLanguage });
+  const system = generateCoverLetterSystemPrompt();
 
   const messages = await prisma.message.findMany({
     where: { conversationId },
-    orderBy: { createdAt: 'asc' }
+    orderBy: { createdAt: "asc" },
   });
 
-  const conversationContent = await prisma.conversation.findUnique({
-    where: { id: conversationId }
-  })
-  
-  const chatHistory: CoreMessage[] = messages.map(m => ({
+  const chatHistory: CoreMessage[] = messages.map((m) => ({
     role: m.role as "user" | "assistant",
     content: m.content,
   }));
@@ -56,44 +103,47 @@ export async function POST(req: Request) {
   if (conversationContent?.content) {
     chatHistory.push({
       role: "user",
-      content: generateCoverLetterPrompt({ description: conversationContent.content, user, curentLanguage })
+      content: generateCoverLetterPrompt({
+        description: conversationContent.content,
+        user: user as any,
+        curentLanguage,
+      }),
     });
   }
 
   chatHistory.push({
     role: "user",
-    content: prompt
+    content: prompt,
   });
-
-
 
   try {
     const result = await streamObject({
       model: gemini("gemini-1.5-flash"),
-      output: 'object',
+      output: "object",
       schema: coverLetterSchema,
-      system: system,
+      system,
       messages: chatHistory,
       async onFinish({ object, error }) {
         if (object === undefined) {
-          console.error('Error:', error);
+          console.error("Error:", error);
           return;
         }
+
         await prisma.message.create({
           data: {
             conversationId,
-            role: 'assistant',
-            content: JSON.stringify(object.coverLetter)
-          }
+            role: "assistant",
+            content: JSON.stringify(object.coverLetter),
+          },
         });
+
         await prisma.coverLetter.create({
           data: {
             recipientName: object.coverLetter.recipientName,
+            recipientTitle: object.coverLetter.recipientTitle || "Hiring Manager",
             companyAddress: object.coverLetter.companyAddress,
-            recipientTitle: object.coverLetter.positionTitle,
             companyName: object.coverLetter.companyName,
             positionTitle: object.coverLetter.positionTitle,
-
             introduction: object.coverLetter.introduction,
             body: object.coverLetter.body,
             conclusion: object.coverLetter.conclusion,
@@ -102,9 +152,9 @@ export async function POST(req: Request) {
             senderEmail: object.coverLetter.senderEmail,
             senderPhone: object.coverLetter.senderPhone,
             sendertitle: object.coverLetter.sendertitle,
-            conversationId: conversationId,
-          }
-        })
+            conversationId,
+          },
+        });
       },
     });
 

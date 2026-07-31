@@ -1,7 +1,6 @@
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
 export async function DELETE() {
-  (await cookies()).delete("token_cv");
-  return NextResponse.json({ message: "Déconnexion réussie" }, { status: 200 });
+  return auth.api.signOut({ headers: await headers(), asResponse: true });
 }

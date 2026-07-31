@@ -1,34 +1,43 @@
 import { NextResponse } from "next/server";
-import prisma from "../../../../../prisma/prisma"
-import { cookies } from "next/headers";
-import { SignJWT } from "jose";
-import { generateToken } from "@/lib/utils";
-
-const secret = new TextEncoder().encode("secret_key");
+import prisma from "../../../../../prisma/prisma";
+import { canAccessUser, getSessionUser, sanitizeUser } from "@/lib/auth";
 
 export async function GET(req: Request) {
-  const url = new URL(req.url)
-  const id = url.pathname.split('/').pop() as string
+  const url = new URL(req.url);
+  const id = url.pathname.split("/").pop() as string;
+  const session = await getSessionUser();
+
+  if (!canAccessUser(session, id)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   const user = await prisma.user.findUnique({
-    where: { id, },
+    where: { id },
     include: {
       Experience: true,
       Education: true,
       Project: true,
-      certifications: true
+      certifications: true,
     },
-  })
+  });
+
   if (!user) {
-    return NextResponse.json({ message: "User not found" })
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
   }
-  return NextResponse.json(user)
+
+  return NextResponse.json(sanitizeUser(user));
 }
 
 export async function PUT(req: Request) {
   const url = new URL(req.url);
   const id = url.pathname.split("/").pop() as string;
-  const body = await req.json();
+  const session = await getSessionUser();
 
+  if (!canAccessUser(session, id)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json();
   const {
     name,
     email,
@@ -41,59 +50,78 @@ export async function PUT(req: Request) {
     skills,
   } = body;
 
-  let user = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id },
   });
 
   if (!user) {
-    user = await prisma.user.create({
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
+  }
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id },
       data: {
         name,
-        email,
         phone,
-        languages,
         address,
+        languages,
         github,
+        email,
         linkedin,
         portfolio,
         skills,
       },
     });
 
-    const token = await generateToken(user);
+    return NextResponse.json(sanitizeUser(updatedUser), { status: 200 });
+  } catch (error: any) {
+    if (error?.code === "P2002") {
+      return NextResponse.json({ message: "Email already exists" }, { status: 409 });
+    }
 
-    (await cookies()).set("token_cv", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-      maxAge: 100 * 365 * 24 * 60 * 60,
-    });
-    return NextResponse.json(user, { status: 200 });
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
-
-  const updatedUser = await prisma.user.update({
-    where: { id },
-    data: {
-      name,
-      phone,
-      address,
-      languages,
-      github,
-      email,
-      linkedin,
-      portfolio,
-      skills,
-    },
-  });
-
-  return NextResponse.json(updatedUser, { status: 200 });
 }
 
 export async function DELETE(req: Request) {
-  const url = new URL(req.url)
-  const id = url.pathname.split('/').pop() as string
-  await prisma.user.delete({ 
-    where: { id, }, 
-  })
+  const url = new URL(req.url);
+  const id = url.pathname.split("/").pop() as string;
+  const session = await getSessionUser();
+
+  if (!canAccessUser(session, id)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
+  await prisma.$transaction([
+    prisma.message.deleteMany({
+      where: {
+        conversation: {
+          userId: id,
+        },
+      },
+    }),
+    prisma.cv.deleteMany({
+      where: {
+        conversation: {
+          userId: id,
+        },
+      },
+    }),
+    prisma.coverLetter.deleteMany({
+      where: {
+        conversation: {
+          userId: id,
+        },
+      },
+    }),
+    prisma.conversation.deleteMany({ where: { userId: id } }),
+    prisma.experience.deleteMany({ where: { userId: id } }),
+    prisma.education.deleteMany({ where: { userId: id } }),
+    prisma.project.deleteMany({ where: { userId: id } }),
+    prisma.certification.deleteMany({ where: { userId: id } }),
+    prisma.user.delete({ where: { id } }),
+  ]);
+
+  return NextResponse.json({ message: "User deleted" }, { status: 200 });
 }

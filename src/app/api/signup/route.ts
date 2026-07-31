@@ -1,46 +1,25 @@
-import bcrypt from "bcryptjs";
-import { NextResponse, NextRequest } from "next/server";
-import prisma from "../../../../prisma/prisma";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { authSchema } from "@/helpers/schema";
-import { generateVerifyCode } from "@/lib/utils";
-import axios from "axios";
+import { auth, sanitizeUser } from "@/lib/auth";
+import prisma from "../../../../prisma/prisma";
 
-export const registerSchema = z.object({
-  email: z.string().email({ message: "Email invalide" }),
-  password: z
-    .string()
-    .min(6, { message: "Le mot de passe doit contenir au moins 6 caractères" }),
-});
-
+const registerSchema = authSchema.extend({ name: z.string().trim().min(3).optional() });
 
 export async function POST(req: NextRequest) {
-  const data = await req.json();
+  let data;
+  try { data = await req.json(); }
+  catch { return NextResponse.json({ message: "Invalid JSON" }, { status: 400 }); }
 
-  const register = authSchema.safeParse(data);
-  if (register.error)
-    return NextResponse.json({ message: register.error.errors[0].message, data }, { status: 400 });
-
-  try {
-    const existingUser = await prisma.user.findUnique({
-      where: { email: register.data.email },
-    });
-
-    if (existingUser) {
-      return NextResponse.json({ message: 'Email already in use.'}, { status: 400 });
-    }
-
-    const hashedPassword = await bcrypt.hash(register.data.password, 10);
-    const verifyCode = generateVerifyCode()
-
-    const user = await prisma.user.create({
-      data: { ...register.data, password: hashedPassword, verificationCode: verifyCode },
-    });
-
-    return NextResponse.json(user, { status: 200 });
-  } catch (error) {
-    console.log(error instanceof Error ? error.message : error);
-    return NextResponse.json({ message: 'An unexpected error occurred.' }, { status: 500 });;
-  }
-
+  const parsed = registerSchema.safeParse(data);
+  if (!parsed.success) return NextResponse.json({ message: parsed.error.errors[0].message }, { status: 400 });
+  const email = parsed.data.email.trim().toLowerCase();
+  const response = await auth.api.signUpEmail({
+    body: { ...parsed.data, email, name: parsed.data.name || email.split("@")[0] },
+    headers: req.headers,
+    asResponse: true,
+  });
+  if (!response.ok) return response;
+  const user = await prisma.user.findUniqueOrThrow({ where: { email } });
+  return NextResponse.json(sanitizeUser(user), { status: 201, headers: response.headers });
 }

@@ -3,11 +3,15 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import prisma from "../../../../prisma/prisma";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-04-30.basil",
-});
-
 export async function POST(req: Request) {
+  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+    return new NextResponse("Missing Stripe configuration", { status: 500 });
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2025-04-30.basil",
+  });
+
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
   const sig = req.headers.get("stripe-signature") as string;
 

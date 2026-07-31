@@ -63,7 +63,7 @@ export const addTemplate = createAsyncThunk(
   }
 );
 
-export const updateTemplatePlan = createAsyncThunk("user/currentUser", async ({ id, plan }: { id: string, plan: string }, { rejectWithValue }) => {
+export const updateTemplatePlan = createAsyncThunk("template/updateTemplatePlan", async ({ id, plan }: { id: string, plan: string }, { rejectWithValue }) => {
   let url = `${API_URL}/${id}/updateplan`
   try {
     const response = await axios.put(url, { id, plan });

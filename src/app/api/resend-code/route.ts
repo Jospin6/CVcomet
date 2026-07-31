@@ -1,13 +1,10 @@
 // app/api/resend-code/route.ts
 import { NextResponse } from "next/server";
 import prisma from "../../../../prisma/prisma";
-import { Resend } from "resend";
 import { generateVerifyCode } from "@/lib/utils";
-import { EmailTemplate } from "@/components/email-template";
 import { sendVerificationEmail } from "@/lib/resend";
 
 // Instancie ton client Resend (ou Nodemailer si tu préfères)
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(req: Request) {
   try {
