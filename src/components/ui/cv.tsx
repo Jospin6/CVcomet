@@ -1,6 +1,7 @@
 "use client"
 import { CvProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
+import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react"
 import { useTranslation } from 'react-i18next'
 import DocZero from "../templates/cv/docZero"
@@ -20,15 +21,16 @@ export const Cv = ({ cv, user }: { cv: CvProps, user?: User }) => {
 
     return (
         <>
-            <div className="flex items-center text-white justify-between mb-4">
+            <div className="flex items-center text-foreground justify-between gap-3 mb-4">
                 <h2 className="text-xl font-bold">{t("resume")}</h2>
                 <div className="flex gap-4">
                     {(user && cv) && (
-                        <Download className="w-5 h-5 cursor-pointer" onClick={onClickDownload} />
+                        <Button variant="outline" size="sm" aria-label={t("shell.download")} onClick={onClickDownload}><Download className="size-4"/><span className="hidden sm:inline">{t("shell.download")}</span></Button>
                     )}
                 </div>
             </div>
-            <div className="md:w-[794px] w-full mx-auto md:p-8 md:h-[1123px] h-[auto] p-2 bg-white shadow-lg">
+            <div className="document-scroll" role="region" tabIndex={0} aria-label={t("shell.preview")}>
+            <div className="w-[794px] min-h-[1123px] mx-auto p-8 document-paper bg-white shadow-lg">
                 <header className="text-center mb-6">
                     <h1 className="text-3xl font-bold uppercase">{user?.name ?? "No name"}</h1>
                     <p className="text-sm uppercase font-medium">
@@ -147,6 +149,7 @@ export const Cv = ({ cv, user }: { cv: CvProps, user?: User }) => {
                     </section>
                 )}
             </div>
+        </div>
         </>
     )
 }

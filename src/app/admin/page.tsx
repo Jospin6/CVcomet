@@ -62,7 +62,7 @@ export default function AdminDashboard() {
   if(user?.role !== "ADMIN") return redirect("/unauthorized"); 
   return (
     <div className="">
-      <h1 className="text-2xl text-white font-bold mb-8">Admin Dashboard</h1>
+      <h1 className="text-2xl text-foreground font-bold mb-8">Admin Dashboard</h1>
 
       <div className="mb-4 flex justify-end">
         <Dialog>

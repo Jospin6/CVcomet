@@ -1,0 +1,15 @@
+{
+  "error": "{\"theme\":\"light\",\"fg\":\"muted-foreground\",\"bg\":\"card\",\"ratio\":null}",
+  "checks": [
+    "Real Next.js overview uses profile data; eight completed sections produce 100%; only one /api/me request.",
+    "Desktop sidebar collapses and expands.",
+    "Ctrl+K and Cmd+K; search/empty state; arrows skip unavailable commands; Enter opens composer; Escape restores focus.",
+    "Header theme switch changes the interface and persists across reloads.",
+    "Gallery search, empty result, premium filter, accessible A4 preview, focus restoration, free selection and premium upgrade link.",
+    "Gallery failure and empty states are visible and retry/reset controls exist.",
+    "72 layout checks: nine real routes, 375/768/1024/1440 px, light/dark; no page overflow; all form fields have accessible names; A4 paper stays white with dark text.",
+    "Mobile drawer traps Tab focus, Escape restores focus, navigation closes it; reduced-motion media disables long transitions.",
+    "Guest state is empty; React Hook Form login fields submit correctly, successful mocked login updates session and overview."
+  ],
+  "errors": []
+}

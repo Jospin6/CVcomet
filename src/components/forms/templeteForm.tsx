@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { addTemplate } from "@/redux/template/templateSlice";
+import { marketProfiles, resumeMarkets, type ResumeMarket } from "@/lib/resume-market";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -21,6 +22,8 @@ export default function AddTemplateForm() {
   const [name, setName] = useState("");
   const [type, setType] = useState<"CV" | "COVER_LETTER" | "">("");
   const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [markets, setMarkets] = useState<ResumeMarket[]>([]);
+  const [styleFamily, setStyleFamily] = useState("MODERN");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
@@ -34,6 +37,8 @@ export default function AddTemplateForm() {
       formData.append("name", validated.name);
       formData.append("type", validated.type);
       formData.append("templateFile", validated.templateFile);
+      formData.append("markets", markets.join(","));
+      formData.append("styleFamily", styleFamily);
 
       setLoading(true);
 
@@ -86,6 +91,11 @@ export default function AddTemplateForm() {
         </Select>
       </div>
 
+      <div>
+        <Label>Style</Label>
+        <Select value={styleFamily} onValueChange={setStyleFamily}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["MODERN","CLASSIC","MINIMAL","EXECUTIVE","TECHNICAL","EUROPASS_INSPIRED"].map(v => <SelectItem key={v} value={v}>{v.replaceAll("_", " ")}</SelectItem>)}</SelectContent></Select>
+      </div>
+      <div className="space-y-2"><Label>Marchés compatibles</Label><p className="text-xs text-muted-foreground">Aucun marché sélectionné = template universel.</p><div className="grid gap-2 sm:grid-cols-2">{resumeMarkets.map(id => <label key={id} className="flex items-center gap-2 rounded-lg border p-3 text-sm"><input type="checkbox" checked={markets.includes(id)} onChange={e => setMarkets(current => e.target.checked ? [...current, id] : current.filter(x => x !== id))}/>{marketProfiles[id].shortLabel}</label>)}</div></div>
       <div>
         <Label>Image du template</Label>
         <Input

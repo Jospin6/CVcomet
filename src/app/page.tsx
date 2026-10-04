@@ -1,222 +1,323 @@
-"use client"
-
-import { motion } from "framer-motion";
-import { use, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { AppDispatch } from "@/redux/store";
-import { Button } from "@/components/ui/button";
-import { fetchUser, selectUser } from "@/redux/user/userSlice";
-import { addConversation, clearConversationId, selectConversationId, setTypeGeneration } from "@/redux/conversation/conversationSlice";
-import { useRouter } from "next/navigation";
-import { useTranslation } from 'react-i18next';
-import { Sparkles, Wand2 } from "lucide-react";
+"use client";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { LoadingIcon } from "@/components/ui/loadingIcon";
+import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  ContactRound,
+  FileText,
+  Mail,
+  MessageSquare,
+  Sparkles,
+} from "lucide-react";
+import type { AppDispatch, RootState } from "@/redux/store";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { fetchUser, selectUser } from "@/redux/user/userSlice";
+import {
+  addConversation,
+  clearConversationId,
+  setTypeGeneration,
+} from "@/redux/conversation/conversationSlice";
 import { getTodayGenerationCount } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader, SectionHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ScoreRing } from "@/components/ui/score-ring";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { profileCompleteness } from "@/lib/career-profile/schema";
+import { dayLimit } from "@/helpers/constants";
 
-export default function Home() {
-    const { t } = useTranslation();
-    const inputRef = useRef<HTMLDivElement>(null);
-    const [input, setInput] = useState<string>("");
-    const dispatch = useDispatch<AppDispatch>();
-    const router = useRouter();
-    const currentUser = useSelector(selectUser)
-    const currentConversationId = useSelector(selectConversationId)
-    const [isCvLoad, setCvLoad] = useState<boolean>(false)
-    const [isCoverLoad, setCoverLoad] = useState<boolean>(false)
-    const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
-    const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
-    const [conversationStarted, setConversationStarted] = useState(false);
-
-    const { user, loading } = useCurrentUser()
-
-    const handleSend = () => {
-        if (input.trim() === "") {
-            setIsInputEmpty(true);
-            if (inputRef.current) inputRef.current.focus();
-            return;
-        }
-
-        dispatch(clearConversationId());
-        dispatch(addConversation({ content: input, userId: user?.id }));
-        dispatch(setTypeGeneration("cv"));
-        setCvLoad(true);
-        setConversationStarted(true); // ✅
-        setInput("");
-    };
-
-    const isUserReadyToGenDoc = () => {
-        if (currentUser?.Experience && currentUser?.Education && currentUser?.skills) {
-            return true;
-
-        } else {
-            return false;
-        }
+function Overview() {
+  const { t } = useTranslation();
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+  const search = useSearchParams();
+  const { user: session } = useCurrentUser();
+  const user = useSelector(selectUser);
+  const conversations = useSelector(
+    (state: RootState) => state.conversation.conversations,
+  );
+  const loadingConversations = useSelector(
+    (state: RootState) => state.conversation.loading,
+  );
+  const [input, setInput] = useState("");
+  const [kind, setKind] = useState<"cv" | "coverLetter">("cv");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const textarea = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (session?.id) void dispatch(fetchUser(session.id));
+  }, [session?.id, dispatch]);
+  useEffect(() => {
+    const type = search.get("document");
+    if (type === "cv" || type === "coverLetter") {
+      setKind(type);
+      requestAnimationFrame(() => textarea.current?.focus());
     }
-
-    const handleCoverLetter = () => {
-        if (input.trim() === "") {
-            setIsInputEmpty(true);
-            if (inputRef.current) inputRef.current.focus();
-            return;
+  }, [search]);
+  const completeness = profileCompleteness({
+    name: user?.name, email: user?.email, headline: user?.headline,
+    summary: user?.summary, skills: user?.skills, languages: user?.languages,
+    careerGoal: user?.careerGoal, experienceLevel: user?.experienceLevel,
+    targetJobTitle: user?.targetJobTitle, targetIndustry: user?.targetIndustry,
+    targetCountry: user?.targetCountry, preferredWorkMode: user?.preferredWorkMode,
+    experiences: user?.Experience, education: user?.Education, projects: user?.Project,
+  });
+  const fields = Object.values(completeness.sections);
+  const completed = completeness.completed;
+  const percentage = completeness.percentage;
+  const generate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!input.trim()) {
+      setError(t("shell.requiredDescription"));
+      textarea.current?.focus();
+      return;
+    }
+    if (!session?.id) {
+      router.push("/login");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      dispatch(clearConversationId());
+      dispatch(setTypeGeneration(kind));
+      const conversation = await dispatch(
+        addConversation({ content: input.trim(), userId: session.id }),
+      ).unwrap();
+      router.push("/g/" + conversation.id);
+    } catch {
+      setError(t("shell.composerError"));
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow={t("shell.homeEyebrow")}
+        title={
+          user?.name
+            ? t("shell.greeting", { name: user.name.split(" ")[0] })
+            : t("shell.homeTitle")
         }
-
-        dispatch(clearConversationId());
-        dispatch(addConversation({ content: input, userId: user?.id }));
-        dispatch(setTypeGeneration("coverLetter"));
-        setCoverLoad(true);
-        setConversationStarted(true); // ✅
-        setInput("");
-    };
-
-    useEffect(() => {
-        // ✅ redirige uniquement si la conversation est volontairement lancée
-        if (conversationStarted && currentConversationId) {
-            router.replace(`/g/${currentConversationId}`);
-        }
-    }, [currentConversationId, conversationStarted, router]);
-
-    useEffect(() => {
-        if (user?.id) {
-            dispatch(fetchUser(user.id));
-        }
-    }, [user?.id, dispatch]);
-
-
-    return (
-        <>
-            <div className="flex flex-col items-center justify-center min-h-[90vh] gap-2">
-
-                <div className="text-center max-w-2xl mx-auto md:px-4">
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="text-xl font-extrabold text-white leading-tight mb-4"
-                    >
-                        {t("bigTitle")}
-                    </motion.h1>
-                    <motion.h2
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-                        className="text-gray-400 text-sm leading-relaxed"
-                    >
-                        {t("bigDescription")}
-                    </motion.h2>
-                </div>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="w-full md:max-w-3xl md:px-4 pb-4 pt-2"
+        description={t("shell.homeDescription")}
+      />
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
+        <section className="relative overflow-hidden rounded-xl border bg-hero px-6 py-8 text-hero-foreground sm:p-9">
+          <p className="mb-5 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest">
+            <Sparkles className="size-3.5" />
+            {t("shell.heroLabel")}
+          </p>
+          <h2 className="max-w-lg text-3xl font-semibold leading-tight tracking-[-.04em] sm:text-4xl">
+            {t("shell.heroTitle")}
+          </h2>
+          <p className="mt-4 max-w-md text-sm leading-relaxed">
+            {t("shell.heroDescription")}
+          </p>
+          <Button asChild className="mt-7">
+            <a href="#composer" onClick={() => textarea.current?.focus()}>
+              {t("shell.start")}
+              <ArrowRight />
+            </a>
+          </Button>
+        </section>
+        <section className="app-section flex flex-col items-center text-center">
+          <p className="mb-5 flex w-full items-center gap-2 text-xs text-muted-foreground">
+            <ContactRound className="size-4" />
+            {t("shell.careerProfile")}
+          </p>
+          <ScoreRing
+            value={percentage}
+            label={t("shell.profileCompleteness")}
+          />
+          <h2 className="mt-4 text-sm font-semibold">
+            {t("shell.profileCompleteness")}
+          </h2>
+          <p className="my-3 text-xs text-muted-foreground">
+            {user
+              ? t("shell.profileFields", {
+                  complete: completed,
+                  total: fields.length,
+                })
+              : t("shell.profileUnavailable")}
+          </p>
+          <Button variant="outline" asChild className="mt-auto w-full">
+            <Link href={user && !user.onboardingCompletedAt ? "/onboarding" : "/dashboard/profile"}>
+              {t("shell.completeProfile")}
+              <ArrowUpRight />
+            </Link>
+          </Button>
+        </section>
+      </div>
+      <section
+        className="app-section scroll-mt-6"
+        id="composer"
+        aria-labelledby="composer-heading"
+      >
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 id="composer-heading" className="type-h2">
+              {t("shell.composerTitle")}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("shell.composerDescription")}
+            </p>
+          </div>
+          <Button variant="ghost" asChild>
+            <Link href="/templates">
+              {t("shell.exploreTemplates")}
+              <ArrowUpRight />
+            </Link>
+          </Button>
+        </div>
+        <form onSubmit={generate}>
+          <label
+            htmlFor="job-description"
+            className="mb-2 block text-sm font-medium"
+          >
+            {t("shell.jobDescription")}
+          </label>
+          <Textarea
+            ref={textarea}
+            id="job-description"
+            value={input}
+            onChange={(event) => {
+              setInput(event.target.value);
+              setError("");
+            }}
+            placeholder={t("shell.jobPlaceholder")}
+            rows={5}
+            disabled={busy}
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? "generation-error" : undefined}
+          />
+          {error && (
+            <p
+              id="generation-error"
+              role="alert"
+              className="mt-3 text-sm text-destructive"
+            >
+              {error}
+            </p>
+          )}
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+            <div
+              role="group"
+              aria-label={t("shell.documents")}
+              className="flex rounded-lg border bg-muted p-1"
+            >
+              {(
+                [
+                  { value: "cv", label: "resumeShort", icon: FileText },
+                  { value: "coverLetter", label: "letterShort", icon: Mail },
+                ] as const
+              ).map(({ value, label, icon: Icon }) => (
+                <Button
+                  key={value}
+                  type="button"
+                  variant={kind === value ? "outline" : "ghost"}
+                  size="sm"
+                  disabled={busy}
+                  aria-pressed={kind === value}
+                  onClick={() => setKind(value)}
                 >
-                    <div className="md:max-w-3xl md:mx-auto md:px-4">
-                        <motion.div
-                            animate={{ height: "auto" }}
-                            whileFocus={{ scale: 1.01 }}
-                            transition={{ duration: 0.2 }}
-                            className="relative rounded-2xl border-[1px] border-gray-500 p-2.5 bg-[#2F2F2F]"
-                        >
-                            <div
-                                contentEditable
-                                role="textbox"
-                                onInput={(e) => {
-                                    setInput(e.currentTarget.textContent || "");
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handleSend();
-                                    }
-                                }}
-                                data-placeholder="Job description..."
-                                className="flex-1 text-gray-200 min-h-[36px] max-h-[300px] overflow-y-auto pt-2 pb-4 focus:outline-none 
-                                  text-sm rounded-md empty:before:text-gray-300 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
-                                ref={inputRef}
-                            />
-                            <div className="flex justify-between items-center">
-
-                                <div>
-                                    {currentUser?.isSubscribed ? (
-                                        <span className="text-xs text-gray-400">
-                                            {t("active")}
-                                        </span>
-                                    ) : (
-                                        <span className="text-xs text-gray-400">
-                                            {(currentUser?.lastGeneratedAt && currentUser?.generationCount) &&
-                                                (
-                                                    <span>
-                                                        {t("remainingGenerations")}: {getTodayGenerationCount(currentUser?.lastGeneratedAt, currentUser?.generationCount)}
-                                                    </span>
-                                                )
-                                            }
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex gap-2">
-                                    {user ? (
-                                        isUserReadyToGenDoc() ? (
-                                            <>
-                                                {!isCvLoad ? (
-
-                                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleSend}>
-                                                        <Sparkles className="w-4 h-4" />
-                                                        <span>Cv</span>
-                                                    </Button>
-                                                ) : (
-                                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
-                                                        <LoadingIcon />
-                                                    </Button>
-                                                )}
-                                                {!isCoverLoad ? (
-                                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm" onClick={handleCoverLetter}>
-                                                        <Wand2 className="w-4 h-4" />
-                                                        <span>Cover letter</span>
-                                                    </Button>
-                                                ) : (
-                                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
-                                                        <LoadingIcon />
-                                                    </Button>
-                                                )}
-
-                                            </>
-                                        ) : (
-                                            <Link href={"/profil"} className="cursor-pointer bg-transparent text-blue-500 underline text-sm">
-                                                {t("fillProfile")}
-                                            </Link>
-                                        )
-                                    ) : (
-                                        <>
-                                            <Link href={"/login"}>
-                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
-                                                    <Sparkles className="w-4 h-4" />
-                                                    <span>Cv</span>
-                                                </Button>
-                                            </Link>
-                                            <Link href={"/login"}>
-                                                <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-sm">
-                                                    <Wand2 className="w-4 h-4" />
-                                                    <span>Cover letter</span>
-                                                </Button>
-                                            </Link>
-
-                                        </>
-                                    )}
-                                </div>
-
-                            </div>
-                            {isInputEmpty && (
-                                <p className="text-red-500 text-xs mt-2">
-                                    {t("inputRequired")}
-                                </p>
-                            )}
-                        </motion.div>
-                    </div>
-                </motion.div>
+                  <Icon />
+                  {t("shell." + label)}
+                </Button>
+              ))}
             </div>
-        </>
-
-    );
+            <Button type="submit" disabled={busy} className="w-full sm:w-auto">
+              <Sparkles
+                className={
+                  busy ? "animate-pulse motion-reduce:animate-none" : ""
+                }
+              />
+              {busy
+                ? t("shell.creating")
+                : session
+                  ? t("shell.create")
+                  : t("login")}
+            </Button>
+          </div>
+          {user && (
+            <div className="mt-5 max-w-sm">
+              <p className="mb-2 text-xs text-muted-foreground">
+                {user.isSubscribed
+                  ? t("shell.subscriptionActive")
+                  : t("shell.remaining", {
+                      count: getTodayGenerationCount(
+                        user.lastGeneratedAt || "",
+                        user.generationCount || 0,
+                      ),
+                    })}
+              </p>
+              {!user.isSubscribed && (
+                <ProgressBar
+                  value={
+                    (getTodayGenerationCount(
+                      user.lastGeneratedAt || "",
+                      user.generationCount || 0,
+                    ) /
+                      dayLimit) *
+                    100
+                  }
+                  label={t("remainingGenerations")}
+                />
+              )}
+            </div>
+          )}
+        </form>
+      </section>
+      <section>
+        <SectionHeader
+          title={t("shell.recent")}
+          description={t("shell.recentDescription")}
+        />
+        {loadingConversations && !conversations.length ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-36 rounded-xl" />
+            ))}
+          </div>
+        ) : session && conversations.length ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {conversations.slice(0, 6).map((conversation) => (
+              <Link
+                key={conversation.id}
+                href={"/g/" + conversation.id}
+                className="group rounded-xl border bg-card p-5 transition-colors hover:border-primary"
+              >
+                <MessageSquare className="mb-6 size-5 text-primary" />
+                <h3 className="truncate font-medium">
+                  {conversation.title || t("shell.untitled")}
+                </h3>
+                <p className="mt-4 flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
+                  {t("shell.open")}
+                  <ArrowUpRight className="size-4" />
+                </p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={FileText}
+            title={t("shell.emptyDocuments")}
+            description={t("shell.emptyDocumentsDescription")}
+          />
+        )}
+      </section>
+    </div>
+  );
+}
+export default function Home() {
+  return (
+    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+      <Overview />
+    </Suspense>
+  );
 }

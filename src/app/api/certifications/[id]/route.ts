@@ -1,70 +1,47 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../../prisma/prisma";
-import { canAccessUser, getSessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
+import { z } from "zod";
+import { certificationSchema } from "@/lib/career-profile/schema";
+import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
 
+const compatibleSchema = certificationSchema.extend({
+  organization: z.preprocess(value => value ?? "", certificationSchema.shape.organization),
+  date: z.preprocess(value => value ?? "", certificationSchema.shape.date),
+  description: z.preprocess(value => value ?? "", certificationSchema.shape.description)
+});
+const inputSchema = compatibleSchema.extend({ userId: z.string().uuid().optional() });
+async function owned(req: Request) {
+  const session = await getSessionUser();
+  if (!session) throw new ProfileError(401, "UNAUTHORIZED");
+  const id = z.string().uuid().parse(new URL(req.url).pathname.split("/").pop());
+  const item = await prisma.certification.findFirst({ where: { id, userId: session.id } });
+  if (!item) throw new ProfileError(404, "NOT_FOUND");
+  return { session, item };
+}
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const id = url.pathname.split("/").pop() as string;
-  const session = await getSessionUser();
-
-  const certification = await prisma.certification.findUnique({
-    where: { id },
-  });
-
-  if (!certification) {
-    return NextResponse.json({ message: "Certification not found" }, { status: 404 });
-  }
-
-  if (!canAccessUser(session, certification.userId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  return NextResponse.json(certification);
+  try { return NextResponse.json((await owned(req)).item); }
+  catch (error) { return profileErrorResponse(error); }
 }
-
 export async function PUT(req: Request) {
-  const url = new URL(req.url);
-  const id = url.pathname.split("/").pop() as string;
-  const session = await getSessionUser();
-  const { name, organization, date, userId, description } = await req.json();
-
-  const certification = await prisma.certification.findUnique({
-    where: { id },
-  });
-
-  if (!certification) {
-    return NextResponse.json({ message: "Certification not found" }, { status: 404 });
-  }
-
-  if (!canAccessUser(session, certification.userId) || !canAccessUser(session, userId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  const updatedCertification = await prisma.certification.update({
-    where: { id },
-    data: { name, organization, date, userId, description },
-  });
-
-  return NextResponse.json(updatedCertification);
+  try {
+    const { session, item } = await owned(req);
+    const { userId, id, ...data } = inputSchema.parse(await profileJson(req));
+    if ((userId && userId !== session.id) || (id && id !== item.id)) throw new ProfileError(403, "FORBIDDEN");
+    const result = await prisma.$transaction(async tx => {
+      await tx.user.update({ where: { id: session.id }, data: { profileRevision: { increment: 1 } } });
+      return tx.certification.update({ where: { id: item.id, userId: session.id }, data });
+    });
+    return NextResponse.json(result);
+  } catch (error) { return profileErrorResponse(error); }
 }
-
 export async function DELETE(req: Request) {
-  const url = new URL(req.url);
-  const id = url.pathname.split("/").pop() as string;
-  const session = await getSessionUser();
-
-  const certification = await prisma.certification.findUnique({
-    where: { id },
-  });
-
-  if (!certification) {
-    return NextResponse.json({ message: "Certification not found" }, { status: 404 });
-  }
-
-  if (!canAccessUser(session, certification.userId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  await prisma.certification.delete({ where: { id } });
-  return NextResponse.json({ message: "Certification deleted" });
+  try {
+    const { session, item } = await owned(req);
+    await prisma.$transaction(async tx => {
+      await tx.user.update({ where: { id: session.id }, data: { profileRevision: { increment: 1 } } });
+      await tx.certification.delete({ where: { id: item.id, userId: session.id } });
+    });
+    return NextResponse.json({ message: "Deleted" });
+  } catch (error) { return profileErrorResponse(error); }
 }

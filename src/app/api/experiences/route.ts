@@ -1,51 +1,38 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../prisma/prisma";
-import { canAccessUser, getSessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
+import { z } from "zod";
+import { experienceSchema } from "@/lib/career-profile/schema";
+import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
 
-export async function POST(req: Request) {
-  const session = await getSessionUser();
-  const { title, company, description, location, start, end, userId } = await req.json();
-
-  if (!canAccessUser(session, userId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  try {
-    const experiences = await prisma.experience.create({
-      data: {
-        title,
-        company,
-        description,
-        location,
-        start,
-        end,
-        userId,
-      },
-    });
-    return NextResponse.json(experiences, { status: 201 });
-  } catch {
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
-  }
-}
+const compatibleSchema = experienceSchema.extend({
+  company: z.preprocess(value => value ?? "", experienceSchema.shape.company),
+  location: z.preprocess(value => value ?? "", experienceSchema.shape.location),
+  start: z.preprocess(value => value ?? "", experienceSchema.shape.start),
+  end: z.preprocess(value => value ?? "", experienceSchema.shape.end),
+  description: z.preprocess(value => value ?? "", experienceSchema.shape.description)
+});
+const inputSchema = compatibleSchema.omit({ id: true }).extend({ userId: z.string().uuid().optional() });
 
 export async function GET(req: Request) {
-  const session = await getSessionUser();
-  const { searchParams } = new URL(req.url);
-  const requestedUserId = searchParams.get("userId") || session?.id || "";
-
-  if (!session) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!canAccessUser(session, requestedUserId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  const experiences = await prisma.experience.findMany({
-    where: {
-      userId: requestedUserId,
-    },
-  });
-
-  return NextResponse.json(experiences);
+  try {
+    const session = await getSessionUser();
+    if (!session) throw new ProfileError(401, "UNAUTHORIZED");
+    const userId = new URL(req.url).searchParams.get("userId") || session.id;
+    if (userId !== session.id) throw new ProfileError(403, "FORBIDDEN");
+    return NextResponse.json(await prisma.experience.findMany({ where: { userId } }));
+  } catch (error) { return profileErrorResponse(error); }
+}
+export async function POST(req: Request) {
+  try {
+    const session = await getSessionUser();
+    if (!session) throw new ProfileError(401, "UNAUTHORIZED");
+    const { userId, ...data } = inputSchema.parse(await profileJson(req));
+    if (userId && userId !== session.id) throw new ProfileError(403, "FORBIDDEN");
+    const result = await prisma.$transaction(async tx => {
+      await tx.user.update({ where: { id: session.id }, data: { profileRevision: { increment: 1 } } });
+      return tx.experience.create({ data: { ...data, userId: session.id } });
+    });
+    return NextResponse.json(result, { status: 201 });
+  } catch (error) { return profileErrorResponse(error); }
 }

@@ -4,7 +4,11 @@ import { SignJWT } from "jose";
 import { twMerge } from "tailwind-merge"
 
 export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
-export const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET || "secret_key");
+export function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET is required");
+  return new TextEncoder().encode(secret);
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -54,8 +58,8 @@ export async function generateToken(user: any) {
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(SESSION_MAX_AGE_SECONDS)
-    .sign(jwtSecret);
+    .setExpirationTime(Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SECONDS)
+    .sign(getJwtSecret());
 
   return token;
 }

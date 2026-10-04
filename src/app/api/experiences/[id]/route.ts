@@ -1,70 +1,49 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../../prisma/prisma";
-import { canAccessUser, getSessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
+import { z } from "zod";
+import { experienceSchema } from "@/lib/career-profile/schema";
+import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
 
+const compatibleSchema = experienceSchema.extend({
+  company: z.preprocess(value => value ?? "", experienceSchema.shape.company),
+  location: z.preprocess(value => value ?? "", experienceSchema.shape.location),
+  start: z.preprocess(value => value ?? "", experienceSchema.shape.start),
+  end: z.preprocess(value => value ?? "", experienceSchema.shape.end),
+  description: z.preprocess(value => value ?? "", experienceSchema.shape.description)
+});
+const inputSchema = compatibleSchema.extend({ userId: z.string().uuid().optional() });
+async function owned(req: Request) {
+  const session = await getSessionUser();
+  if (!session) throw new ProfileError(401, "UNAUTHORIZED");
+  const id = z.string().uuid().parse(new URL(req.url).pathname.split("/").pop());
+  const item = await prisma.experience.findFirst({ where: { id, userId: session.id } });
+  if (!item) throw new ProfileError(404, "NOT_FOUND");
+  return { session, item };
+}
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const id = url.pathname.split("/").pop() as string;
-  const session = await getSessionUser();
-
-  const experience = await prisma.experience.findUnique({
-    where: { id },
-  });
-
-  if (!experience) {
-    return NextResponse.json({ message: "Experience not found" }, { status: 404 });
-  }
-
-  if (!canAccessUser(session, experience.userId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  return NextResponse.json(experience);
+  try { return NextResponse.json((await owned(req)).item); }
+  catch (error) { return profileErrorResponse(error); }
 }
-
 export async function PUT(req: Request) {
-  const url = new URL(req.url);
-  const id = url.pathname.split("/").pop() as string;
-  const session = await getSessionUser();
-  const { title, company, location, start, end, userId, description } = await req.json();
-
-  const experience = await prisma.experience.findUnique({
-    where: { id },
-  });
-
-  if (!experience) {
-    return NextResponse.json({ message: "Experience not found" }, { status: 404 });
-  }
-
-  if (!canAccessUser(session, experience.userId) || !canAccessUser(session, userId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  const updatedExperience = await prisma.experience.update({
-    where: { id },
-    data: { title, company, location, start, end, userId, description },
-  });
-
-  return NextResponse.json(updatedExperience);
+  try {
+    const { session, item } = await owned(req);
+    const { userId, id, ...data } = inputSchema.parse(await profileJson(req));
+    if ((userId && userId !== session.id) || (id && id !== item.id)) throw new ProfileError(403, "FORBIDDEN");
+    const result = await prisma.$transaction(async tx => {
+      await tx.user.update({ where: { id: session.id }, data: { profileRevision: { increment: 1 } } });
+      return tx.experience.update({ where: { id: item.id, userId: session.id }, data });
+    });
+    return NextResponse.json(result);
+  } catch (error) { return profileErrorResponse(error); }
 }
-
 export async function DELETE(req: Request) {
-  const url = new URL(req.url);
-  const id = url.pathname.split("/").pop() as string;
-  const session = await getSessionUser();
-
-  const experience = await prisma.experience.findUnique({
-    where: { id },
-  });
-
-  if (!experience) {
-    return NextResponse.json({ message: "Experience not found" }, { status: 404 });
-  }
-
-  if (!canAccessUser(session, experience.userId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  await prisma.experience.delete({ where: { id } });
-  return NextResponse.json({ message: "Experience deleted" });
+  try {
+    const { session, item } = await owned(req);
+    await prisma.$transaction(async tx => {
+      await tx.user.update({ where: { id: session.id }, data: { profileRevision: { increment: 1 } } });
+      await tx.experience.delete({ where: { id: item.id, userId: session.id } });
+    });
+    return NextResponse.json({ message: "Deleted" });
+  } catch (error) { return profileErrorResponse(error); }
 }

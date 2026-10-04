@@ -3,7 +3,7 @@ import prisma from "../../../../prisma/prisma";
 import { canAccessUser, getSessionUser } from "@/lib/auth";
 import { z } from "zod";
 import { generateText } from "ai";
-import { gemini } from "@/lib/gemini";
+import { getCareerModel } from "@/lib/gemini";
 
 const schema = z.object({
   content: z.string().min(1),
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     const titleResponse = await generateText({
-      model: gemini("gemini-1.5-flash"),
+      model: getCareerModel(),
       prompt: `Create a very short and catchy summary title (max 28 characters) for the following conversation:\n\n${content}\n\nOnly return the title.`,
       maxTokens: 20,
       temperature: 0.7,

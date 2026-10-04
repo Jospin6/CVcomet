@@ -1,0 +1,77 @@
+{
+  "scope": "Real Next.js UI and middleware; synthetic session and intercepted API fixtures; no live database writes or AI requests.",
+  "checks": [
+    "Five-step scratch onboarding, required fields, back navigation, manual review and explicit persistence; student reaches 100% without work history.",
+    "AI suggestion shows source and editable proposal; accepting changes only the draft until explicit save.",
+    "TXT upload merges non-destructively, allows corrections, requires review confirmation and persists only on Save.",
+    "409 conflict preserves the local draft; discard restores the saved snapshot.",
+    "Import and AI failures leave editable information intact.",
+    "Legacy /profil redirects to central profile and persisted information reloads.",
+    "12 profile layouts: FR/EN, light/dark, 375/768/1440 px; all fields labelled and no horizontal page overflow.",
+    "Middleware redirects unauthenticated profile access to login."
+  ],
+  "layouts": [
+    {
+      "language": "en",
+      "theme": "light",
+      "width": 375
+    },
+    {
+      "language": "en",
+      "theme": "light",
+      "width": 768
+    },
+    {
+      "language": "en",
+      "theme": "light",
+      "width": 1440
+    },
+    {
+      "language": "en",
+      "theme": "dark",
+      "width": 375
+    },
+    {
+      "language": "en",
+      "theme": "dark",
+      "width": 768
+    },
+    {
+      "language": "en",
+      "theme": "dark",
+      "width": 1440
+    },
+    {
+      "language": "fr",
+      "theme": "light",
+      "width": 375
+    },
+    {
+      "language": "fr",
+      "theme": "light",
+      "width": 768
+    },
+    {
+      "language": "fr",
+      "theme": "light",
+      "width": 1440
+    },
+    {
+      "language": "fr",
+      "theme": "dark",
+      "width": 375
+    },
+    {
+      "language": "fr",
+      "theme": "dark",
+      "width": 768
+    },
+    {
+      "language": "fr",
+      "theme": "dark",
+      "width": 1440
+    }
+  ],
+  "writes": 3,
+  "runtimeErrors": []
+}

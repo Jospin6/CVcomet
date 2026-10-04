@@ -114,10 +114,10 @@ export default function EditUserForm({ user, onSuccess }: EditUserFormProps) {
 
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="shadow border-[1px] border-gray-500 p-4 rounded-xl w-full">
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full">
       <UserProfilItem
         subTitle={`${t("emailDescription")}`}
-        icon={<Mail className="text-[#C53030]" size={18}/>}
+        icon={<Mail className="text-primary" size={18}/>}
         title={`${t("email")}`} >
         <InputField
           label=""
@@ -144,7 +144,7 @@ export default function EditUserForm({ user, onSuccess }: EditUserFormProps) {
 
       <UserProfilItem
         subTitle={`${t("phoneDescription")}`}
-        icon={<Phone className="text-[#2B6CB0]" size={18}/>}
+        icon={<Phone className="text-primary" size={18}/>}
         title={`${t("phone")}`} >
         <InputField
           label=""
@@ -157,7 +157,7 @@ export default function EditUserForm({ user, onSuccess }: EditUserFormProps) {
 
       <UserProfilItem
         subTitle={`${t("addressDescription")}`}
-        icon={<MapPin className="text-[#805AD5]" size={18}/>}
+        icon={<MapPin className="text-primary" size={18}/>}
         title={`${t("address")}`} >
         <InputField
           label=""
@@ -170,11 +170,11 @@ export default function EditUserForm({ user, onSuccess }: EditUserFormProps) {
 
       <UserProfilItem
         subTitle={`${t("languageDescription")}`}
-        icon={<Languages className="text-[#38A169]" size={18}/>}
+        icon={<Languages className="text-primary" size={18}/>}
         title={`${t("languages")}`} >
         <div className="flex flex-wrap gap-2 mb-2">
           {transformStringToArray(user?.languages ?? "").map((language, index) => (
-            <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border-[1px] border-gray-500">{language}</div>
+            <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border-[1px] border-input">{language}</div>
           ))}
         </div>
         <InputField
@@ -189,7 +189,7 @@ export default function EditUserForm({ user, onSuccess }: EditUserFormProps) {
 
       <UserProfilItem
         subTitle={`${t("linkedinDescription")}`}
-        icon={<Linkedin className="text-[#0A66C2]" size={18}/>}
+        icon={<Linkedin className="text-primary" size={18}/>}
         title={`${t("linkedin")}`} >
         <InputField
           label=""
@@ -202,7 +202,7 @@ export default function EditUserForm({ user, onSuccess }: EditUserFormProps) {
 
       <UserProfilItem
         subTitle={`${t("githubDescription")}`}
-        icon={<Github className="text-[#fff]" size={18}/>}
+        icon={<Github className="text-primary" size={18}/>}
         title={`${t("github")}`} >
         <InputField
           label=""
@@ -215,7 +215,7 @@ export default function EditUserForm({ user, onSuccess }: EditUserFormProps) {
 
       <UserProfilItem
         subTitle={`${t("websiteDescription")}`}
-        icon={<Globe className="text-[#3270ee]" size={18}/>}
+        icon={<Globe className="text-primary" size={18}/>}
         title={`${t("website")}`} >
         <InputField
           label=""
@@ -228,17 +228,17 @@ export default function EditUserForm({ user, onSuccess }: EditUserFormProps) {
 
       <UserProfilItem
         subTitle={`${t("skillDescription")}`}
-        icon={<BadgeCheck className="text-[#D69E2E]" size={18}/>}
+        icon={<BadgeCheck className="text-primary" size={18}/>}
         title={`${t("skills")}`} >
         <div className="flex flex-wrap gap-2 mb-2">
           {transformStringToArray(user?.skills ?? "").map((skill, index) => (
-            <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border-[1px] border-gray-500">{skill}</div>
+            <div key={index} className="px-5 py-[3px] text-sm rounded-2xl border-[1px] border-input">{skill}</div>
           ))}
         </div>
         <TextAreaField
           label=""
           name="skills"
-          className="border-[1px] border-gray-500"
+          className="border-[1px] border-input"
           placeholder="List your technical and soft skills"
           register={register}
           errors={errors}

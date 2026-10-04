@@ -1,70 +1,48 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../../prisma/prisma";
-import { canAccessUser, getSessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
+import { z } from "zod";
+import { educationSchema } from "@/lib/career-profile/schema";
+import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
 
+const compatibleSchema = educationSchema.extend({
+  school: z.preprocess(value => value ?? "", educationSchema.shape.school),
+  start: z.preprocess(value => value ?? "", educationSchema.shape.start),
+  end: z.preprocess(value => value ?? "", educationSchema.shape.end),
+  description: z.preprocess(value => value ?? "", educationSchema.shape.description)
+});
+const inputSchema = compatibleSchema.extend({ userId: z.string().uuid().optional() });
+async function owned(req: Request) {
+  const session = await getSessionUser();
+  if (!session) throw new ProfileError(401, "UNAUTHORIZED");
+  const id = z.string().uuid().parse(new URL(req.url).pathname.split("/").pop());
+  const item = await prisma.education.findFirst({ where: { id, userId: session.id } });
+  if (!item) throw new ProfileError(404, "NOT_FOUND");
+  return { session, item };
+}
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const id = url.pathname.split("/").pop() as string;
-  const session = await getSessionUser();
-
-  const education = await prisma.education.findUnique({
-    where: { id },
-  });
-
-  if (!education) {
-    return NextResponse.json({ message: "Education not found" }, { status: 404 });
-  }
-
-  if (!canAccessUser(session, education.userId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  return NextResponse.json(education);
+  try { return NextResponse.json((await owned(req)).item); }
+  catch (error) { return profileErrorResponse(error); }
 }
-
 export async function PUT(req: Request) {
-  const url = new URL(req.url);
-  const id = url.pathname.split("/").pop() as string;
-  const session = await getSessionUser();
-  const { degree, school, start, end, userId, description } = await req.json();
-
-  const education = await prisma.education.findUnique({
-    where: { id },
-  });
-
-  if (!education) {
-    return NextResponse.json({ message: "Education not found" }, { status: 404 });
-  }
-
-  if (!canAccessUser(session, education.userId) || !canAccessUser(session, userId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  const updatedEducation = await prisma.education.update({
-    where: { id },
-    data: { degree, school, start, end, userId, description },
-  });
-
-  return NextResponse.json(updatedEducation);
+  try {
+    const { session, item } = await owned(req);
+    const { userId, id, ...data } = inputSchema.parse(await profileJson(req));
+    if ((userId && userId !== session.id) || (id && id !== item.id)) throw new ProfileError(403, "FORBIDDEN");
+    const result = await prisma.$transaction(async tx => {
+      await tx.user.update({ where: { id: session.id }, data: { profileRevision: { increment: 1 } } });
+      return tx.education.update({ where: { id: item.id, userId: session.id }, data });
+    });
+    return NextResponse.json(result);
+  } catch (error) { return profileErrorResponse(error); }
 }
-
 export async function DELETE(req: Request) {
-  const url = new URL(req.url);
-  const id = url.pathname.split("/").pop() as string;
-  const session = await getSessionUser();
-
-  const education = await prisma.education.findUnique({
-    where: { id },
-  });
-
-  if (!education) {
-    return NextResponse.json({ message: "Education not found" }, { status: 404 });
-  }
-
-  if (!canAccessUser(session, education.userId)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  await prisma.education.delete({ where: { id } });
-  return NextResponse.json({ message: "Education deleted" });
+  try {
+    const { session, item } = await owned(req);
+    await prisma.$transaction(async tx => {
+      await tx.user.update({ where: { id: session.id }, data: { profileRevision: { increment: 1 } } });
+      await tx.education.delete({ where: { id: item.id, userId: session.id } });
+    });
+    return NextResponse.json({ message: "Deleted" });
+  } catch (error) { return profileErrorResponse(error); }
 }

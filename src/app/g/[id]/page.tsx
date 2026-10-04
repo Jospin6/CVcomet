@@ -1,8 +1,11 @@
 "use client"
 
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader } from "@/components/ui/page-header";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppDispatch, RootState } from "@/redux/store";
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { coverLetterSchema, cvSchema } from "@/helpers/schema";
@@ -33,7 +36,6 @@ import { LoadingIcon } from "@/components/ui/loadingIcon";
 import Link from "next/link";
 import { getTodayGenerationCount } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
     [cv1]: CvOne,
@@ -55,18 +57,18 @@ export default function Home() {
     const id = params.id
     const conversation = useSelector(selectConversation)
     const loadConversation = useSelector((state: RootState) => state.conversation.loading)
-    const inputRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
     const [input, setInput] = useState(conversation?.content ?? "");
     const dispatch = useDispatch<AppDispatch>();
     const convId = useSelector(selectConversationId)
-    const { user, loading } = useCurrentUser()
+    const { user: user } = useCurrentUser();
     const currentUser = useSelector(selectUser)
     const typeGeneration = useSelector(selectTypeGeneration)
     const [hasGenerated, setHasGenerated] = useState(false);
-    let language = i18n.language === 'fr' ? 'French' : 'English'
+    const language = i18n.language.startsWith('fr') ? 'fr' : 'en'
     const [isCvLoad, setCvLoad] = useState<boolean>(false)
     const [isCoverLoad, setCoverLoad] = useState<boolean>(false)
-    const hasFetchedConversation = useRef(false);
+
 
     const { object: cvObject, error: cvError, submit: cvSubmit, isLoading: isLoadingCv } = useObject({
         api: '/api/generate-cv',
@@ -90,20 +92,20 @@ export default function Home() {
     const alreadyGeneratedRef = useRef(false);
 
     useEffect(() => {
-        if (!conversation || !convId) return;
+        if (!conversation || !convId || !currentUser || conversation.id !== convId) return;
 
         if (!alreadyGeneratedRef.current && !hasGenerated) {
             if (typeGeneration === "cv") {
-                cvSubmit({ description: conversation.content, user: currentUser, conversationId: convId, language });
+                cvSubmit({ description: conversation.content, conversationId: convId, language });
             } else if (typeGeneration === "coverLetter") {
-                submitCoverLetter({ description: conversation.content, user: currentUser, conversationId: convId, language });
+                submitCoverLetter({ description: conversation.content, conversationId: convId, language });
             }
 
             alreadyGeneratedRef.current = true; // Ne pas regénérer
             setHasGenerated(true);
             dispatch(clearConversationId());
         }
-    }, [conversation, convId, hasGenerated, typeGeneration, currentUser, dispatch]);
+    }, [conversation, convId, hasGenerated, typeGeneration, currentUser, dispatch, cvSubmit, submitCoverLetter, language]);
 
     useEffect(() => {
         if (typeof id === "string") {
@@ -111,15 +113,25 @@ export default function Home() {
         }
     }, [dispatch, id]);
 
+    // useEffect(() => {
+    //     if (cvObject && !cvError && !hasFetchedConversation.current) {
+    //         hasFetchedConversation.current = true;
+
+    //         if (typeof id === "string") {
+    //             dispatch(getConversation({ id }));
+    //         }
+    //     }
+    // }, [cvObject, cvError, id, dispatch]);
+
     const handleSend = async () => {
         if (!input.trim()) return;
         setCvLoad(true);
         try {
-            await cvSubmit({ description: input, user: currentUser, conversationId: id, language });
+            await cvSubmit({ description: input, conversationId: id, language });
             setInput("");
             setCvLoad(false);
             if (inputRef.current) {
-                inputRef.current.innerText = "";
+                inputRef.current.value = "";
             }
         } catch (error) {
             console.log("Error submitting CV:", error);
@@ -131,11 +143,11 @@ export default function Home() {
         if (!input.trim()) return;
         setCoverLoad(true)
         try {
-            await submitCoverLetter({ description: input, user: currentUser, conversationId: id, language });
+            await submitCoverLetter({ description: input, conversationId: id, language });
             setCoverLoad(false)
             setInput("");
             if (inputRef.current) {
-                inputRef.current.innerText = "";
+                inputRef.current.value = "";
             }
         } catch (error) {
             console.log("Error submitting Cover letter:", error);
@@ -156,7 +168,7 @@ export default function Home() {
     const longText = conversation?.content;
 
     return (
-        <div className="pb-20">
+        <div className="min-w-0 space-y-6 pb-10"><PageHeader title={t("shell.documents")} description={conversation?.title || t("shell.composerDescription")} />
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -167,33 +179,18 @@ export default function Home() {
                         animate={{ height: "auto" }}
                         whileFocus={{ scale: 1.01 }}
                         transition={{ duration: 0.2 }}
-                        className="relative rounded-2xl border-[1px] border-gray-500 p-2.5 bg-[#2F2F2F]"
+                        className="relative rounded-2xl border-[1px] border-input p-2.5 bg-card"
                     >
-                        <div
-                            contentEditable
-                            role="textbox"
-                            onInput={(e) => {
-                                setInput(e.currentTarget.textContent || "");
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSend();
-                                }
-                            }}
-                            data-placeholder="Enter the Job description..."
-                            className="flex-1 text-gray-200 min-h-[36px] max-h-[300px] overflow-y-auto pt-2 pb-4 focus:outline-none 
-                  text-sm rounded-md empty:before:text-gray-300 empty:before:content-[attr(data-placeholder)] whitespace-pre-wrap break-words"
-                            ref={inputRef}
-                        />
-                        <div className="flex gap-2 justify-between items-center">
+                        <label htmlFor="generation-description" className="mb-2 block text-sm font-medium">{t("shell.jobDescription")}</label>
+                        <Textarea id="generation-description" ref={inputRef} value={input} onChange={e=>setInput(e.target.value)} placeholder={t("shell.jobPlaceholder")} rows={4} className="mb-3" disabled={isLoadingCv||isLoadingCoverLetter} />
+                        <div className="flex flex-wrap gap-3 justify-between items-center">
                             <div>
                                 {currentUser?.isSubscribed ? (
-                                    <span className="text-xs text-gray-400">
+                                    <span className="text-xs text-muted-foreground">
                                         {t("active")}
                                     </span>
                                 ) : (
-                                    <span className="text-xs text-gray-400">
+                                    <span className="text-xs text-muted-foreground">
                                         {(currentUser?.lastGeneratedAt && currentUser?.generationCount) &&
                                             (
                                                 <span>
@@ -206,23 +203,21 @@ export default function Home() {
                             </div>
                             <div className="flex gap-2">
                                 {!isCvLoad ? (
-                                    <Button className="cursor-pointer bg-transparent border-[1px] py-1 border-gray-500 text-xs md:text-sm" onClick={handleSend}>
+                                    <Button variant="outline" onClick={handleSend} disabled={!input.trim()||!currentUser||isLoadingCv||isLoadingCoverLetter}>
                                         <Sparkles className="md:w-4 md:h-4 w-2 h-2" />
-                                        <span>Cv</span>
+                                        <span>{t("shell.resumeShort")}</span>
                                     </Button>
                                 ) : (
-                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-xs md:text-sm">
-                                        <LoadingIcon />
+                                    <Button variant="outline" disabled aria-label={t("shell.loading")}><LoadingIcon />
                                     </Button>
                                 )}
                                 {!isCoverLoad ? (
-                                    <Button className="cursor-pointer bg-transparent py-1 border-[1px] border-gray-500 text-xs md:text-sm" onClick={handleCoverLetter}>
+                                    <Button variant="outline" onClick={handleCoverLetter} disabled={!input.trim()||!currentUser||isLoadingCv||isLoadingCoverLetter}>
                                         <Wand2 className="md:w-4 md:h-4 w-2 h-2" />
-                                        <span>{t('coverLetter')}</span>
+                                        <span>{t("shell.letterShort")}</span>
                                     </Button>
                                 ) : (
-                                    <Button className="cursor-pointer bg-transparent border-[1px] border-gray-500 text-xs md:text-sm">
-                                        <LoadingIcon />
+                                    <Button variant="outline" disabled aria-label={t("shell.loading")}><LoadingIcon />
                                     </Button>
                                 )}
                             </div>
@@ -231,9 +226,9 @@ export default function Home() {
                 </div>
             </motion.div>
 
-            <div className=" max-w-3xl mx-auto px-4 text-gray-300">
+            <div className=" max-w-3xl mx-auto px-4 text-foreground">
                 <p
-                    className={`transition-all text-sm duration-500 ease-in-out leading-relaxed tracking-wide ${isExpanded ? '' : 'line-clamp-3'}`}
+                    className={`transition-all text-sm duration-150 ease-in-out leading-relaxed tracking-wide ${isExpanded ? '' : 'line-clamp-3'}`}
                 >
                     {longText}
                 </p>
@@ -241,7 +236,7 @@ export default function Home() {
                 <div className="flex justify-end">
                     <button
                         onClick={toggleText}
-                        className="mt-2 text-sm text-blue-600 hover:underline focus:outline-none"
+                        className="mt-2 text-sm text-primary hover:underline focus:outline-none"
                     >
                         {isExpanded ? `${t("lessInfos")}` : `${t("moreInfos")}`}
                     </button>
@@ -249,9 +244,9 @@ export default function Home() {
             </div>
 
             {(cvError || coverError) && (
-                <div className="text-red-500 bg-black/50 mb-4 rounded-lg text-sm p-2 mt-2">
+                <div className="text-destructive bg-destructive/10 mb-4 rounded-lg text-sm p-2 mt-2">
                     <p>{t("limite")}</p>
-                    <Link href={"/upgrade"} className="text-sm text-blue-700 underline">
+                    <Link href={"/upgrade"} className="text-sm text-primary underline">
                         {t("ctUpgrade")}
                     </Link>
                 </div>
@@ -262,14 +257,14 @@ export default function Home() {
 
 
             <Tabs defaultValue="all" className="w-full mt-4">
-                <div className="md:w-[400px] w-3/4 m-auto">
-                    <TabsList className="grid w-full grid-cols-3 bg-[#1a1a1a] text-gray-300">
-                        <TabsTrigger className="text-white" value="all">{t("all")}</TabsTrigger>
-                        <TabsTrigger className="text-white" value="cv">{t("resume")}</TabsTrigger>
-                        <TabsTrigger className="text-white" value="cover">{t("letter")}</TabsTrigger>
+                <div className="mx-auto w-full max-w-md">
+                    <TabsList className="grid w-full grid-cols-3 bg-card text-foreground">
+                        <TabsTrigger className="text-foreground" value="all">{t("all")}</TabsTrigger>
+                        <TabsTrigger className="text-foreground" value="cv">{t("resume")}</TabsTrigger>
+                        <TabsTrigger className="text-foreground" value="cover">{t("letter")}</TabsTrigger>
                     </TabsList>
                 </div>
-                <TabsContent value="all">
+                <TabsContent className="min-w-0" value="all">
                     {cvObject?.cvs && (
                         <div className="mb-6">
                             {SelectedCvComponent ? (
@@ -374,7 +369,7 @@ export default function Home() {
                     </div>
 
                 </TabsContent>
-                <TabsContent value="cv">
+                <TabsContent className="min-w-0" value="cv">
                     <div>
                         <div>
                             {cvObject?.cvs && (
@@ -463,7 +458,7 @@ export default function Home() {
                         }
                     </div>
                 </TabsContent>
-                <TabsContent value="cover">
+                <TabsContent className="min-w-0" value="cover">
                     <div>
                         {coverLetterObject?.coverLetter && (
                             <div>

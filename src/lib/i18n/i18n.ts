@@ -1,25 +1,24 @@
-import i18n from 'i18next'
-import { initReactI18next } from 'react-i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
-import HttpApi from 'i18next-http-backend'
+import { createInstance } from "i18next";
+import { initReactI18next } from "react-i18next";
+import en from "../../../public/locales/en/common.json";
+import fr from "../../../public/locales/fr/common.json";
 
-i18n
-    .use(HttpApi)
-    .use(LanguageDetector)
-    .use(initReactI18next)
-    .init({
-        fallbackLng: 'en',
-        supportedLngs: ['en', 'fr'],
-        ns: ['common'],
-        defaultNS: 'common',
-        detection: {
-            order: ['cookie', 'htmlTag', 'localStorage', 'path', 'subdomain'],
-            caches: ['cookie'],
-        },
-        backend: {
-            loadPath: '/locales/{{lng}}/{{ns}}.json',
-        },
-        react: { useSuspense: false },
-    })
+export type AppLanguage = "en" | "fr";
 
-export default i18n
+// One instance per provider/request prevents language leaking between SSR requests.
+// Resources and the initial language are identical on the server and the browser.
+export function createAppI18n(language: AppLanguage) {
+  const instance = createInstance();
+  void instance.use(initReactI18next).init({
+    resources: { en: { common: en }, fr: { common: fr } },
+    lng: language,
+    fallbackLng: "en",
+    supportedLngs: ["en", "fr"],
+    defaultNS: "common",
+    ns: ["common"],
+    initImmediate: false,
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+  });
+  return instance;
+}

@@ -1,0 +1,48 @@
+{
+  "scope": "Static phase-0 design prototype only; no application backend tested",
+  "checks": [
+    "Desktop overview rendered; profile completeness calculated from 4 of 6 fields.",
+    "Gallery: category filter, no-results, reset, letter tab, preview, accent color and local selection pass.",
+    "Ctrl+K, command search and profile form update the local state and readiness indicator.",
+    "Dark theme works; resume preview remains white.",
+    "New-account state shows zero completeness and an actionable empty state.",
+    "No horizontal overflow: overview at 1440px.",
+    "No horizontal overflow: templates at 1440px.",
+    "No horizontal overflow: profile at 1440px.",
+    "No horizontal overflow: overview at 768px.",
+    "No horizontal overflow: templates at 768px.",
+    "No horizontal overflow: profile at 768px.",
+    "No horizontal overflow: overview at 390px.",
+    "No horizontal overflow: templates at 390px.",
+    "No horizontal overflow: profile at 390px.",
+    "Mobile menu opens, prevents background focus, and closes with Escape.",
+    "No unnamed buttons or runtime JavaScript exceptions."
+  ],
+  "contrasts": [
+    {
+      "name": "Body light",
+      "ratio": 13.77
+    },
+    {
+      "name": "Muted light",
+      "ratio": 5.09
+    },
+    {
+      "name": "Primary light",
+      "ratio": 8.58
+    },
+    {
+      "name": "Body dark",
+      "ratio": 14.94
+    },
+    {
+      "name": "Muted dark",
+      "ratio": 8.08
+    },
+    {
+      "name": "Primary dark",
+      "ratio": 9.39
+    }
+  ],
+  "runtimeErrors": []
+}

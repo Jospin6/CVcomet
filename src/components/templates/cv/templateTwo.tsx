@@ -2,6 +2,7 @@
 
 import { CvProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
+import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react"
 import { useTranslation } from 'react-i18next'
 import { formatDateToMonthYear } from "@/lib/utils"
@@ -20,19 +21,20 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
 
     return (
         <>
-            <div className="flex items-center text-white justify-between mb-4">
+            <div className="flex items-center text-foreground justify-between gap-3 mb-4">
                 <h2 className="text-xl font-bold">{t("resume")}</h2>
                 {(user && cv) && (
-                    <Download className="w-5 h-5 cursor-pointer" onClick={onClickDownload} />
+                    <Button variant="outline" size="sm" aria-label={t("shell.download")} onClick={onClickDownload}><Download className="size-4"/><span className="hidden sm:inline">{t("shell.download")}</span></Button>
                 )}
             </div>
+            <div className="document-scroll" role="region" tabIndex={0} aria-label={t("shell.preview")}>
             <div
                 className="max-w-[794px] mx-auto shadow-lg flex"
                 style={{ width: "210mm", minHeight: "297mm" }}
             >
 
                 {/* Main Content */}
-                <main className="w-2/3 bg-white p-6">
+                <main className="w-2/3 document-paper bg-white p-6">
                     <div className="mb-2">
                         <h1 className="text-2xl font-bold uppercase">{user?.name ?? "No name"}</h1>
                         <p className="text-[sm] uppercase font-semibold">{cv.title}</p>
@@ -155,6 +157,7 @@ export const CvTwo = ({ cv, user }: { cv: CvProps, user?: User }) => {
                     </div>
                 </aside>
             </div>
+        </div>
         </>
     )
 }

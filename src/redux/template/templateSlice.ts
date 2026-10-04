@@ -8,7 +8,11 @@ export interface Template {
   type: 'CV' | 'COVER_LETTER';
   templateFile: string;
   createdAt: string;
-  plan?: "FREE" | "PAID"
+  plan?: "FREE" | "PAID";
+  markets?: string[];
+  styleFamily?: string;
+  customizable?: boolean;
+  accentColors?: string[];
 }
 
 interface TemplateState {

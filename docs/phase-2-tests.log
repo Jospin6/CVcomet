@@ -1,0 +1,40 @@
+
+> my_cv@0.1.0 test
+> node --test scripts/career-profile.test.cjs
+
+✔ validation rejects unknown fields, foreign ownership fields and unsafe links (97.3244ms)
+✔ onboarding requires all direction fields and explicit confirmation; partial normal profiles remain valid (13.8684ms)
+✔ completeness is factual and students can reach 100% without work experience or awards (1.0035ms)
+✔ import merge preserves account email, populated text and IDs and deduplicates entries (84.1823ms)
+✔ aggregate DTO preserves partial dates and exposes only professional context (1632.2496ms)
+✔ foreign and duplicate child IDs are rejected before any write (1141.3352ms)
+✔ save preserves relation IDs, scopes every write to owner and timestamps onboarding once (418.3237ms)
+✔ stale revisions cannot erase a newer profile (273.6172ms)
+✔ relation write failure rolls back the profile and its revision (229.1884ms)
+✔ profile HTTP operations deny anonymous users before processing input (338.3132ms)
+✔ profile HTTP validation handles malformed JSON, mass assignment and absent consent (340.0007ms)
+✔ bounded request body rejects a streamed oversized request without Content-Length (69.2342ms)
+✔ profile API writes only the authenticated account and returns no-store aggregate (318.6215ms)
+✔ daily quota reservation is atomic across concurrent requests (1303.7302ms)
+✔ rewrites reject invented numerical achievements and use only supplied text (307.9333ms)
+✔ improvement checks saved experience ownership before calling AI (252.3037ms)
+✔ improvement stays a proposal and never updates the profile (250.1851ms)
+✔ resume upload validates authentication, bytes, type and size before AI (640.8811ms)
+✔ resume extraction reuses existing AI and returns a draft without persistence (1258.5279ms)
+✔ missing provider configuration and model failure are recoverable (455.7307ms)
+✔ legacy collection endpoints deny cross-account requests and validate server input (1260.1122ms)
+✔ migration adds fields only, without touching existing models or data (5.1074ms)
+✔ generation accepts existing language names but discards client-supplied facts (0.8875ms)
+✔ CV and letter generation use only the owned central profile and reject cross-account conversations (811.8686ms)
+✔ profile assistance denies anonymous requests and blocks server mass assignment (514.3007ms)
+✔ authenticated sessions reload current account and role instead of trusting stale JWT claims (348.0305ms)
+✔ duplicate entries within one extraction are collapsed before review (0.5495ms)
+✔ valid PDF is sent as a file part through the same provider (775.2588ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16608.8771

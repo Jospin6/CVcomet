@@ -135,6 +135,7 @@ const conversationSlice = createSlice({
         }
     },
     extraReducers: (builder) => {
+        builder.addCase("auth/logout/fulfilled", () => initialState);
         // fetch
         builder.addCase(fetchConversations.pending, (state) => {
             state.loading = true;

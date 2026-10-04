@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
+import { cookies, headers } from "next/headers";
+import Script from "next/script";
+import { AppProviders } from "@/components/app-providers";
 import "./globals.css";
-import { ReduxProvider } from "@/redux/provider";
-import { AccountNav } from "@/components/navbar/accountNav";
-import { LanguageProviderWrapper } from "@/components/LanguageProviderWrapper";
-import { Toaster } from '@/components/ui/sonner'
-import Script from 'next/script';
-import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export const metadata: Metadata = {
   title: {
     default: "CVcomet - Create a Professional Resume with AI",
     template: "%s | CVcomet",
   },
-  description: "Generate your professional resume and cover letter using AI with CVcomet. Fast, easy, and modern CV creation.",
-  keywords: ["CVcomet", "resume builder", "AI CV", "cover letter", "cover letter generator", "CV generator", "job application"],
-  authors: [{ name: "CVcomet Team", url: "https://smartcv-landingpage.vercel.app" }],
+  description:
+    "Generate your professional resume and cover letter using AI with CVcomet. Fast, easy, and modern CV creation.",
+  keywords: [
+    "CVcomet",
+    "resume builder",
+    "AI CV",
+    "cover letter",
+    "cover letter generator",
+    "CV generator",
+    "job application",
+  ],
+  authors: [
+    { name: "CVcomet Team", url: "https://smartcv-landingpage.vercel.app" },
+  ],
   creator: "CVcomet",
   publisher: "CVcomet",
   metadataBase: new URL("https://www.cvcomet.com"),
@@ -25,7 +31,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "CVcomet - Create a Professional Resume with AI",
-    description: "Create a modern, standout resume with CVcomet's AI-powered CV generator.",
+    description:
+      "Create a modern, standout resume with CVcomet's AI-powered CV generator.",
     url: "https://www.cvcomet.com",
     siteName: "CVcomet",
     type: "website",
@@ -39,52 +46,34 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-  modal
-}: Readonly<{
-  children: React.ReactNode;
-  modal: React.ReactNode
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
+  const [cookieStore, requestHeaders] = await Promise.all([
+    cookies(),
+    headers(),
+  ]);
+  const savedLanguage = cookieStore.get("i18next")?.value;
+  const preferredLanguage =
+    savedLanguage || requestHeaders.get("accept-language") || "en";
+  const initialLanguage = preferredLanguage.toLowerCase().startsWith("fr")
+    ? "fr"
+    : "en";
   return (
-    <html>
-
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=G-NEY0HEKQYN`}
-        strategy="afterInteractive"
-      />
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-NEY0HEKQYN');
-        `}
-      </Script>
-
-      <body className="overflow-x-hidden">
-        <AuthProvider>
-          <ReduxProvider>
-            <LanguageProviderWrapper>
-              <SidebarProvider className="">
-                <AppSidebar />
-                <main className="w-full bg-[#282828]">
-                  <div className="w-full flex justify-between items-center h-10 px-3">
-                    <SidebarTrigger className="text-white" />
-                    <AccountNav />
-                  </div>
-                  <div className="md:w-10/12 md:m-auto w-full px-2 md:px-0">
-                    {children}
-                    <Toaster richColors position="bottom-right" />
-                  </div>
-                </main>
-              </SidebarProvider>
-            </LanguageProviderWrapper>
-          </ReduxProvider>
-        </AuthProvider>
-
+    <html lang={initialLanguage} suppressHydrationWarning>
+      <body>
+        <AppProviders initialLanguage={initialLanguage}>
+          {children}
+        </AppProviders>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-NEY0HEKQYN"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+        >{`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-NEY0HEKQYN');`}</Script>
       </body>
     </html>
-
   );
 }

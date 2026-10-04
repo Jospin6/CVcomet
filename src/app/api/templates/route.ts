@@ -15,6 +15,8 @@ export async function POST(req: NextRequest) {
     const name = formData.get("name") as string;
     const type = formData.get("type") as string;
     const templateFile = formData.get("templateFile") as File;
+    const markets = String(formData.get("markets") || "").split(",").map(v => v.trim()).filter(Boolean);
+    const styleFamily = String(formData.get("styleFamily") || "MODERN");
 
     if (!templateFile) {
       return NextResponse.json({ error: "Preview image is required" }, { status: 400 });
@@ -26,7 +28,7 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         type: type as "CV" | "COVER_LETTER",
-        templateFile: previewBuffer,
+        templateFile: previewBuffer, markets, styleFamily,
       },
     });
 

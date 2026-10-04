@@ -80,7 +80,7 @@ export default function ProjectForm({ user, initialData, id, onSuccess }: { id?:
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="border-[1px] border-gray-500 shadow p-3 rounded-2xl">
+    <form onSubmit={handleSubmit(onSubmit)} className="border-[1px] border-input shadow p-3 rounded-2xl">
       {successMessage && (
         <div className="bg-green-100 text-green-800 px-4 py-2 rounded-md">
           {successMessage}

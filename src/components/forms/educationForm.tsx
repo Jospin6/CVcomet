@@ -82,7 +82,7 @@ export default function EducationForm({ user, initialData, id, onSuccess }: {id?
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="border-[1px] border-gray-500 shadow p-4 rounded-xl space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="border-[1px] border-input shadow p-4 rounded-xl space-y-4">
       <div className="md:grid md:grid-cols-8 gap-4">
         <InputField
           label={`${t("start")}`}

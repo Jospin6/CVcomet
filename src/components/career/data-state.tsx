@@ -1,0 +1,3 @@
+"use client";
+import { useCallback,useEffect,useState } from "react";
+export function useApi<T>(url:string){const [data,setData]=useState<T|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState("");const reload=useCallback(async()=>{setLoading(true);setError("");try{const r=await fetch(url,{cache:"no-store"});if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||"Request failed");setData(await r.json())}catch(e){setError(e instanceof Error?e.message:"Request failed")}finally{setLoading(false)}},[url]);useEffect(()=>{void reload()},[reload]);return{data,loading,error,reload,setData}}

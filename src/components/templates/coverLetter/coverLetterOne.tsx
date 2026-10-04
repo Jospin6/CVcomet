@@ -1,5 +1,6 @@
 import { CoverLetterProps } from "@/helpers/schema"
 import { User } from "@/redux/user/userSlice"
+import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 import CoverOne from "./coverOne";
@@ -18,17 +19,18 @@ export const CoverLetterOne = ({ coverLetter, user }: { coverLetter: CoverLetter
 
     return (
         <>
-            <div className="flex items-center text-white justify-between mb-4">
+            <div className="flex items-center text-foreground justify-between gap-3 mb-4">
                 <h2 className="text-xl font-bold">{t("coverLetter")}</h2>
                 <div className="flex gap-4">
                     {(user && coverLetter) && (
-                        <Download className="w-5 h-5 cursor-pointer" onClick={onClickDownload} />
+                        <Button variant="outline" size="sm" aria-label={t("shell.download")} onClick={onClickDownload}><Download className="size-4"/><span className="hidden sm:inline">{t("shell.download")}</span></Button>
                     )}
                 </div>
             </div>
 
+            <div className="document-scroll" role="region" tabIndex={0} aria-label={t("shell.preview")}>
             <div
-                className="mx-auto bg-white flex flex-col justify-start shadow-lg"
+                className="mx-auto document-paper bg-white flex flex-col justify-start shadow-lg"
                 style={{
                     width: "210mm",
                     height: "297mm",
@@ -74,6 +76,7 @@ export const CoverLetterOne = ({ coverLetter, user }: { coverLetter: CoverLetter
                     </div>
                 </div>
             </div>
+        </div>
         </>
     )
 }

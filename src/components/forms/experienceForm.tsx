@@ -93,7 +93,7 @@ export default function ExperienceForm({ user, initialData, id, onSuccess }: { i
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="border-[1px] border-gray-500 shadow p-4 rounded-xl space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="border-[1px] border-input shadow p-4 rounded-xl space-y-4">
       {successMessage && (
         <div className="bg-green-100 text-green-800 px-4 py-2 rounded-md">
           {successMessage}

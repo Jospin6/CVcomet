@@ -3,9 +3,9 @@ import Link from "next/link";
 export default function UnauthorizedPage() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="max-w-md w-full rounded-2xl border border-gray-700 bg-[#1a1a1a] p-8 text-center text-gray-200">
+      <div className="max-w-md w-full rounded-2xl border border-border bg-card p-8 text-center text-foreground">
         <h1 className="text-2xl font-bold mb-3">Access denied</h1>
-        <p className="text-sm text-gray-400 mb-6">
+        <p className="text-sm text-muted-foreground mb-6">
           You do not have permission to view this page.
         </p>
         <div className="flex items-center justify-center gap-3">

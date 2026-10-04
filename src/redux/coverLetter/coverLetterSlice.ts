@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
 import { RootState } from '../store'
 import axios from 'axios'
-import { User } from '../user/userSlice'
 
 export interface CoverLetter {
     id?: string
@@ -18,9 +17,9 @@ export interface CoverLetter {
 
 export const generateCoverLetter = createAsyncThunk(
     "coverLetter/generateCoverLetter", 
-    async ({ description, user }: { description: string, user: User }, { rejectWithValue }) => {
+    async ({ description, conversationId, language }: { description: string; conversationId: string; language: "fr" | "en" }, { rejectWithValue }) => {
     try {
-        const res = await axios.post('/api/generate-cover-letter', { description, user })
+        const res = await axios.post('/api/generate-cover-letter', { description, conversationId, language })
 
         return res.data
     } catch (error: any) {

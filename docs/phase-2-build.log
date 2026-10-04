@@ -1,0 +1,255 @@
+
+> my_cv@0.1.0 build
+> prisma generate && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v6.5.0) to .\node_modules\@prisma\client in 609ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+
+   ▲ Next.js 15.2.4
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+./src/app/admin/page.tsx
+6:8  Warning: 'TemplateCardList' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:8  Warning: 'TemplateCardList' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+40:9  Warning: 'templates' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+40:9  Warning: 'templates' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+42:9  Warning: 'user' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+42:9  Warning: 'user' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/api/avatar/route.ts
+25:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  no-unused-vars
+25:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/api/stripe/cancel-subscription/route.ts
+44:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  no-unused-vars
+44:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/api/stripe/checkout/route.ts
+76:12  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  no-unused-vars
+76:12  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/api/templates/route.ts
+34:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/users/[id]/route.ts
+84:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/webhooks/route.ts
+33:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/g/[id]/page.tsx
+40:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/upgrade/page.tsx
+30:18  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  no-unused-vars
+30:18  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/forms/certificationForm.tsx
+12:21  Warning: 'useState' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+12:21  Warning: 'useState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+72:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  no-unused-vars
+72:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/forms/educationForm.tsx
+7:21  Warning: 'useState' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+7:21  Warning: 'useState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+76:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  no-unused-vars
+76:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/forms/experienceForm.tsx
+45:26  Warning: 'setSuccessMessage' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+45:26  Warning: 'setSuccessMessage' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+87:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  no-unused-vars
+87:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/forms/projectForm.tsx
+39:26  Warning: 'setSuccessMessage' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+39:26  Warning: 'setSuccessMessage' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+74:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  no-unused-vars
+74:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/forms/templeteForm.tsx
+52:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/forms/userForm.tsx
+19:11  Warning: 't' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+19:11  Warning: 't' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+25:5  Warning: 'setError' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+25:5  Warning: 'setError' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/templates/cv/docFive.tsx
+4:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+4:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+45:73  Warning: 'key' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+140:80  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+145:82  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/templates/cv/docFour.tsx
+4:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+4:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+70:66  Warning: 'key' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/templates/cv/docOne.tsx
+5:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+5:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+64:65  Warning: 'key' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+167:62  Warning: 'index' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+167:62  Warning: 'index' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+173:67  Warning: 'index' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+173:67  Warning: 'index' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/templates/cv/docThree.tsx
+6:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+44:67  Warning: 'key' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/templates/cv/docTwo.tsx
+5:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+5:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+50:65  Warning: 'key' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/templates/cv/docZero.tsx
+5:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+5:10  Warning: 'useTranslation' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+64:66  Warning: 'key' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+167:62  Warning: 'index' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+167:62  Warning: 'index' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+173:67  Warning: 'index' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+173:67  Warning: 'index' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/ui/coverLetterItems.tsx
+12:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/ui/cvItems.tsx
+11:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/ui/sidebar.tsx
+39:13  Warning: 'open' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+41:19  Warning: 'open' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+68:19  Warning: 'open' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+78:25  Warning: 'value' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/lib/utils.ts
+53:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/redux/auth/authSlice.ts
+1:41  Warning: 'PayloadAction' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+1:41  Warning: 'PayloadAction' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+29:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+49:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+60:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+81:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/redux/certification/certificationSlice.ts
+43:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/redux/conversation/conversationSlice.ts
+48:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+61:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+74:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/redux/coverLetter/coverLetterSlice.ts
+25:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+34:9  Warning: 'url' is never reassigned. Use 'const' instead.  prefer-const
+39:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/redux/cv/cvSlice.ts
+9:14  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+12:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+13:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+14:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+28:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+36:13  Warning: 'url' is never reassigned. Use 'const' instead.  prefer-const
+41:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/redux/template/templateSlice.ts
+36:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+46:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+60:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+67:7  Warning: 'url' is never reassigned. Use 'const' instead.  prefer-const
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/39) ...
+   Generating static pages (9/39) 
+   Generating static pages (19/39) 
+   Generating static pages (29/39) 
+ ✓ Generating static pages (39/39)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                    9.38 kB         167 kB
+├ ƒ /_not-found                            990 B         102 kB
+├ ƒ /admin                               4.26 kB         206 kB
+├ ƒ /api/avatar                            241 B         101 kB
+├ ƒ /api/career-profile                    241 B         101 kB
+├ ƒ /api/career-profile/import             241 B         101 kB
+├ ƒ /api/career-profile/improve            241 B         101 kB
+├ ƒ /api/certifications                    241 B         101 kB
+├ ƒ /api/certifications/[id]               241 B         101 kB
+├ ƒ /api/conversations                     241 B         101 kB
+├ ƒ /api/conversations/[id]                241 B         101 kB
+├ ƒ /api/coverLetter                       241 B         101 kB
+├ ƒ /api/coverLetter/[id]                  241 B         101 kB
+├ ƒ /api/cvs                               241 B         101 kB
+├ ƒ /api/cvs/[id]                          241 B         101 kB
+├ ƒ /api/educations                        241 B         101 kB
+├ ƒ /api/educations/[id]                   241 B         101 kB
+├ ƒ /api/experiences                       241 B         101 kB
+├ ƒ /api/experiences/[id]                  241 B         101 kB
+├ ƒ /api/generate-cover-letter             241 B         101 kB
+├ ƒ /api/generate-cv                       241 B         101 kB
+├ ƒ /api/login                             241 B         101 kB
+├ ƒ /api/logout                            241 B         101 kB
+├ ƒ /api/me                                241 B         101 kB
+├ ƒ /api/projects                          241 B         101 kB
+├ ƒ /api/projects/[id]                     241 B         101 kB
+├ ƒ /api/signup                            241 B         101 kB
+├ ƒ /api/stripe/cancel-subscription        241 B         101 kB
+├ ƒ /api/stripe/checkout                   241 B         101 kB
+├ ƒ /api/templates                         241 B         101 kB
+├ ƒ /api/templates/[id]                    241 B         101 kB
+├ ƒ /api/templates/[id]/updateplan         241 B         101 kB
+├ ƒ /api/users                             241 B         101 kB
+├ ƒ /api/users/[id]                        241 B         101 kB
+├ ƒ /api/users/[id]/updateCoverLetter      241 B         101 kB
+├ ƒ /api/users/[id]/updateTemplate         241 B         101 kB
+├ ƒ /api/webhooks                          241 B         101 kB
+├ ƒ /dashboard/profile                     162 B         182 kB
+├ ƒ /g/[id]                               551 kB         715 kB
+├ ƒ /help                                3.36 kB         118 kB
+├ ƒ /login                               3.37 kB         171 kB
+├ ƒ /onboarding                            163 B         182 kB
+├ ƒ /profil                                241 B         101 kB
+├ ○ /robots.txt                            241 B         101 kB
+├ ƒ /settings                            3.37 kB         147 kB
+├ ƒ /signup                              3.39 kB         171 kB
+├ ○ /sitemap.xml                           241 B         101 kB
+├ ƒ /templates                           11.9 kB         207 kB
+├ ƒ /unauthorized                          176 B         104 kB
+└ ƒ /upgrade                             3.12 kB         169 kB
++ First Load JS shared by all             101 kB
+  ├ chunks/1684-5593b547c87cddd7.js      45.8 kB
+  ├ chunks/4bd1b696-83ba2e2afe4fc14d.js  53.3 kB
+  └ other shared chunks (total)             2 kB
+
+
+ƒ Middleware                             37.2 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

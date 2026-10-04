@@ -42,7 +42,7 @@ export default function LoginPage() {
 
         <label
           htmlFor="email"
-          className="block mb-2 text-sm font-medium text-gray-700"
+          className="block mb-2 text-sm font-medium text-foreground"
         >
           Email
         </label>
@@ -54,13 +54,13 @@ export default function LoginPage() {
             }`}
         />
         {errors.email && (
-          <p className="text-red-500 text-sm mb-4">{errors.email.message}</p>
+          <p className="text-destructive text-sm mb-4">{errors.email.message}</p>
         )}
 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full mt-4 bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+          className="w-full mt-4 bg-primary text-primary-foreground font-semibold py-2 rounded-lg hover:bg-primary transition disabled:opacity-50"
         >
           {isSubmitting ? "Loading..." : "Login"}
         </button>

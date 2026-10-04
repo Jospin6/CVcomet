@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { CoreMessage, streamObject } from "ai";
-import { gemini } from "@/lib/gemini";
+import { getCareerModel } from "@/lib/gemini";
 import prisma from "../../../../prisma/prisma";
 import { generateCoverLetterPrompt, generateCoverLetterSystemPrompt, generatedLanguagePrompt } from "@/helpers/helpers";
 import { coverLetterSchema } from "@/helpers/schema";
-import { dayLimit } from "@/helpers/constants";
-import { canAccessUser, getSessionUser, sanitizeUser } from "@/lib/auth";
+import { getCareerProfile, careerProfileContext } from "@/lib/career-profile/service";
+import { reserveProfileAI } from "@/lib/career-profile/ai";
+import { generationInputSchema } from "@/lib/career-profile/schema";
+import { profileJson, profileErrorResponse } from "@/lib/career-profile/http";
+import { canAccessUser, getSessionUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const session = await getSessionUser();
@@ -17,7 +20,11 @@ export async function POST(req: Request) {
     });
   }
 
-  const { description, conversationId, language } = await req.json();
+  let input;
+  try {
+    input = generationInputSchema.parse(await profileJson(req));
+  } catch (error) { return profileErrorResponse(error); }
+  const { description, conversationId, language } = input;
   const curentLanguage = generatedLanguagePrompt(language);
 
   const conversationContent = await prisma.conversation.findUnique({
@@ -38,46 +45,12 @@ export async function POST(req: Request) {
     });
   }
 
-  const fullUser = await prisma.user.findUnique({
-    where: { id: session.id },
-    include: {
-      Experience: true,
-      Education: true,
-      Project: true,
-      certifications: true,
-    },
-  });
-
-  if (!fullUser) {
-    return new NextResponse(JSON.stringify({ error: "User not found" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  const user = sanitizeUser(fullUser);
-
-  if (!fullUser.isSubscribed) {
-    const today = new Date();
-    const isSameDay =
-      fullUser.lastGeneratedAt &&
-      today.toDateString() === new Date(fullUser.lastGeneratedAt).toDateString();
-
-    if (isSameDay && fullUser.generationCount >= dayLimit) {
-      return new NextResponse(
-        JSON.stringify({ error: `Limit to ${dayLimit} generations a day` }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    await prisma.user.update({
-      where: { id: fullUser.id },
-      data: {
-        generationCount: isSameDay ? { increment: 1 } : 1,
-        lastGeneratedAt: today,
-      },
-    });
-  }
+  let user;
+  try {
+    getCareerModel();
+    user = careerProfileContext(await getCareerProfile(conversationContent.userId));
+    await reserveProfileAI(session.id);
+  } catch (error) { return profileErrorResponse(error); }
 
   await prisma.message.create({
     data: {
@@ -87,7 +60,7 @@ export async function POST(req: Request) {
     },
   });
 
-  const prompt = generateCoverLetterPrompt({ description, user: user as any, curentLanguage });
+  const prompt = generateCoverLetterPrompt({ description, user, curentLanguage });
   const system = generateCoverLetterSystemPrompt();
 
   const messages = await prisma.message.findMany({
@@ -105,7 +78,7 @@ export async function POST(req: Request) {
       role: "user",
       content: generateCoverLetterPrompt({
         description: conversationContent.content,
-        user: user as any,
+        user,
         curentLanguage,
       }),
     });
@@ -118,7 +91,7 @@ export async function POST(req: Request) {
 
   try {
     const result = await streamObject({
-      model: gemini("gemini-1.5-flash"),
+      model: getCareerModel(),
       output: "object",
       schema: coverLetterSchema,
       system,

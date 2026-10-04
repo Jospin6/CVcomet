@@ -1,35 +1,51 @@
-"use client"
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { fetchConversations } from "@/redux/conversation/conversationSlice";
-import { AppDispatch, RootState } from "@/redux/store";
+import type { AppDispatch, RootState } from "@/redux/store";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { SidebarMenuButton, SidebarMenuItem } from "./sidebar";
-import { capitalize } from "@/lib/utils";
-
-export const ConversationList = () => {
+import { useTranslation } from "react-i18next";
+import { MessageSquare } from "lucide-react";
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "./sidebar";
+export function ConversationList() {
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useCurrentUser();
-  const conversations = useSelector((state: RootState) => state.conversation.conversations)
-
-
+  const { user: user } = useCurrentUser();
+  const { t } = useTranslation();
+  const path = usePathname();
+  const { setOpenMobile } = useSidebar();
+  const conversations = useSelector(
+    (state: RootState) => state.conversation.conversations,
+  );
   useEffect(() => {
-    if (!user?.id) {
-      return
-    }
-    dispatch(fetchConversations({ userId: user.id }));
+    if (user?.id) void dispatch(fetchConversations({ userId: user.id }));
   }, [user?.id, dispatch]);
+  if (!user || !conversations.length) return null;
   return (
-    <div className="flex flex-col gap-2 border-t border-gray-300 pt-2 mt-6">
-      {conversations.map((item) => (
-        <SidebarMenuItem key={item.id}>
-          <SidebarMenuButton asChild>
-            <a href={`/g/${item.id}`}>
-              <span>{ item.title ? capitalize(item.title) : "New chat"}</span>
-            </a>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
-    </div>
+    <SidebarGroup>
+      <SidebarGroupLabel className="text-[9px] uppercase tracking-wider">
+        {t("shell.recent")}
+      </SidebarGroupLabel>
+      <SidebarMenu>
+        {conversations.slice(0, 5).map((item) => (
+          <SidebarMenuItem key={item.id}>
+            <SidebarMenuButton asChild isActive={path === "/g/" + item.id}>
+              <Link href={"/g/" + item.id} onClick={() => setOpenMobile(false)}>
+                <MessageSquare aria-hidden="true" />
+                <span>{item.title || t("shell.untitled")}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
   );
 }

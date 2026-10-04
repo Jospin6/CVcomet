@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store'; // Assure-toi que tu as bien configuré le store
 import axios from 'axios';
+import { login, signup } from '../auth/authSlice';
 import { Project } from '../project/projectSlice';
 
 type Certification = {
@@ -33,6 +34,18 @@ type Experience = {
 };
 
 export interface User {
+  headline?: string;
+  careerGoal?: import("@/lib/career-profile/schema").ProfileData["careerGoal"];
+  experienceLevel?: import("@/lib/career-profile/schema").ProfileData["experienceLevel"];
+  targetJobTitle?: string;
+  targetIndustry?: string;
+  targetCountry?: string;
+  preferredWorkMode?: import("@/lib/career-profile/schema").ProfileData["preferredWorkMode"];
+  targetMarket?: import("@/lib/career-profile/schema").ProfileData["targetMarket"];
+  referralSource?: import("@/lib/career-profile/schema").ProfileData["referralSource"];
+  templateAccent?: string;
+  coverLetterAccent?: string;
+  onboardingCompletedAt?: string | null;
   id?: string;
   email: string;
   name?: string;
@@ -65,6 +78,8 @@ interface UserState {
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
   templateUpdated: boolean;
+  sessionStatus: 'idle' | 'loading' | 'authenticated' | 'anonymous';
+  sessionRequestId?: string;
 }
 
 // Initial state
@@ -75,6 +90,7 @@ const initialState: UserState = {
   status: 'idle',
   error: null,
   templateUpdated: false,
+  sessionStatus: 'idle',
 };
 
 export const deleteSubscription = createAsyncThunk<string, string>(
@@ -122,22 +138,18 @@ export const updateUser = createAsyncThunk(
   }
 );
 
-export const fetchcurrentUser = createAsyncThunk(
+export const fetchcurrentUser = createAsyncThunk<User, void, { state: RootState }>(
   "user/currentUser",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get("/api/me", { withCredentials: true });
+      const response = await axios.get<User>("/api/me", { withCredentials: true });
       return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(error.response?.data || "Erreur inconnue");
-      }
-      return rejectWithValue("Erreur inconnue");
-    }
-  }
+    } catch { return rejectWithValue("Session unavailable"); }
+  },
+  { condition: (_, {getState}) => getState().user.sessionStatus === "idle" }
 );
 
-export const updateCurrentTemplate = createAsyncThunk("user/updateCurrentTemplate", async ({ id, type, currentTemplateId }: { id: string, type: string, currentTemplateId: string }, { rejectWithValue }) => {
+export const updateCurrentTemplate = createAsyncThunk("user/updateCurrentTemplate", async ({ id, type, currentTemplateId, accent }: { id: string, type: string, currentTemplateId: string, accent?: string }, { rejectWithValue }) => {
   let url = ""
   if (type === "CV") {
     url = `/api/users/${id}/updateTemplate`
@@ -145,7 +157,7 @@ export const updateCurrentTemplate = createAsyncThunk("user/updateCurrentTemplat
     url = `/api/users/${id}/updateCoverLetter`
   }
   try {
-    const response = await axios.put(url, { id, currentTemplateId });
+    const response = await axios.put(url, { id, currentTemplateId, accent });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -166,16 +178,22 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchcurrentUser.pending, state => {
-        state.status = 'loading';
+      .addCase(fetchcurrentUser.pending, (state, action) => {
+        state.sessionStatus = "loading";
+        state.sessionRequestId = action.meta.requestId;
       })
       .addCase(fetchcurrentUser.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.currentUser = action.payload
+        if (state.sessionRequestId !== action.meta.requestId) return;
+        state.sessionStatus = "authenticated";
+        state.sessionRequestId = undefined;
+        state.currentUser = action.payload;
       })
-      .addCase(fetchcurrentUser.rejected, (state) => {
-        state.status = 'failed';
-        state.error = "An error occured"
+      .addCase(fetchcurrentUser.rejected, (state, action) => {
+        if (state.sessionRequestId !== action.meta.requestId) return;
+        state.sessionStatus = "anonymous";
+        state.sessionRequestId = undefined;
+        state.currentUser = null;
+        state.user = null;
       })
 
       .addCase(fetchUser.pending, (state) => {
@@ -203,6 +221,14 @@ const userSlice = createSlice({
       .addCase(updateCurrentTemplate.fulfilled, (state) => {
         state.templateUpdated = true;
       });
+
+    builder.addCase(login.fulfilled, (state, action: PayloadAction<User>) => {
+      state.currentUser = action.payload; state.user = action.payload;
+      state.sessionStatus = "authenticated"; state.sessionRequestId = undefined;
+    }).addCase(signup.fulfilled, (state, action: PayloadAction<User>) => {
+      state.currentUser = action.payload; state.user = action.payload;
+      state.sessionStatus = "authenticated"; state.sessionRequestId = undefined;
+    }).addCase("auth/logout/fulfilled", () => ({ ...initialState, sessionStatus: "anonymous" }));
 
     builder.addCase(fetchUsers.pending, (state) => {
       state.status = 'loading';

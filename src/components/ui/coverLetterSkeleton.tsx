@@ -11,7 +11,7 @@ export const CoverLetterSkeleton = () => {
 
     return (
         <>
-            <div className="flex items-center justify-between mb-4 text-white">
+            <div className="flex items-center justify-between mb-4 text-foreground">
                 <h2 className="text-xl font-bold">{t("coverLetter")}</h2>
                 <div className="flex gap-4">
                     <button
@@ -37,31 +37,31 @@ export const CoverLetterSkeleton = () => {
             >
                 <div className="text-sm leading-relaxed">
                     <div className="mb-3">
-                        <Skeleton className="h-6 w-48 mb-2 bg-[#3c3c3c]" />
-                        <Skeleton className="h-4 w-64 bg-[#3c3c3c]" />
+                        <Skeleton className="h-6 w-48 mb-2 bg-muted" />
+                        <Skeleton className="h-4 w-64 bg-muted" />
                     </div>
 
-                    <Skeleton className="h-4 w-32 mb-1 bg-[#3c3c3c]" />
-                    <Skeleton className="h-4 w-48 mb-1 bg-[#3c3c3c]" />
-                    <Skeleton className="h-4 w-56 mb-4 bg-[#3c3c3c]" />
+                    <Skeleton className="h-4 w-32 mb-1 bg-muted" />
+                    <Skeleton className="h-4 w-48 mb-1 bg-muted" />
+                    <Skeleton className="h-4 w-56 mb-4 bg-muted" />
 
                     <div className="mt-8">
-                        <Skeleton className="h-4 w-48 mb-1 bg-[#3c3c3c]" />
-                        <Skeleton className="h-4 w-64 bg-[#3c3c3c]" />
+                        <Skeleton className="h-4 w-48 mb-1 bg-muted" />
+                        <Skeleton className="h-4 w-64 bg-muted" />
                     </div>
 
                     <div className="mt-8 space-y-4">
-                        <Skeleton className="h-4 w-24 bg-[#3c3c3c]" />
-                        <Skeleton className="h-4 w-full bg-[#3c3c3c]" />
-                        <Skeleton className="h-4 w-5/6 bg-[#3c3c3c]" />
-                        <Skeleton className="h-4 w-3/4 bg-[#3c3c3c]" />
-                        <Skeleton className="h-4 w-full bg-[#3c3c3c]" />
-                        <Skeleton className="h-4 w-5/6 bg-[#3c3c3c]" />
-                        <Skeleton className="h-4 w-1/2 bg-[#3c3c3c]" />
+                        <Skeleton className="h-4 w-24 bg-muted" />
+                        <Skeleton className="h-4 w-full bg-muted" />
+                        <Skeleton className="h-4 w-5/6 bg-muted" />
+                        <Skeleton className="h-4 w-3/4 bg-muted" />
+                        <Skeleton className="h-4 w-full bg-muted" />
+                        <Skeleton className="h-4 w-5/6 bg-muted" />
+                        <Skeleton className="h-4 w-1/2 bg-muted" />
                     </div>
 
                     <div className="mt-6">
-                        <Skeleton className="h-4 w-32 bg-[#3c3c3c]" />
+                        <Skeleton className="h-4 w-32 bg-muted" />
                     </div>
                 </div>
             </div>

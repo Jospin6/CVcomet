@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../../prisma/prisma";
+import { profileDataSchema } from "@/lib/career-profile/schema";
+import { profileJson, profileErrorResponse } from "@/lib/career-profile/http";
 import { canAccessUser, getSessionUser, sanitizeUser } from "@/lib/auth";
 
 export async function GET(req: Request) {
@@ -37,7 +39,10 @@ export async function PUT(req: Request) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json();
+  let body;
+  try {
+    body = profileDataSchema.pick({ name: true, email: true, phone: true, languages: true, address: true, linkedin: true, portfolio: true, github: true, skills: true }).partial().parse(await profileJson(req));
+  } catch (error) { return profileErrorResponse(error); }
   const {
     name,
     email,
@@ -62,6 +67,7 @@ export async function PUT(req: Request) {
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
+        profileRevision: { increment: 1 },
         name,
         phone,
         address,

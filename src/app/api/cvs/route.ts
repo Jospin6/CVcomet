@@ -1,14 +1,2 @@
-import { NextResponse } from "next/server";
-import prisma from "../../../../prisma/prisma";
-import { getSessionUser, isAdmin } from "@/lib/auth";
-
-export async function GET() {
-  const session = await getSessionUser();
-
-  if (!isAdmin(session)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  const generateCv = await prisma.cv.findMany();
-  return NextResponse.json(generateCv);
-}
+import { NextResponse } from "next/server";import prisma from "../../../../prisma/prisma";import { getSessionUser,isAdmin } from "@/lib/auth";
+export async function GET(req:Request){const session=await getSessionUser();if(!session)return NextResponse.json({message:"Unauthorized"},{status:401});const mine=new URL(req.url).searchParams.get("mine")==="1";if(!mine&&!isAdmin(session))return NextResponse.json({message:"Forbidden"},{status:403});const cvs=await prisma.cv.findMany({where:mine?{conversation:{userId:session.id}}:undefined,orderBy:{createdAt:"desc"},select:{id:true,title:true,summary:true,skills:true,experiences:true,educations:true,certifications:true,projects:true,languages:true,createdAt:true,templateId:true,conversationId:true}});return NextResponse.json(cvs)}

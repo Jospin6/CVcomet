@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
 import { RootState } from '../store'
 import axios from 'axios'
-import { User } from '../user/userSlice'
 
 export interface Cv {
     id?: string
@@ -20,9 +19,9 @@ export interface Cv {
 
 export const generateCv = createAsyncThunk(
     "cv/generateCv",
-    async ({ description, user }: { description: string, user?: User }, { rejectWithValue }) => {
+    async ({ description, conversationId, language }: { description: string; conversationId: string; language: "fr" | "en" }, { rejectWithValue }) => {
         try {
-            const res = await axios.post('/api/generate-cv', { description})
+            const res = await axios.post('/api/generate-cv', { description, conversationId, language })
             console.log("CV RESPONSE", res.data)
 
             return res.data
