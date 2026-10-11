@@ -1,0 +1,17 @@
+{
+  "error": "Timeout: load failure",
+  "checks": [
+    "Multiple-file picker uploads, previews and persistence after page reload.",
+    "Text preview, original download link and keyboard dismissal.",
+    "Original PDF renders in both the thumbnail and the full document viewer.",
+    "Drag and drop works; invalid extensions and server failures preserve existing documents.",
+    "Deletion requires confirmation and updates the document list.",
+    "Profile-based draft opens a readable resume preview and title/summary editor.",
+    "Cover-letter page accepts a public job URL for email creation with no description paste field.",
+    "Overview and legacy generation page have no job description composer."
+  ],
+  "errors": [
+    "SyntaxError: Invalid or unexpected token",
+    "ChunkLoadError: Loading chunk app/layout failed.\n(timeout: http://localhost:3000/_next/static/chunks/app/layout.js)\n    at __webpack_require__.f.j (http://localhost:3000/_next/static/chunks/webpack.js?v=1791761116655:873:29)\n    at http://localhost:3000/_next/static/chunks/webpack.js?v=1791761116655:153:40\n    at Array.reduce (<anonymous>)\n    at __webpack_require__.e (http://localhost:3000/_next/static/chunks/webpack.js?v=1791761116655:152:67)\n    at fn.e (http://localhost:3000/_next/static/chunks/webpack.js?v=1791761116655:404:50)\n    at loadChunk (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:126:34)\n    at preloadModule (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:93:31)\n    at resolveModule (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:1607:20)\n    at processFullStringRow (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2218:11)\n    at processFullBinaryRow (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2213:7)\n    at progress (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2459:17)\n    at RootLayout (rsc://React/Server/webpack-internal:///(rsc)/./src/app/layout.tsx?0:72:92)"
+  ]
+}

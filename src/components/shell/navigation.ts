@@ -23,11 +23,11 @@ export const navigationGroups: { key: string; items: NavigationItem[] }[] = [
     items: [
       { key: "overview", icon: LayoutDashboard, href: "/" },
       { key: "careerProfile", icon: ContactRound, href: "/dashboard/profile" },
-      { key: "resumes", icon: FileText, href: "/dashboard/resumes" },
+      { key: "documents", icon: FileText, href: "/dashboard/resumes" },
       {
         key: "coverLetters",
         icon: Mail,
-        href: "/?document=coverLetter#composer",
+        href: "/dashboard/cover-letters",
       },
       { key: "templates", icon: PanelsTopLeft, href: "/templates" },
     ],
@@ -55,10 +55,10 @@ export const footerNavigation: NavigationItem[] = [
   { key: "help", icon: CircleHelp, href: "/help" },
 ];
 export const commandActions: NavigationItem[] = [
-  { key: "createResume", icon: FileText, href: "/?document=cv#composer" },
+  { key: "createResume", icon: FileText, href: "/dashboard/resumes" },
   { key: "analyzeResume", icon: ScanLine, href: "/dashboard/ats" },
   { key: "matchJob", icon: BriefcaseBusiness, href: "/dashboard/job-match" },
-  { key: "createLetter", icon: Mail, href: "/?document=coverLetter#composer" },
+  { key: "createLetter", icon: Mail, href: "/dashboard/cover-letters" },
   { key: "addApplication", icon: ClipboardList, href: "/dashboard/applications" },
   { key: "practiceInterview", icon: MessagesSquare, href: "/dashboard/interviews" },
   ...footerNavigation,

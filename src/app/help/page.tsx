@@ -22,7 +22,7 @@ export default function HelpPage() {
       <div className="grid gap-5 sm:grid-cols-2">
         {[
           { key: "Profile", icon: ContactRound, href: "/dashboard/profile" },
-          { key: "Create", icon: Sparkles, href: "/#composer" },
+          { key: "Create", icon: Sparkles, href: "/dashboard/resumes" },
           { key: "Templates", icon: PanelsTopLeft, href: "/templates" },
           { key: "Export", icon: Download },
         ].map(({ key, icon: Icon, href }) => (

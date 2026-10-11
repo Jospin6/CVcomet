@@ -69,6 +69,7 @@ model User {
   jobApplications      JobApplication[]
   interviewSessions    InterviewSession[]
   aiUsage              AIUsage[]
+  uploadedResumes      UploadedResume[]
   subscription         Subscription?
 
   createdAt DateTime @default(now())
@@ -216,6 +217,20 @@ model Cv {
   atsAnalyses    AtsAnalysis[]
   jobMatches     JobMatch[]
   applications  JobApplication[]
+}
+
+model UploadedResume {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  mimeType    String
+  size        Int
+  content     Bytes
+  previewText String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model CoverLetter {

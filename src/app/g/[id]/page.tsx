@@ -1,8 +1,6 @@
 "use client"
 
-import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/ui/page-header";
-import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -19,7 +17,7 @@ import { getConversation, selectConversation, selectTypeGeneration, clearConvers
 import { CvItems } from "@/components/ui/cvItems";
 import { CoverLetterItems } from "@/components/ui/coverLetterItems";
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Wand2 } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { CvOne } from "@/components/templates/cv/templateOne";
 import { CvTwo } from "@/components/templates/cv/templateTwo";
 import { CvThree } from "@/components/templates/cv/templateThree";
@@ -32,9 +30,7 @@ import { CoverLetterFour } from "@/components/templates/coverLetter/coverLetterF
 import { CoverLetterFive } from "@/components/templates/coverLetter/coverLetterFive";
 import { cover1, cover2, cover3, cover4, cover5, cv1, cv2, cv3, cv4, cv5 } from "@/helpers/constants";
 import { CoverLetterSkeleton } from "@/components/ui/coverLetterSkeleton";
-import { LoadingIcon } from "@/components/ui/loadingIcon";
 import Link from "next/link";
-import { getTodayGenerationCount } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const templateComponentMap: Record<string, React.ComponentType<any>> = {
@@ -57,8 +53,6 @@ export default function Home() {
     const id = params.id
     const conversation = useSelector(selectConversation)
     const loadConversation = useSelector((state: RootState) => state.conversation.loading)
-    const inputRef = useRef<HTMLTextAreaElement>(null);
-    const [input, setInput] = useState(conversation?.content ?? "");
     const dispatch = useDispatch<AppDispatch>();
     const convId = useSelector(selectConversationId)
     const { user: user } = useCurrentUser();
@@ -66,8 +60,6 @@ export default function Home() {
     const typeGeneration = useSelector(selectTypeGeneration)
     const [hasGenerated, setHasGenerated] = useState(false);
     const language = i18n.language.startsWith('fr') ? 'fr' : 'en'
-    const [isCvLoad, setCvLoad] = useState<boolean>(false)
-    const [isCoverLoad, setCoverLoad] = useState<boolean>(false)
 
 
     const { object: cvObject, error: cvError, submit: cvSubmit, isLoading: isLoadingCv } = useObject({
@@ -83,11 +75,6 @@ export default function Home() {
     const SelectedCvComponent = currentUser?.currentTemplateId && templateComponentMap[currentUser.currentTemplateId];
     const SelectedCoverLetterComponent = currentUser?.currentCoverLetterId && templateComponentMap[currentUser.currentCoverLetterId];
 
-    useEffect(() => {
-        if (input === "" && conversation?.content) {
-            setInput(conversation.content);
-        }
-    }, [input, conversation?.content]);
 
     const alreadyGeneratedRef = useRef(false);
 
@@ -123,124 +110,17 @@ export default function Home() {
     //     }
     // }, [cvObject, cvError, id, dispatch]);
 
-    const handleSend = async () => {
-        if (!input.trim()) return;
-        setCvLoad(true);
-        try {
-            await cvSubmit({ description: input, conversationId: id, language });
-            setInput("");
-            setCvLoad(false);
-            if (inputRef.current) {
-                inputRef.current.value = "";
-            }
-        } catch (error) {
-            console.log("Error submitting CV:", error);
-            setCvLoad(false);
-        }
-    };
-
-    const handleCoverLetter = async () => {
-        if (!input.trim()) return;
-        setCoverLoad(true)
-        try {
-            await submitCoverLetter({ description: input, conversationId: id, language });
-            setCoverLoad(false)
-            setInput("");
-            if (inputRef.current) {
-                inputRef.current.value = "";
-            }
-        } catch (error) {
-            console.log("Error submitting Cover letter:", error);
-            setCoverLoad(false)
-        }
-    };
-
     useEffect(() => {
         if (user?.id) {
             dispatch(fetchUser(user.id));
         }
     }, [user?.id, dispatch]);
 
-    const [isExpanded, setIsExpanded] = useState(false);
-
-    const toggleText = () => setIsExpanded(!isExpanded);
-
-    const longText = conversation?.content;
-
     return (
-        <div className="min-w-0 space-y-6 pb-10"><PageHeader title={t("shell.documents")} description={conversation?.title || t("shell.composerDescription")} />
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full pb-4 pt-2 mt-auto"
-            >
-                <div className="md:max-w-3xl md:mx-auto md:px-4">
-                    <motion.div
-                        animate={{ height: "auto" }}
-                        whileFocus={{ scale: 1.01 }}
-                        transition={{ duration: 0.2 }}
-                        className="relative rounded-2xl border-[1px] border-input p-2.5 bg-card"
-                    >
-                        <label htmlFor="generation-description" className="mb-2 block text-sm font-medium">{t("shell.jobDescription")}</label>
-                        <Textarea id="generation-description" ref={inputRef} value={input} onChange={e=>setInput(e.target.value)} placeholder={t("shell.jobPlaceholder")} rows={4} className="mb-3" disabled={isLoadingCv||isLoadingCoverLetter} />
-                        <div className="flex flex-wrap gap-3 justify-between items-center">
-                            <div>
-                                {currentUser?.isSubscribed ? (
-                                    <span className="text-xs text-muted-foreground">
-                                        {t("active")}
-                                    </span>
-                                ) : (
-                                    <span className="text-xs text-muted-foreground">
-                                        {(currentUser?.lastGeneratedAt && currentUser?.generationCount) &&
-                                            (
-                                                <span>
-                                                    {t("remainingGenerations")}: {getTodayGenerationCount(currentUser?.lastGeneratedAt, currentUser?.generationCount)}
-                                                </span>
-                                            )
-                                        }
-                                    </span>
-                                )}
-                            </div>
-                            <div className="flex gap-2">
-                                {!isCvLoad ? (
-                                    <Button variant="outline" onClick={handleSend} disabled={!input.trim()||!currentUser||isLoadingCv||isLoadingCoverLetter}>
-                                        <Sparkles className="md:w-4 md:h-4 w-2 h-2" />
-                                        <span>{t("shell.resumeShort")}</span>
-                                    </Button>
-                                ) : (
-                                    <Button variant="outline" disabled aria-label={t("shell.loading")}><LoadingIcon />
-                                    </Button>
-                                )}
-                                {!isCoverLoad ? (
-                                    <Button variant="outline" onClick={handleCoverLetter} disabled={!input.trim()||!currentUser||isLoadingCv||isLoadingCoverLetter}>
-                                        <Wand2 className="md:w-4 md:h-4 w-2 h-2" />
-                                        <span>{t("shell.letterShort")}</span>
-                                    </Button>
-                                ) : (
-                                    <Button variant="outline" disabled aria-label={t("shell.loading")}><LoadingIcon />
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-            </motion.div>
-
-            <div className=" max-w-3xl mx-auto px-4 text-foreground">
-                <p
-                    className={`transition-all text-sm duration-150 ease-in-out leading-relaxed tracking-wide ${isExpanded ? '' : 'line-clamp-3'}`}
-                >
-                    {longText}
-                </p>
-
-                <div className="flex justify-end">
-                    <button
-                        onClick={toggleText}
-                        className="mt-2 text-sm text-primary hover:underline focus:outline-none"
-                    >
-                        {isExpanded ? `${t("lessInfos")}` : `${t("moreInfos")}`}
-                    </button>
-                </div>
+        <div className="min-w-0 space-y-6 pb-10"><PageHeader title={t("shell.documents")} description={conversation?.title || t("documents.description")} />
+            <div className="flex flex-wrap gap-3">
+                <Button variant="outline" asChild><Link href="/dashboard/resumes">{t("documents.manage")}<ArrowUpRight /></Link></Button>
+                <Button variant="outline" asChild><Link href="/dashboard/cover-letters">{t("shell.coverLetters")}<ArrowUpRight /></Link></Button>
             </div>
 
             {(cvError || coverError) && (

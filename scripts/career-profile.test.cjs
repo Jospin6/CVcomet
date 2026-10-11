@@ -32,7 +32,7 @@ const other = "22222222-2222-4222-8222-222222222222";
 const expId = "33333333-3333-4333-8333-333333333333";
 const session = { id: owner, email: "person@example.test", role: "USER" };
 const experience = { id: expId, title: "Developer", company: "Example", location: "", start: "2020", end: "", description: "Built a dashboard." };
-const profile = () => ({ ...schema.emptyProfile(session.email), name: "Sam", careerGoal: "FIRST_JOB", experienceLevel: "STUDENT", targetJobTitle: "Developer", targetIndustry: "Software", targetCountry: "France", preferredWorkMode: "REMOTE", resumeSource: "SCRATCH" });
+const profile = () => ({ ...schema.emptyProfile(session.email), name: "Sam", careerGoal: "FIRST_JOB", experienceLevel: "STUDENT", targetJobTitle: "Developer", targetIndustry: "Software", targetCountry: "France", targetMarket: "EUROPE", preferredWorkMode: "REMOTE", resumeSource: "SCRATCH" });
 function row(p = profile()) {
   const { experiences, education, projects, certifications, ...scalars } = p;
   return { ...scalars, Experience: experiences, Education: education, Project: projects, certifications, profileRevision: 0, onboardingCompletedAt: null };
@@ -213,7 +213,7 @@ test("resume upload validates authentication, bytes, type and size before AI", a
   const upload = file => { const form = new FormData(); form.set("resume", file); return new Request("http://localhost", { method: "POST", body: form }); };
   assert.equal((await route.POST(upload(new File(["fake"], "cv.pdf", { type: "application/pdf" })))).status, 415);
   assert.equal((await route.POST(upload(new File(["a"], "cv.exe", { type: "text/plain" })))).status, 415);
-  assert.equal((await route.POST(upload(new File([new Uint8Array(5 * 1024 * 1024 + 1)], "cv.pdf", { type: "application/pdf" })))).status, 413);
+  assert.equal((await route.POST(upload(new File([new Uint8Array(8 * 1024 * 1024 + 1)], "cv.pdf", { type: "application/pdf" })))).status, 413);
   assert.equal(calls, 0);
   const denied = loader(aiMocks({ "@/lib/auth": { getSessionUser: async () => null } }))("src/app/api/career-profile/import/route.ts");
   assert.equal((await denied.POST(upload(new File(["text"], "cv.txt", { type: "text/plain" })))).status, 401);

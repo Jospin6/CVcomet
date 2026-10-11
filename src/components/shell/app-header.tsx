@@ -24,6 +24,8 @@ export function AppHeader({ onSearch }: { onSearch: () => void }) {
           "/": "overview",
           "/profil": "careerProfile",
           "/dashboard/profile": "careerProfile",
+          "/dashboard/resumes": "documents",
+          "/dashboard/cover-letters": "coverLetters",
           "/onboarding": "careerProfile",
           "/templates": "templates",
           "/upgrade": "billing",
