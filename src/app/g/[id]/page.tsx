@@ -55,7 +55,7 @@ export default function Home() {
     const loadConversation = useSelector((state: RootState) => state.conversation.loading)
     const dispatch = useDispatch<AppDispatch>();
     const convId = useSelector(selectConversationId)
-    const { user: user } = useCurrentUser();
+    const { user } = useCurrentUser();
     const currentUser = useSelector(selectUser)
     const typeGeneration = useSelector(selectTypeGeneration)
     const [hasGenerated, setHasGenerated] = useState(false);

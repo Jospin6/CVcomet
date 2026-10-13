@@ -12,6 +12,7 @@ import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/button";
 
 import { useTranslation } from 'react-i18next';
+import { authClient } from "@/lib/auth-client";
 
 const schema = z.object({
   email: z.string().email("Invalid email"),
@@ -37,6 +38,7 @@ export default function RegisterForm() {
     try {
       await dispatch(signup(data)).unwrap();
       router.replace("/onboarding");
+      router.refresh();
     } catch (error) {
       if (typeof error === "object" && error && "message" in error) {
         setError(String((error as { message?: string }).message));
@@ -76,6 +78,12 @@ export default function RegisterForm() {
         />
         <Button type="submit" className="w-full" disabled={isSubmitting}>{t(isSubmitting?"shell.signingUp":"signup")}</Button>
       </form>
+      {process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true" && (
+        <Button type="button" variant="outline" className="mt-4 w-full" onClick={async () => {
+          const result = await authClient.signIn.social({ provider: "google", callbackURL: "/onboarding" });
+          if (result.error) setError(result.error.message || "Google sign-in failed");
+        }}>Google</Button>
+      )}
       <div className="mt-6 flex flex-wrap gap-y-2 text-sm justify-center">
         <span className="pr-2 text-muted-foreground">{t("haveSignedup")}</span>
         <Link href="/login" className="text-primary hover:underline">

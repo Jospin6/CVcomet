@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 export function SubscribeButton() {
   const { t } = useTranslation();
-  const { user: user } = useCurrentUser();
+  const { user } = useCurrentUser();
   const [loading, setLoading] = useState(false);
   async function subscribe() {
     if (!user?.id) return;

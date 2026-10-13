@@ -8,7 +8,7 @@ import { hashPassword, verifyPassword } from "@/lib/password";
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || process.env.JWT_SECRET,
   baseURL: process.env.BETTER_AUTH_URL ||
-    (process.env.NODE_ENV === "production" ? process.env.NEXT_PUBLIC_APP_URL : undefined),
+    (process.env.NODE_ENV === "production" ? process.env.NEXT_PUBLIC_APP_URL : "http://localhost:3000"),
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   socialProviders: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
     ? { google: {

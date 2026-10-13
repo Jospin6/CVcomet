@@ -64,10 +64,11 @@ export function LoginForm({
     const { success, message } = await signIn(values.email, values.password)
 
     if (success) {
+      authClient.$store.notify("$sessionSignal");
       toast("Login successful")
       route.push("/")
     } else {
-      toast("Login failed")
+      toast.error(message)
     }
     setIsLoading(false)
   }

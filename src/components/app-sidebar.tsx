@@ -35,7 +35,7 @@ export function AppSidebar() {
   const { t } = useTranslation();
   const pathname = usePathname();
   const search = useSearchParams();
-  const { user: user } = useCurrentUser();
+  const { user } = useCurrentUser();
   const { setOpenMobile, isMobile, state } = useSidebar();
   const compact = state === "collapsed" && !isMobile;
   const active = (item: NavigationItem) => {

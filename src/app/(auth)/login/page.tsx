@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/InputField";
 import { login } from "@/redux/auth/authSlice";
 import { useTranslation } from 'react-i18next';
+import { safeRedirectPath } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client";
 
 const schema = z.object({
   email: z.string().email("Invalide email"),
@@ -35,7 +37,8 @@ export default function Login() {
 
     try {
       await dispatch(login(data)).unwrap();
-      router.replace("/");
+      router.replace(safeRedirectPath(new URLSearchParams(window.location.search).get("redirect")));
+      router.refresh();
     } catch (error) {
       if (typeof error === "object" && error && "message" in error) {
         setError(String((error as { message?: string }).message));
@@ -75,6 +78,12 @@ export default function Login() {
         />
         <Button type="submit" className="w-full" disabled={isSubmitting}>{t(isSubmitting?"shell.loggingIn":"login")}</Button>
       </form>
+      {process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true" && (
+        <Button type="button" variant="outline" className="mt-4 w-full" onClick={async () => {
+          const result = await authClient.signIn.social({ provider: "google", callbackURL: safeRedirectPath(new URLSearchParams(window.location.search).get("redirect")) });
+          if (result.error) setError(result.error.message || "Google sign-in failed");
+        }}>Google</Button>
+      )}
       <div className="mt-6 flex flex-wrap gap-y-2 text-sm justify-center">
         <span className="pr-2 text-muted-foreground">{t("nonAccount")}</span>
         <Link href="/signup" className="text-primary hover:underline">

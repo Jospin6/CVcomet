@@ -286,12 +286,13 @@ test("profile assistance denies anonymous requests and blocks server mass assign
   const route = loader(aiMocks())("src/app/api/career-profile/improve/route.ts");
   assert.equal((await route.POST(request({ field: "headline", text: "Developer", language: "en", userId: other }))).status, 400);
 });
-test("authenticated sessions reload current account and role instead of trusting stale JWT claims", async () => {
+test("authenticated sessions reload current account and role instead of trusting stale session data", async () => {
   let exists = true;
   const load = loader({
-    "next/headers": { cookies: async () => ({ get: () => ({ value: "signed-token" }) }) },
-    jose: { jwtVerify: async () => ({ payload: { id: owner, email: "old@example.test", role: "ADMIN" } }) },
-    "@/lib/utils": { getJwtSecret: () => new Uint8Array([1]) },
+    "next/headers": { headers: async () => new Headers() },
+    "better-auth": { betterAuth: () => ({ api: { getSession: async () => ({ user: { id: owner, email: "old@example.test", role: "ADMIN" } }) } }) },
+    "better-auth/adapters/prisma": { prismaAdapter: () => undefined },
+    "better-auth/next-js": { nextCookies: () => ({ id: "next-cookies" }) },
     [dbKey]: { user: { findUnique: async () => exists ? session : null } },
   });
   const auth = load("src/lib/auth.ts");

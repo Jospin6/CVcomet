@@ -10,7 +10,7 @@ import { fetchCoverLetter } from "@/redux/coverLetter/coverLetterSlice";
 import { fetchCvs } from "@/redux/cv/cvSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchTemplates } from "@/redux/template/templateSlice";
-import { fetchUser, fetchUsers, selectUser } from "@/redux/user/userSlice";
+import { fetchUsers } from "@/redux/user/userSlice";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -41,25 +41,19 @@ export default function AdminDashboard() {
   const subscribedUsers = users.filter(user => user.isSubscribed).length;
   const templates = useSelector((state: RootState) => state.template.templates);
   const { user: currentUser, loading } = useCurrentUser()
-  const user = useSelector(selectUser);
 
   useEffect(() => {
-    if (currentUser?.id) {
-      dispatch(fetchUser(currentUser?.id))
-    }
-  }, [currentUser?.id, dispatch])
-
-  useEffect(() => {
+    if (currentUser?.role !== "ADMIN") return;
     dispatch(fetchUsers())
     dispatch(fetchCvs())
     dispatch(fetchCoverLetter())
     dispatch(fetchTemplates())
-  }, [dispatch])
+  }, [currentUser?.role, dispatch])
 
   if (loading) {
     return <AdminSkeleton/>;
   }
-  if(user?.role !== "ADMIN") return redirect("/unauthorized"); 
+  if(currentUser?.role !== "ADMIN") return redirect("/unauthorized");
   return (
     <div className="">
       <h1 className="text-2xl text-foreground font-bold mb-8">Admin Dashboard</h1>

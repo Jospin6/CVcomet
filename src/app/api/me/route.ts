@@ -7,5 +7,5 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Non authentifi?" }, { status: 401 });
   const user = await prisma.user.findUnique({ where: { id: session.id } });
   if (!user) return NextResponse.json({ error: "Non authentifi?" }, { status: 401 });
-  return NextResponse.json(sanitizeUser(user));
+  return NextResponse.json(sanitizeUser(user), { headers: { "Cache-Control": "private, no-store" } });
 }

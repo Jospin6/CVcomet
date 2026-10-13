@@ -18,8 +18,6 @@ import { ResumeCards, useResumeLibrary } from "@/components/resumes/resume-libra
 export default function Overview() {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
-  const search = useSearchParams();
   const { user: session } = useCurrentUser();
   const user = useSelector(selectUser);
   const { documents, loading, error, reload } = useResumeLibrary(Boolean(session?.id));

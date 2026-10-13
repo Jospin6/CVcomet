@@ -18,7 +18,7 @@ import {
 } from "./sidebar";
 export function ConversationList() {
   const dispatch = useDispatch<AppDispatch>();
-  const { user: user } = useCurrentUser();
+  const { user } = useCurrentUser();
   const { t } = useTranslation();
   const path = usePathname();
   const { setOpenMobile } = useSidebar();

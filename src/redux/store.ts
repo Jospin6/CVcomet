@@ -1,5 +1,5 @@
 // redux/store.ts
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import userReducer from "./user/userSlice";
 import experienceReducer from "./experience/experienceSlice";
 import educationReducer from "./education/educationSlice";
@@ -11,9 +11,7 @@ import conversationReducer from "./conversation/conversationSlice";
 import authReducer from "./auth/authSlice";
 import templateReducer from "./template/templateSlice";
 
-export const makeStore = () =>
-  configureStore({
-    reducer: {
+const appReducer = combineReducers({
       auth: authReducer,
       user: userReducer,
       experience: experienceReducer,
@@ -24,8 +22,14 @@ export const makeStore = () =>
       coverLetter: coverLetterReducer,
       conversation: conversationReducer,
       template: templateReducer,
-    },
-  });
+});
+
+const rootReducer: typeof appReducer = (state, action) => {
+  const sessionChanged = ["auth/logout/fulfilled", "auth/login/fulfilled", "auth/signup/fulfilled"].includes(action.type);
+  return appReducer(sessionChanged ? undefined : state, action);
+};
+
+export const makeStore = () => configureStore({ reducer: rootReducer });
 
 export type AppStore = ReturnType<typeof makeStore>;
 export type AppDispatch = AppStore["dispatch"];

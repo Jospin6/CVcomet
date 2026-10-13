@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit"
 import axios from "axios"
 import { RootState } from "../store"
+import { authClient } from "@/lib/auth-client"
 
 interface User {
     id?: string
@@ -45,6 +46,7 @@ export const login = createAsyncThunk("auth/login", async ({ email, password }: 
                 },
             });
 
+        authClient.$store.notify("$sessionSignal");
         return response.data;
     } catch (error: any) {
         console.log("Erreur Axios :", error.response?.data || error.message);
@@ -55,7 +57,7 @@ export const login = createAsyncThunk("auth/login", async ({ email, password }: 
 export const logout = createAsyncThunk("auth/logout", async (_, { rejectWithValue }) => {
     try {
         const response = await axios.delete(`/api/logout`);
-
+        authClient.$store.notify("$sessionSignal");
         return response.data;
     } catch (error: any) {
         console.log("Erreur Axios :", error.response?.data || error.message);
@@ -77,6 +79,7 @@ export const signup = createAsyncThunk(
                         "Content-Type": "application/json",
                     },
                 });
+            authClient.$store.notify("$sessionSignal");
             return response.data;
         } catch (error: any) {
             console.log("Erreur Axios :", error.response?.data || error.message);

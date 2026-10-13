@@ -19,14 +19,14 @@ export default function JobMatch(){
      <div className="mb-5 flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><Globe2 className="size-5"/></div>
      <p className="text-xs font-semibold uppercase tracking-[.16em] text-primary">Job intelligence</p>
      <h2 className="mt-2 text-2xl font-semibold tracking-tight">Analyze an opportunity from its URL</h2>
-     <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Use the employer's public job page whenever possible. No copying and cleaning long descriptions by hand.</p>
+     <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Use the employer&apos;s public job page whenever possible. No copying and cleaning long descriptions by hand.</p>
      <label htmlFor="job-url" className="mt-7 block text-sm font-medium">Job posting URL</label>
      <div className="mt-2 flex flex-col gap-3 sm:flex-row">
       <div className="relative flex-1"><Link2 className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/><Input id="job-url" type="url" autoComplete="url" className="h-11 pl-10" value={url} onChange={e=>setUrl(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&valid&&!busy)run()}} placeholder="https://careers.company.com/jobs/role"/></div>
       <Button className="h-11 px-5" disabled={!valid||busy} onClick={run}>{busy?<LoaderCircle className="animate-spin"/>:<Sparkles/>}{busy?"Reading job…":"Analyze job"}</Button>
      </div>
      {url&&!valid&&<p className="mt-2 text-xs text-destructive">Enter a complete http:// or https:// job URL.</p>}
-     {error&&<div role="alert" className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive"><p className="font-medium">We couldn't read this posting</p><p className="mt-1 text-destructive/80">{error}</p><p className="mt-2 text-xs text-muted-foreground">Some job boards require sign-in or block automated access. Try the employer's public careers page.</p></div>}
+     {error&&<div role="alert" className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive"><p className="font-medium">We couldn&apos;t read this posting</p><p className="mt-1 text-destructive/80">{error}</p><p className="mt-2 text-xs text-muted-foreground">Some job boards require sign-in or block automated access. Try the employer&apos;s public careers page.</p></div>}
     </div>
     <div className="rounded-xl border border-border/60 bg-muted/35 p-5">
      <p className="text-sm font-semibold">What CVcomet reads</p>

@@ -153,7 +153,7 @@ export type CoverLetterProps = {
 };
 
 export const authSchema = z.object({
-    email: z.string().email({ message: "Email invalide" }),
+    email: z.string().trim().toLowerCase().email({ message: "Email invalide" }),
     password: z
         .string()
         .min(6, { message: "Le mot de passe doit contenir au moins 6 caractères" }),

@@ -66,6 +66,7 @@ export function SignupForm({
         const { success, message } = await signUp(values.email, values.password, values.name)
 
         if (success) {
+            authClient.$store.notify("$sessionSignal");
             toast("Login successful")
             route.push("/")
         } else {

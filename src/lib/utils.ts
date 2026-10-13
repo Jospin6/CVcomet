@@ -1,14 +1,7 @@
 import { dayLimit } from "@/helpers/constants";
 import { clsx, type ClassValue } from "clsx"
-import { SignJWT } from "jose";
 import { twMerge } from "tailwind-merge"
 
-export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
-export function getJwtSecret() {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET is required");
-  return new TextEncoder().encode(secret);
-}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -50,18 +43,10 @@ export function formatDateToFullYear(dateInput: string | number, language: strin
   return date.toLocaleDateString(lang, options);
 }
 
-export async function generateToken(user: any) {
-  const token = await new SignJWT({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SECONDS)
-    .sign(getJwtSecret());
-
-  return token;
+export function safeRedirectPath(target: string | null | undefined, fallback = "/") {
+  return target && target.startsWith("/") && !target.startsWith("//") && !target.includes("\\")
+    ? target
+    : fallback;
 }
 
 export function getTodayGenerationCount(lastGeneratedAt: string, generationCount: number): number {

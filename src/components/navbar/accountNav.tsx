@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function AccountNav() {
-  const { user: user } = useCurrentUser();
+  const { user } = useCurrentUser();
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();

@@ -22,7 +22,7 @@ export function ResumeEditor() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const session = useCurrentUser();
+  const { user: session } = useCurrentUser();
   const user = useSelector(selectUser);
   const [resume, setResume] = useState<Resume | null>(null);
   const [error, setError] = useState("");
