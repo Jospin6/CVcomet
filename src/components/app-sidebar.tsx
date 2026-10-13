@@ -6,6 +6,7 @@ import {
   Sparkles,
   ArrowUpRight,
   Shield,
+  Cpu,
   UserRound,
   X,
 } from "lucide-react";
@@ -131,6 +132,7 @@ export function AppSidebar() {
           <SidebarGroup>
             <SidebarMenu>
               {renderItem({ key: "admin", icon: Shield, href: "/admin" })}
+              {renderItem({ key: "aiSettings", icon: Cpu, href: "/admin/ai" })}
             </SidebarMenu>
           </SidebarGroup>
         )}

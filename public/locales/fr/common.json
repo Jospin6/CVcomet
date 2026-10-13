@@ -244,7 +244,8 @@
     "loggingIn": "Connexion…",
     "signingUp": "Création du compte…",
     "email": "Adresse e-mail",
-    "download": "Télécharger le PDF"
+    "download": "Télécharger le PDF",
+    "aiSettings": "Réglages IA"
   },
   "career": {
     "title": "Profil professionnel",
@@ -388,10 +389,15 @@
       "TOO_LARGE": "Le fichier est trop volumineux (8 Mo maximum).",
       "AI_LIMIT": "Votre limite quotidienne d’IA est atteinte. Vous pouvez continuer à modifier le profil manuellement.",
       "AI_UNAVAILABLE": "L’IA n’est pas configurée. Vous pouvez saisir et modifier vos informations manuellement.",
+      "AI_AUTH_ERROR": "Le service d’extraction des CV a refusé l’accès. Contactez l’assistance ou saisissez vos informations manuellement.",
+      "AI_RATE_LIMIT": "Le service d’extraction des CV a atteint sa limite d’utilisation. Réessayez plus tard ou saisissez vos informations manuellement.",
+      "AI_TIMEOUT": "L’extraction du CV a pris trop de temps. Réessayez ou saisissez vos informations manuellement.",
       "AI_FAILED": "L’extraction ou la reformulation a échoué. Réessayez ou saisissez les informations manuellement.",
       "UNSUPPORTED_FACTS": "La suggestion contenait un nombre absent de votre texte et a été rejetée.",
       "UPLOAD_REQUIRED": "Importez un CV ou choisissez Partir de zéro.",
-      "CONFIRM_REQUIRED": "Vérifiez et confirmez vos informations avant de sauvegarder."
+      "CONFIRM_REQUIRED": "Vérifiez et confirmez vos informations avant de sauvegarder.",
+      "PDF_TEXT_REQUIRED": "Ce PDF est une image sans texte lisible. Utilisez un PDF contenant du texte, un DOCX ou TXT, ou contactez un administrateur pour activer un modèle qui lit les PDF scannés.",
+      "AI_MODEL_UNAVAILABLE": "Le modèle IA configuré est indisponible. Contactez le support ou saisissez les informations manuellement."
     }
   },
   "documents": {

@@ -31,7 +31,7 @@ export function PdfPreview({ id, name, thumbnail = false }: { id: string; name: 
       try {
         const pdfjs = await import("pdfjs-dist");
         if (!active) return;
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+        pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs?v=${pdfjs.version}`;
         loadingTask = pdfjs.getDocument({ url: `/api/resume-documents/${id}`, withCredentials: true });
         const pdf = await loadingTask.promise;
         if (active) setDocument(pdf);

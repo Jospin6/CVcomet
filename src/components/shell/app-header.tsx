@@ -32,6 +32,7 @@ export function AppHeader({ onSearch }: { onSearch: () => void }) {
           "/settings": "settings",
           "/help": "help",
           "/admin": "admin",
+          "/admin/ai": "aiSettings",
           "/unauthorized": "accessDenied",
         } as Record<string, string>
       )[pathname] || "workspace";

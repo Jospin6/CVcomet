@@ -10,6 +10,36 @@ export class ProfileError extends Error {
     this.code = code;
   }
 }
+
+export function profileAIError(error: unknown): ProfileError {
+  if (error instanceof ProfileError) return error;
+  let current = error;
+  let statusCode: number | undefined;
+  let credentialsRejected = false;
+  let timedOut = false;
+  let modelUnavailable = false;
+  for (let depth = 0; depth < 5 && current && typeof current === "object"; depth++) {
+    const failure = current as { statusCode?: number; responseBody?: string; name?: string; cause?: unknown; lastError?: unknown };
+    if (typeof failure.statusCode === "number") statusCode = failure.statusCode;
+    if (typeof failure.responseBody === "string" && /API_KEY_(?:INVALID|EXPIRED|SERVICE_BLOCKED|HTTP_REFERRER_BLOCKED|IP_ADDRESS_BLOCKED)/.test(failure.responseBody)) credentialsRejected = true;
+    if (typeof failure.responseBody === "string" && /model_not_found|model_decommissioned|model.*(?:does not exist|not found|not supported|unsupported)/i.test(failure.responseBody)) modelUnavailable = true;
+    if (failure.name === "AbortError" || failure.name === "TimeoutError") timedOut = true;
+    current = failure.cause || failure.lastError;
+  }
+  const failure = credentialsRejected || statusCode === 401 || statusCode === 403
+    ? new ProfileError(503, "AI_AUTH_ERROR")
+    : statusCode === 429
+      ? new ProfileError(429, "AI_RATE_LIMIT")
+      : modelUnavailable || statusCode === 404
+        ? new ProfileError(503, "AI_MODEL_UNAVAILABLE")
+        : timedOut
+        ? new ProfileError(504, "AI_TIMEOUT")
+        : new ProfileError(502, "AI_FAILED");
+  // Log the category only; provider errors can contain keys or document contents.
+  console.error("AI request failed", { code: failure.code, statusCode });
+  return failure;
+}
+
 export function profileErrorResponse(error: unknown) {
   if (error instanceof ProfileError) return NextResponse.json({ error: error.code }, { status: error.status });
   if (error instanceof ZodError) return NextResponse.json({ error: "VALIDATION", issues: error.issues.map(x => ({ path: x.path.join("."), message: x.message })) }, { status: 400 });

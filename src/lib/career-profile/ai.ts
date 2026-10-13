@@ -1,9 +1,9 @@
-import { generateObject } from "ai";
+import { generateObject, type LanguageModel } from "ai";
 import { z } from "zod";
 import prisma from "../../../prisma/prisma";
 import { dayLimit } from "@/helpers/constants";
-import { getCareerModel } from "@/lib/gemini";
-import { ProfileError } from "./http";
+import { getAIModel } from "@/lib/ai/model";
+import { ProfileError, profileAIError } from "./http";
 import { profileDataSchema, experienceSchema, educationSchema, projectSchema, certificationSchema } from "./schema";
 
 export const factualRules = [
@@ -53,10 +53,10 @@ export const improveSchema = z.object({
   if (value.field !== "experience" && value.experienceId) ctx.addIssue({ code: "custom", path: ["experienceId"], message: "Unexpected experience ID" });
 });
 
-export async function improveText(text: string, field: string, language: string) {
+export async function improveText(text: string, field: string, language: string, configuredModel?: LanguageModel) {
   try {
     const { object } = await generateObject({
-      model: getCareerModel(), temperature: 0, maxRetries: 1,
+      model: configuredModel || await getAIModel(), temperature: 0, maxRetries: 1,
       abortSignal: AbortSignal.timeout(45000),
       schema: z.object({ suggestion: z.string().trim().min(1).max(field === "headline" ? 300 : 8000) }),
       system: factualRules + "\nOnly rephrase the supplied text for clarity, grammar and concision. Do not expand the factual scope. Preserve every number and proper noun.",
@@ -67,7 +67,6 @@ export async function improveText(text: string, field: string, language: string)
     if ((object.suggestion.match(/\d+(?:[.,]\d+)?/g) || []).some(x => !originalNumbers.has(x))) throw new ProfileError(422, "UNSUPPORTED_FACTS");
     return object.suggestion;
   } catch (error) {
-    if (error instanceof ProfileError) throw error;
-    throw new ProfileError(502, "AI_FAILED");
+    throw profileAIError(error);
   }
 }

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { CoreMessage, streamObject } from "ai";
-import { getCareerModel } from "@/lib/gemini";
+import { CoreMessage, LanguageModel, streamObject } from "ai";
+import { getAIModel } from "@/lib/ai/model";
 import prisma from "../../../../prisma/prisma";
 import { generateCoverLetterPrompt, generateCoverLetterSystemPrompt, generatedLanguagePrompt } from "@/helpers/helpers";
 import { coverLetterSchema } from "@/helpers/schema";
 import { getCareerProfile, careerProfileContext } from "@/lib/career-profile/service";
 import { reserveProfileAI } from "@/lib/career-profile/ai";
 import { generationInputSchema } from "@/lib/career-profile/schema";
-import { profileJson, profileErrorResponse } from "@/lib/career-profile/http";
+import { profileJson, profileErrorResponse, profileAIError } from "@/lib/career-profile/http";
 import { canAccessUser, getSessionUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
@@ -46,8 +46,9 @@ export async function POST(req: Request) {
   }
 
   let user;
+  let model: LanguageModel;
   try {
-    getCareerModel();
+    model = await getAIModel();
     user = careerProfileContext(await getCareerProfile(conversationContent.userId));
     await reserveProfileAI(session.id);
   } catch (error) { return profileErrorResponse(error); }
@@ -91,14 +92,14 @@ export async function POST(req: Request) {
 
   try {
     const result = await streamObject({
-      model: getCareerModel(),
+      model,
       output: "object",
       schema: coverLetterSchema,
       system,
       messages: chatHistory,
       async onFinish({ object, error }) {
         if (object === undefined) {
-          console.error("Error:", error);
+          profileAIError(error);
           return;
         }
 
@@ -132,11 +133,5 @@ export async function POST(req: Request) {
     });
 
     return result.toTextStreamResponse();
-  } catch (error) {
-    console.log("Error while generating the cover letter:", error);
-    return new NextResponse(
-      JSON.stringify({ error: "Failed to generate cover letter" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  } catch (error) { return profileErrorResponse(profileAIError(error)); }
 }

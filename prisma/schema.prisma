@@ -477,11 +477,37 @@ model AIUsage {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   feature       String
   model         String?
+  provider      String?
   inputTokens   Int?
   outputTokens  Int?
   estimatedCost Decimal? @db.Decimal(12, 6)
   createdAt     DateTime @default(now())
   @@index([userId, feature, createdAt])
+}
+
+enum AIProvider {
+  OPENAI
+  GOOGLE
+  ANTHROPIC
+  HUGGINGFACE
+  GROQ
+}
+
+model AISettings {
+  id             String     @id @default("global")
+  activeProvider AIProvider @default(GOOGLE)
+  updatedBy      String?
+  updatedAt      DateTime   @updatedAt
+}
+
+model AIProviderConfig {
+  provider          AIProvider @id
+  model             String
+  encryptedApiKey   String?
+  useEnvironmentKey Boolean    @default(true)
+  enabled           Boolean    @default(true)
+  updatedBy         String?
+  updatedAt         DateTime   @updatedAt
 }
 
 model Subscription {

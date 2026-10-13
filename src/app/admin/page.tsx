@@ -1,4 +1,7 @@
 "use client"
+import Link from "next/link";
+import { Cpu } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import AddTemplatePage from "@/components/forms/templeteForm";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { Button } from "@/components/ui/button";
@@ -34,6 +37,7 @@ const StatCard = ({ title, value }: StatCardProps) => (
 );
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const users = useSelector((state: RootState) => state.user.users);
   const cvs = useSelector((state: RootState) => state.cv.cvs);
@@ -58,7 +62,8 @@ export default function AdminDashboard() {
     <div className="">
       <h1 className="text-2xl text-foreground font-bold mb-8">Admin Dashboard</h1>
 
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex flex-wrap justify-end gap-3">
+        <Button asChild><Link href="/admin/ai"><Cpu className="size-4" />{t("shell.aiSettings")}</Link></Button>
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="outline">Add template</Button>

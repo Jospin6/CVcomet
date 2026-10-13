@@ -170,7 +170,8 @@ test("profile API writes only the authenticated account and returns no-store agg
 
 function aiMocks(extra = {}) {
   return { "@/lib/auth": { getSessionUser: async () => session },
-    "@/lib/gemini": { getCareerModel: () => "existing-provider" },
+    "@/lib/ai/model": { getAIModel: () => "existing-provider" },
+    "@/lib/pdf-text": { extractPDFText: async () => "Candidate Developer" },
     "@/helpers/constants": { dayLimit: 20 },
     [dbKey]: { user: { findUnique: async () => ({ isSubscribed: true }) } }, ...extra };
 }
@@ -230,13 +231,60 @@ test("resume extraction reuses existing AI and returns a draft without persisten
 });
 test("missing provider configuration and model failure are recoverable", async () => {
   let ExpectedError;
-  const load = loader(aiMocks({ "@/lib/gemini": { getCareerModel: () => { throw new ExpectedError(503, "AI_UNAVAILABLE"); } } }));
+  const load = loader(aiMocks({ "@/lib/ai/model": { getAIModel: () => { throw new ExpectedError(503, "AI_UNAVAILABLE"); } } }));
   ExpectedError = load("src/lib/career-profile/http.ts").ProfileError;
   const response = await load("src/app/api/career-profile/improve/route.ts").POST(request({ field: "headline", text: "Developer", language: "en" }));
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { error: "AI_UNAVAILABLE" });
   const failed = loader(aiMocks({ ai: { generateObject: async () => { throw Error("provider down"); } } }))("src/app/api/career-profile/improve/route.ts");
   assert.equal((await failed.POST(request({ field: "headline", text: "Developer", language: "en" }))).status, 502);
+});
+
+test("resume import checks missing AI configuration before reserving the user's quota", async () => {
+  let ExpectedError, reserved = 0;
+  const load = loader(aiMocks({
+    "@/lib/ai/model": { getAIModel: () => { throw new ExpectedError(503, "AI_UNAVAILABLE"); } },
+    [dbKey]: { user: { findUnique: async () => { reserved++; return { isSubscribed: true }; } } },
+  }));
+  ExpectedError = load("src/lib/career-profile/http.ts").ProfileError;
+  const form = new FormData(); form.set("resume", new File(["Developer"], "cv.txt", { type: "text/plain" }));
+  const response = await load("src/app/api/career-profile/import/route.ts").POST(new Request("http://localhost", { method: "POST", body: form }));
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: "AI_UNAVAILABLE" });
+  assert.equal(reserved, 0);
+});
+
+test("actual Gemini SDK credential errors produce a service error instead of a session or file error", async () => {
+  const { createGoogleGenerativeAI } = require("@ai-sdk/google");
+  let calls = 0;
+  const provider = createGoogleGenerativeAI({
+    apiKey: "synthetic-test-key",
+    fetch: async () => {
+      calls++;
+      return new Response(JSON.stringify({ error: { code: 400, status: "INVALID_ARGUMENT", message: "API key not valid.", details: [{ reason: "API_KEY_INVALID" }] } }), {
+        status: 400, headers: { "content-type": "application/json" },
+      });
+    },
+  });
+  const route = loader(aiMocks({ ai: require("ai"), "@/lib/ai/model": { getAIModel: () => provider("gemini-3.5-flash") } }))("src/app/api/career-profile/import/route.ts");
+  const form = new FormData(); form.set("resume", new File(["Sam: developer with TypeScript experience."], "cv.txt", { type: "text/plain" }));
+  const response = await route.POST(new Request("http://localhost", { method: "POST", body: form }));
+  assert.equal(calls, 1);
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: "AI_AUTH_ERROR" });
+});
+
+test("AI rewriting distinguishes provider rate limits, rejected credentials and timeouts", async () => {
+  for (const [failure, status, code] of [
+    [Object.assign(new Error("provider rejected credentials"), { statusCode: 401 }), 503, "AI_AUTH_ERROR"],
+    [Object.assign(new Error("provider quota"), { statusCode: 429 }), 429, "AI_RATE_LIMIT"],
+    [Object.assign(new Error("timeout"), { name: "TimeoutError" }), 504, "AI_TIMEOUT"],
+  ]) {
+    const route = loader(aiMocks({ ai: { generateObject: async () => { throw Object.assign(new Error("wrapped failure"), { cause: failure }); } } }))("src/app/api/career-profile/improve/route.ts");
+    const response = await route.POST(request({ field: "headline", text: "Developer", language: "en" }));
+    assert.equal(response.status, status);
+    assert.deepEqual(await response.json(), { error: code });
+  }
 });
 test("legacy collection endpoints deny cross-account requests and validate server input", async () => {
   for (const kind of ["experiences", "educations", "projects", "certifications"]) {
@@ -263,7 +311,7 @@ test("CV and letter generation use only the owned central profile and reject cro
       message: { create: async () => ({}), findMany: async () => [] } };
     const route = loader({
       "@/lib/auth": { getSessionUser: async () => session, canAccessUser: (user, id) => user.id === id },
-      "@/lib/gemini": { getCareerModel: () => "existing-provider" },
+      "@/lib/ai/model": { getAIModel: () => "existing-provider" },
       "@/lib/career-profile/ai": { reserveProfileAI: async () => {}, factualRules: "Never invent facts." },
       "@/lib/career-profile/service": {
         getCareerProfile: async id => { usedProfileId = id; return { headline: "Confirmed headline", skills: "Java" }; },
@@ -304,14 +352,15 @@ test("duplicate entries within one extraction are collapsed before review", () =
   const draft = schema.mergeExtractedProfile(profile(), { experiences: [experience, experience] });
   assert.equal(draft.experiences.length, 1);
 });
-test("valid PDF is sent as a file part through the same provider", async () => {
+test("PDF text is extracted locally and sent through the configured provider", async () => {
   let seen;
   const ai = loader(aiMocks())("src/lib/career-profile/ai.ts");
   const extracted = ai.extractionSchema.parse(Object.fromEntries(Object.entries(profile()).filter(([key]) => key in ai.extractionSchema.shape)));
   const route = loader(aiMocks({ ai: { generateObject: async args => { seen = args; return { object: extracted }; } } }))("src/app/api/career-profile/import/route.ts");
   const form = new FormData(); form.set("resume", new File(["%PDF-1.4\nfixture"], "cv.pdf", { type: "application/pdf" }));
   const response = await route.POST(new Request("http://localhost", { method: "POST", body: form }));
-  assert.equal(response.status, 200); assert.equal(seen.messages[0].content[1].type, "file");
-  assert.equal(seen.messages[0].content[1].mimeType, "application/pdf");
-  assert.equal(seen.messages[0].content[1].data.subarray(0, 5).toString(), "%PDF-");
+  assert.equal(response.status, 200);
+  assert.equal(seen.messages[0].content.length, 1);
+  assert.equal(seen.messages[0].content[0].type, "text");
+  assert.match(seen.messages[0].content[0].text, /Candidate Developer/);
 });

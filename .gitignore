@@ -40,6 +40,7 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+/public/pdf.worker.min.mjs
 next-env.d.ts
 
 # Isolated Next.js development output

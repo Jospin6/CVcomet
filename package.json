@@ -4,16 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && node scripts/prepare-pdf-worker.cjs && next build",
     "start": "next start",
     "lint": "eslint src prisma next.config.ts",
     "typecheck": "tsc --noEmit",
+    "check:ai": "node scripts/verify-ai-config.cjs",
     "test:phase1": "node scripts/verify-phase-1.cjs",
-    "test": "node --test scripts/auth.test.cjs scripts/career-profile.test.cjs scripts/resume-documents.test.cjs",
+    "test": "node --test scripts/auth.test.cjs scripts/career-profile.test.cjs scripts/resume-documents.test.cjs scripts/ai-providers.test.cjs",
     "test:auth:db": "node scripts/verify-auth-database.cjs",
-    "test:phase2": "node scripts/verify-phase-2.cjs"
+    "test:phase2": "node scripts/verify-phase-2.cjs",
+    "test:ai": "node --test scripts/ai-providers.test.cjs",
+    "predev": "node scripts/prepare-pdf-worker.cjs"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^1.2.12",
     "@ai-sdk/google": "^1.2.5",
     "@ai-sdk/openai": "^1.3.6",
     "@ai-sdk/react": "^1.2.5",

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../../prisma/prisma";
 import { getSessionUser } from "@/lib/auth";
-import { getCareerModel } from "@/lib/gemini";
+import { getAIModel } from "@/lib/ai/model";
 import { improveSchema, improveText, reserveProfileAI } from "@/lib/career-profile/ai";
 import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
 
@@ -15,9 +15,9 @@ export async function POST(req: Request) {
       const owned = await prisma.experience.findFirst({ where: { id: data.experienceId, userId: session.id }, select: { id: true } });
       if (!owned) throw new ProfileError(403, "FORBIDDEN");
     }
-    getCareerModel();
+    const model = await getAIModel();
     await reserveProfileAI(session.id);
-    const suggestion = await improveText(data.text, data.field, data.language);
+    const suggestion = await improveText(data.text, data.field, data.language, model);
     return NextResponse.json({ suggestion }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return profileErrorResponse(error); }
 }

@@ -243,7 +243,8 @@
     "loggingIn": "Signing in…",
     "signingUp": "Creating account…",
     "email": "Email address",
-    "download": "Download PDF"
+    "download": "Download PDF",
+    "aiSettings": "AI settings"
   },
   "career": {
     "title": "Career Profile",
@@ -387,10 +388,15 @@
       "TOO_LARGE": "The file is too large (maximum 8 MB).",
       "AI_LIMIT": "Your daily AI limit has been reached. You can still edit manually.",
       "AI_UNAVAILABLE": "AI is not configured. You can still enter and edit your information manually.",
+      "AI_AUTH_ERROR": "The resume extraction service could not authorize this request. Please contact support or enter your information manually.",
+      "AI_RATE_LIMIT": "The resume extraction service has reached its usage limit. Please try again later or enter your information manually.",
+      "AI_TIMEOUT": "Resume extraction took too long. Please retry or enter your information manually.",
       "AI_FAILED": "Extraction or rewriting failed. Please retry or enter the information manually.",
       "UNSUPPORTED_FACTS": "The suggestion contained a number absent from your text and was rejected.",
       "UPLOAD_REQUIRED": "Upload a resume first, or choose Start from scratch.",
-      "CONFIRM_REQUIRED": "Review and confirm your information before saving."
+      "CONFIRM_REQUIRED": "Review and confirm your information before saving.",
+      "PDF_TEXT_REQUIRED": "This PDF is an image without readable text. Use a text-based PDF, DOCX or TXT, or ask an administrator to activate a model that reads scanned PDFs.",
+      "AI_MODEL_UNAVAILABLE": "The configured AI model is unavailable. Contact support or enter the information manually."
     }
   },
   "documents": {

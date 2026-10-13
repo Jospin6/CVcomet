@@ -25,6 +25,20 @@ La connexion par email, l'inscription et la deconnexion utilisent Better Auth. L
 
 Les API privees verifient la session et les droits dans la base. Les mots de passe et codes de verification ne sont jamais inclus dans les reponses utilisateur.
 
+## Fournisseurs IA
+
+Depuis **Administration > Réglages IA** (`/admin/ai`), un administrateur peut gérer OpenAI, Google Gemini, Claude (Anthropic), Hugging Face et Groq. Pour chaque fournisseur : ajouter/remplacer une clé, charger les modèles disponibles, sélectionner un identifiant, tester la génération JSON, enregistrer puis activer le fournisseur. Le bouton de test effectue une courte requête facturée selon votre offre. Aucun CV n’est envoyé par le test.
+
+Le fournisseur actif s’applique aux imports, réécritures, CV, lettres de motivation, emails, analyses d’offres, titres de conversations et à l’assistant. Les requêtes déjà commencées terminent avec leur configuration ; les suivantes lisent immédiatement les nouveaux réglages, sans redémarrage.
+
+Les clés saisies dans l’admin sont chiffrées avec AES-256-GCM et ne sont jamais renvoyées au navigateur. Configurez et sauvegardez `AI_CONFIG_ENCRYPTION_KEY` avec une valeur aléatoire longue, stable entre les déploiements. En son absence, le secret Better Auth (ou JWT historique) sert de remplacement. Changer ce secret impose de ressaisir les clés enregistrées. Les clés et modèles de `env.example` sont des valeurs initiales facultatives : les réglages en base ont priorité. Redémarrez le serveur après une modification de `.env`. Un fournisseur actif doit conserver une clé, un modèle et être disponible ; activez un autre fournisseur avant de le désactiver ou retirer sa clé.
+
+Les PDF contenant du texte sont lus localement et fonctionnent avec les cinq fournisseurs ; DOCX et TXT aussi. Les PDF scannés sans texte nécessitent un modèle Google ou Claude prenant en charge les PDF, sinon utilisez un fichier avec du texte. La sélection d’un modèle arbitraire reste possible, mais il doit prendre en charge la génération de texte/JSON : vérifiez-le avec le bouton **Tester le modèle**.
+
+`npm run check:ai` consulte la liste des modèles du fournisseur actif, sans document ni génération. Le test admin vérifie aussi les réponses JSON. Les erreurs d’accès, quota, délai et modèle indisponible sont distinguées sans exposer de clés ni de données personnelles.
+
+Interfaces utilisées : [Google](https://v4.ai-sdk.dev/providers/ai-sdk-providers/google-generative-ai), [Claude](https://v4.ai-sdk.dev/providers/ai-sdk-providers/anthropic), [Groq compatible OpenAI](https://console.groq.com/docs/openai) et [Hugging Face Router](https://huggingface.co/docs/inference-providers/en/hub-api).
+
 ## Base de donnees
 
 `DATABASE_URL` fournit la connexion de l'application. `DATABASE_URL_UNPOOLED` fournit la connexion directe utilisee par les migrations Prisma ; sur une base locale, les deux URL peuvent etre identiques.
