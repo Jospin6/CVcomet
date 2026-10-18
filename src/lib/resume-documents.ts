@@ -19,6 +19,8 @@ export type SavedResume = {
   experiences?: { title: string; company: string; description?: string[] }[];
   educations?: { degree: string; school: string }[];
   createdAt: string;
+  contact?: { name?: string; email?: string; phone?: string; city?: string } | null;
+  design?: { documentName?: string; accent?: string; layout?: string } | null;
 };
 
 export type LibraryResume =

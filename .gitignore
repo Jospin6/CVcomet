@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/docs/resume-editor/
 
 # next.js
 /.next/

@@ -229,6 +229,63 @@ test("resume extraction reuses existing AI and returns a draft without persisten
   assert.equal(response.status, 200); assert.equal((await response.json()).extracted.name, "Sam");
   assert.equal(seen.model, "existing-provider"); assert.match(seen.system, /Never invent/);
 });
+
+test("PDF import normalizes incomplete model output and retries a temporary provider failure", async () => {
+  const originalFetch = global.fetch;
+  let calls = 0;
+  const source = {
+    name: "Sam Example", phone: null, skills: ["JavaScript", "React"], linkedin: "linkedin.com/in/sam-example",
+    portfolio: "javascript:alert(1)", email: "other@example.test", role: "ADMIN",
+    experiences: [{ id: other, title: null, company: "Example Labs", start: "2020", end: "2023", description: "Built internal dashboards." }],
+    education: [{ degree: null, school: "Example University", start: "2016", end: "2019" }],
+    projects: [{ title: "Dashboard", url: "example.test/dashboard" }],
+    professionalLinks: [{ label: "GitHub", url: "github.com/sam-example" }, {}],
+  };
+  global.fetch = async (_url, init) => {
+    calls++;
+    assert.match(JSON.parse(init.body).messages.at(-1).content, /linkedin.com\/in\/sam-example/);
+    if (calls === 1) return Response.json({ error: { message: "Temporary overload", type: "server_error", code: "server_error" } }, { status: 503 });
+    return Response.json({ id: "test_import", object: "chat.completion", created: 1, model: "gpt-4o-mini",
+      choices: [{ index: 0, message: { role: "assistant", content: JSON.stringify(source) }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } });
+  };
+  try {
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const actualPDF = loader({ "pdfjs-dist/legacy/build/pdf.mjs": pdfjs })("src/lib/pdf-text.ts");
+    const model = loader({ [dbKey]: {} })("src/lib/ai/model.ts").createAIModel({ provider: "OPENAI", model: "gpt-4o-mini", apiKey: "test-key", enabled: true });
+    const route = loader(aiMocks({ ai: require("ai"), "@/lib/pdf-text": actualPDF,
+      "@/lib/ai/model": { getAIModel: async () => model } }))("src/app/api/career-profile/import/route.ts");
+    const form = new FormData(); form.set("resume", new File([require("./resume-fixture.cjs").resumePDF()], "cv.pdf", { type: "application/pdf" }));
+    const response = await route.POST(new Request("http://localhost", { method: "POST", body: form }));
+    assert.equal(response.status, 200);
+    const { extracted } = await response.json();
+    assert.equal(calls, 2);
+    assert.equal(extracted.linkedin, "https://linkedin.com/in/sam-example");
+    assert.equal(extracted.skills, "JavaScript, React");
+    assert.equal(extracted.phone, "");
+    assert.equal(extracted.summary, "");
+    assert.equal(extracted.experiences[0].title, "");
+    assert.equal(extracted.experiences[0].company, "Example Labs");
+    assert.equal(extracted.experiences[0].id, undefined);
+    assert.equal(extracted.education[0].degree, "");
+    assert.equal(extracted.education[0].school, "Example University");
+    assert.equal(extracted.projects[0].url, "https://example.test/dashboard");
+    assert.equal(extracted.portfolio, "");
+    assert.equal(extracted.professionalLinks.length, 1);
+    assert.equal(extracted.professionalLinks[0].url, "https://github.com/sam-example");
+    assert.equal(extracted.email, undefined);
+    assert.equal(extracted.role, undefined);
+    assert.equal(schema.profileDataSchema.safeParse({ ...profile(), ...extracted }).success, false);
+  } finally { global.fetch = originalFetch; }
+});
+
+test("an empty AI extraction is reported instead of pretending that the CV was imported", async () => {
+  const route = loader(aiMocks({ ai: { generateObject: async () => ({ object: {} }) } }))("src/app/api/career-profile/import/route.ts");
+  const form = new FormData(); form.set("resume", new File(["No candidate facts"], "cv.txt", { type: "text/plain" }));
+  const response = await route.POST(new Request("http://localhost", { method: "POST", body: form }));
+  assert.equal(response.status, 422);
+  assert.deepEqual(await response.json(), { error: "NO_RESUME_DATA" });
+});
 test("missing provider configuration and model failure are recoverable", async () => {
   let ExpectedError;
   const load = loader(aiMocks({ "@/lib/ai/model": { getAIModel: () => { throw new ExpectedError(503, "AI_UNAVAILABLE"); } } }));

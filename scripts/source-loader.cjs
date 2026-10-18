@@ -16,7 +16,7 @@ module.exports = function loader(mocks) {
     const module = { exports: {} };
     cache.set(file, module);
     const source = ts.transpileModule(fs.readFileSync(file, "utf8"), {
-      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
     }).outputText;
     new vm.Script("(function(require,module,exports){" + source + "\n})", { filename: file })
       .runInThisContext()(dep => load(dep, file), module, module.exports);

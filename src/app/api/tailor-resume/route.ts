@@ -1,1 +1,10 @@
-import {NextResponse} from "next/server";import {z} from "zod";import prisma from "../../../../prisma/prisma";import {requireUser} from "@/lib/career/auth-user";import {apiError} from "@/lib/career/api";import {matchJob,parseJobDescription} from "@/lib/career/job-match";const s=z.object({cvId:z.string().uuid(),jobId:z.string().uuid()});export async function POST(req:Request){try{const u=await requireUser();const b=s.parse(await req.json());const [cv,job]=await Promise.all([prisma.cv.findFirst({where:{id:b.cvId,conversation:{userId:u.id}}}),prisma.jobOpportunity.findFirst({where:{id:b.jobId,userId:u.id}})]);if(!cv||!job)return NextResponse.json({error:"Resume or job not found"},{status:404});const parsed=parseJobDescription(job.description);const before=matchJob(JSON.stringify(cv),parsed);const current=cv.summary[0]||"";const verified=parsed.requiredSkills.filter(x=>JSON.stringify(cv).toLowerCase().includes(x.toLowerCase()));const proposal=current+(verified.length?`\n\nRelevant strengths for this role: ${verified.join(", ")}.`:"");const after=matchJob(JSON.stringify({...cv,summary:[proposal]}),parsed);return NextResponse.json({before:{match:before.overallScore},after:{match:after.overallScore},changes:[{field:"summary",current,proposed:proposal,reason:"Highlights only job-relevant skills already present in this resume."}],notice:"Review and accept changes manually. No unverified skill is added."})}catch(e){return apiError(e)}}
+import { NextResponse } from "next/server";
+import { requireUser } from "@/lib/career/auth-user";
+import { apiError } from "@/lib/career/api";
+import { tailorJobResume } from "@/lib/career/job-tailor";
+import { profileJson } from "@/lib/career-profile/http";
+export const maxDuration = 60;
+export async function POST(req: Request) {
+  try { const user = await requireUser(); return NextResponse.json(await tailorJobResume(user.id, await profileJson(req))); }
+  catch (error) { return apiError(error); }
+}

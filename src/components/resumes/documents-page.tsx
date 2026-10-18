@@ -4,11 +4,12 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { ArrowUpRight, CheckCircle2, ContactRound, FilePlus2, FileText, FolderOpen, LoaderCircle, Mail, PanelsTopLeft, Upload } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, ContactRound, FilePlus2, FileText, FolderOpen, Linkedin, LoaderCircle, Mail, PanelsTopLeft, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { ResumeCards, useResumeLibrary } from "./resume-library";
 import { RESUME_ACCEPT, validateResumeSelection } from "@/lib/resume-documents";
+import { LinkedInImportDialog } from "./linkedin-import-dialog";
 
 export function DocumentsPage() {
   const { t } = useTranslation();
@@ -22,6 +23,7 @@ export function DocumentsPage() {
   const [pending, setPending] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [linkedinOpen, setLinkedinOpen] = useState(false);
   const upload = async (files: File[]) => {
     if (uploadLock.current || creating) return;
     setError(""); setMessage("");
@@ -61,6 +63,7 @@ export function DocumentsPage() {
         </button>
         {pending.length > 0 && <ul aria-live="polite" className="mb-3 space-y-1 text-xs text-muted-foreground">{pending.map((name, index) => <li key={index} className="truncate">{name}</li>)}</ul>}
         <div className="space-y-1 border-t pt-3">
+          <Button variant="ghost" disabled={busy || creating} className="h-auto w-full justify-start whitespace-normal py-3 text-left" onClick={() => setLinkedinOpen(true)}><Linkedin className="text-[#0A66C2]" />{t("linkedinImport.action")}</Button>
           <Button variant="ghost" disabled={busy || creating} className="h-auto w-full justify-start whitespace-normal py-3 text-left" onClick={() => void create("PROFILE")}><ContactRound className="text-primary" />{t("documents.fromProfile")}</Button>
           <Button variant="ghost" disabled={busy || creating} className="h-auto w-full justify-start whitespace-normal py-3 text-left" onClick={() => void create("SCRATCH")}><FilePlus2 className="text-primary" />{t("documents.fromScratch")}</Button>
           <Button variant="ghost" asChild className="h-auto w-full justify-start whitespace-normal py-3 text-left"><Link href="/templates"><PanelsTopLeft className="text-primary" />{t("documents.useTemplate")}<ArrowUpRight className="ml-auto" /></Link></Button>
@@ -69,5 +72,6 @@ export function DocumentsPage() {
       {loadError ? <div role="alert" className="app-section"><p className="text-sm text-muted-foreground">{t("shell.loadError")}</p><Button variant="outline" className="mt-4" onClick={() => void reload()}>{t("shell.retry")}</Button></div> : <ResumeCards documents={documents} loading={loading} onDeleted={() => void reload()} />}
       {!loading && !loadError && !documents.length && <div className="flex min-h-[350px] flex-col items-center justify-center rounded-xl border bg-muted/30 p-7 text-center sm:col-span-1 xl:col-span-2 2xl:col-span-3"><FolderOpen className="mb-4 size-8 text-primary/60" /><h2 className="type-h2">{t("documents.emptyTitle")}</h2><p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{t("documents.emptyDescription")}</p></div>}
     </div>
+    <LinkedInImportDialog open={linkedinOpen} onOpenChange={setLinkedinOpen} onImported={id => { setLinkedinOpen(false); router.push(`/dashboard/resumes/${id}`); }} />
   </div>;
 }

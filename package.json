@@ -10,11 +10,16 @@
     "typecheck": "tsc --noEmit",
     "check:ai": "node scripts/verify-ai-config.cjs",
     "test:phase1": "node scripts/verify-phase-1.cjs",
-    "test": "node --test scripts/auth.test.cjs scripts/career-profile.test.cjs scripts/resume-documents.test.cjs scripts/ai-providers.test.cjs",
+    "test": "node --test scripts/auth.test.cjs scripts/career-profile.test.cjs scripts/resume-documents.test.cjs scripts/ai-providers.test.cjs scripts/resume-editor.test.cjs scripts/linkedin-import.test.cjs scripts/job-analyzer.test.cjs scripts/job-analysis-form.test.cjs scripts/job-renderer.test.cjs",
+    "test:job-analyzer": "node --test scripts/job-analyzer.test.cjs scripts/job-analysis-form.test.cjs scripts/job-renderer.test.cjs",
+    "setup:job-browser": "playwright install --with-deps chromium",
     "test:auth:db": "node scripts/verify-auth-database.cjs",
     "test:phase2": "node scripts/verify-phase-2.cjs",
     "test:ai": "node --test scripts/ai-providers.test.cjs",
-    "predev": "node scripts/prepare-pdf-worker.cjs"
+    "predev": "node scripts/prepare-pdf-worker.cjs",
+    "check:resume-import": "node scripts/verify-resume-import.cjs",
+    "test:resume-editor": "node --test scripts/resume-editor.test.cjs",
+    "check:resume-editor-ui": "node scripts/verify-resume-editor-ui.cjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",
@@ -61,6 +66,7 @@
     "next-sitemap": "^4.2.3",
     "next-themes": "^0.4.6",
     "pdfjs-dist": "^6.4.299",
+    "playwright": "^1.64.1",
     "prisma": "^6.5.0",
     "raw-body": "^3.0.0",
     "react": "^19.0.0",

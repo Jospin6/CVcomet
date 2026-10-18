@@ -2,53 +2,44 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, ArrowUpRight, ContactRound, FileText, PanelsTopLeft, Sparkles, Upload } from "lucide-react";
+import { ArrowUpRight, ContactRound, FileText, LoaderCircle, PanelsTopLeft, Sparkles, Upload } from "lucide-react";
 import type { AppDispatch } from "@/redux/store";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { fetchUser, selectUser } from "@/redux/user/userSlice";
 import { Button } from "@/components/ui/button";
 import { PageHeader, SectionHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ScoreRing } from "@/components/ui/score-ring";
-import { profileCompleteness } from "@/lib/career-profile/schema";
 import { ResumeCards, useResumeLibrary } from "@/components/resumes/resume-library";
+import { JobAnalysisForm, useJobAnalysisForm } from "@/components/career/job-analysis-form";
 
 export default function Overview() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const router = useRouter();
+  const jobForm = useJobAnalysisForm<{ id: string }>({
+    language: i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en",
+    onAnalyzed: data => router.push("/dashboard/job-match?analysis=" + encodeURIComponent(data.id)),
+  });
   const dispatch = useDispatch<AppDispatch>();
   const { user: session } = useCurrentUser();
   const user = useSelector(selectUser);
   const { documents, loading, error, reload } = useResumeLibrary(Boolean(session?.id));
   useEffect(() => { if (session?.id) void dispatch(fetchUser(session.id)); }, [session?.id, dispatch]);
-  const completeness = profileCompleteness({
-    name: user?.name, email: user?.email, headline: user?.headline,
-    summary: user?.summary, skills: user?.skills, languages: user?.languages,
-    careerGoal: user?.careerGoal, experienceLevel: user?.experienceLevel,
-    targetJobTitle: user?.targetJobTitle, targetIndustry: user?.targetIndustry,
-    targetCountry: user?.targetCountry, preferredWorkMode: user?.preferredWorkMode,
-    targetMarket: user?.targetMarket,
-    experiences: user?.Experience, education: user?.Education, projects: user?.Project,
-  });
   const documentHref = session ? "/dashboard/resumes" : "/login";
   return <div className="space-y-7">
     <PageHeader eyebrow={t("shell.homeEyebrow")} title={user?.name ? t("shell.greeting", { name: user.name.split(" ")[0] }) : t("shell.homeTitle")} description={t("shell.homeDescription")} action={<Button asChild><Link href={documentHref}><Upload />{t("documents.upload")}</Link></Button>} />
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
-      <section className="flex flex-col justify-center rounded-xl border bg-hero p-6 text-hero-foreground sm:p-8">
-        <p className="mb-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest"><Sparkles className="size-3.5" />{t("shell.heroLabel")}</p>
-        <h2 className="max-w-lg text-3xl font-semibold leading-tight tracking-[-.04em] sm:text-4xl">{t("documents.heroTitle")}</h2>
-        <p className="mt-3 max-w-lg text-sm leading-relaxed">{t("documents.heroDescription")}</p>
-        <div className="mt-6 flex flex-wrap gap-3"><Button asChild><Link href={documentHref}>{t("documents.manage")}<ArrowRight /></Link></Button><Button variant="outline" asChild><Link href="/templates">{t("shell.exploreTemplates")}<ArrowUpRight /></Link></Button></div>
-      </section>
-      <section className="app-section flex flex-col items-center text-center">
-        <p className="mb-4 flex w-full items-center gap-2 text-xs text-muted-foreground"><ContactRound className="size-4" />{t("shell.careerProfile")}</p>
-        <ScoreRing value={completeness.percentage} label={t("shell.profileCompleteness")} />
-        <h2 className="mt-3 text-sm font-semibold">{t("shell.profileCompleteness")}</h2>
-        <p className="my-3 text-xs text-muted-foreground">{user ? t("shell.profileFields", { complete: completeness.completed, total: completeness.total }) : t("shell.profileUnavailable")}</p>
-        <Button variant="outline" asChild className="mt-auto w-full"><Link href={user && !user.onboardingCompletedAt ? "/onboarding" : "/dashboard/profile"}>{t("shell.completeProfile")}<ArrowUpRight /></Link></Button>
-      </section>
-    </div>
+    <section className="min-w-0 w-full rounded-xl border bg-hero p-6 text-hero-foreground sm:p-8" aria-labelledby="overview-job-title">
+      <p className="mb-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest"><Sparkles className="size-3.5" />{t("shell.heroLabel")}</p>
+      <h2 id="overview-job-title" className="max-w-lg text-3xl font-semibold leading-tight tracking-[-.04em] sm:text-4xl">{jobForm.c.title}</h2>
+      <p className="mt-3 max-w-lg text-sm leading-relaxed">{jobForm.c.description}</p>
+      <div className="mt-6 space-y-4 rounded-xl border bg-card p-4 text-card-foreground sm:p-5">
+        {jobForm.error && <div role="alert" className="rounded-lg border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{jobForm.errorText}{jobForm.error === "FEATURE_NOT_AVAILABLE" && <Link className="ml-2 underline" href="/upgrade">{jobForm.c.upgrade}</Link>}</div>}
+        {jobForm.busy && <p role="status" aria-live="polite" className="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle className="size-4 shrink-0 animate-spin" />{jobForm.busy === "extract" ? jobForm.c.extracting : jobForm.busy === "analyze" ? jobForm.c.analyzing : jobForm.c.working}</p>}
+        <JobAnalysisForm form={jobForm} />
+      </div>
+    </section>
     <section>
       <SectionHeader title={t("documents.recent")} description={t("documents.recentDescription")} action={<Button variant="ghost" asChild><Link href={documentHref}>{t("documents.viewAll")}<ArrowUpRight /></Link></Button>} />
       {error ? <div role="alert" className="app-section"><p className="text-sm text-muted-foreground">{t("shell.loadError")}</p><Button variant="outline" className="mt-3" onClick={() => void reload()}>{t("shell.retry")}</Button></div> : loading || documents.length ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"><ResumeCards documents={documents.slice(0, 3)} loading={loading} onDeleted={() => void reload()} /></div> : <EmptyState icon={FileText} title={t("documents.emptyTitle")} description={t("documents.emptyDescription")} action={<Button asChild><Link href={documentHref}><Upload />{t("documents.upload")}</Link></Button>} />}

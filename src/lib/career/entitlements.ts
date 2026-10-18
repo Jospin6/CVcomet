@@ -7,3 +7,9 @@ const access: Record<CareerPlan, FeatureKey[]> = {
 };
 export function canUseFeature(plan: CareerPlan, feature: FeatureKey) { return access[plan].includes(feature); }
 export const planFeatures = access;
+
+export async function requireFeature(userId: string, feature: FeatureKey) {
+  const { userPlan } = await import("./auth-user");
+  const { ProfileError } = await import("@/lib/career-profile/http");
+  if (!canUseFeature(await userPlan(userId), feature)) throw new ProfileError(403, "FEATURE_NOT_AVAILABLE");
+}

@@ -7,11 +7,16 @@ import { reserveProfileAI } from "@/lib/career-profile/ai";
 import { requireUser } from "@/lib/career/auth-user";
 import { apiError } from "@/lib/career/api";
 import { scrapeJobUrl, JobScrapeError } from "@/lib/career/job-scraper";
+import { jobApplicationEmail } from "@/lib/career/job-documents";
+import { profileJson } from "@/lib/career-profile/http";
+export const maxDuration = 60;
 const input = z.object({ url: z.string().trim().url().max(2048), type: z.enum(["APPLICATION", "FOLLOW_UP", "NETWORKING", "THANK_YOU"]).default("APPLICATION") }).strict();
 export async function POST(req: Request) {
   try {
     const user = await requireUser();
-    const body = input.parse(await req.json());
+    const raw = await profileJson(req);
+    if (raw && typeof raw === "object" && "jobId" in raw) return NextResponse.json(await jobApplicationEmail(user.id, raw));
+    const body = input.parse(raw);
     const profile = careerProfileContext(await getCareerProfile(user.id));
     const job = await scrapeJobUrl(body.url);
     const model = await getAIModel();

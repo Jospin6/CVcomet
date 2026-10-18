@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";import prisma from "../../../../prism
 import { z } from "zod";
 import { getCareerProfile } from "@/lib/career-profile/service";
 import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
-export async function GET(req:Request){const session=await getSessionUser();if(!session)return NextResponse.json({message:"Unauthorized"},{status:401});const mine=new URL(req.url).searchParams.get("mine")==="1";if(!mine&&!isAdmin(session))return NextResponse.json({message:"Forbidden"},{status:403});const cvs=await prisma.cv.findMany({where:mine?{conversation:{userId:session.id}}:undefined,orderBy:{createdAt:"desc"},select:{id:true,title:true,summary:true,skills:true,experiences:true,educations:true,certifications:true,projects:true,languages:true,createdAt:true,templateId:true,conversationId:true}});return NextResponse.json(cvs)}
+import { resumeContactSchema, resumeDesignSchema } from "@/lib/resume-editor";
+export async function GET(req:Request){const session=await getSessionUser();if(!session)return NextResponse.json({message:"Unauthorized"},{status:401});const mine=new URL(req.url).searchParams.get("mine")==="1";if(!mine&&!isAdmin(session))return NextResponse.json({message:"Forbidden"},{status:403});const cvs=await prisma.cv.findMany({where:mine?{conversation:{userId:session.id}}:undefined,orderBy:{createdAt:"desc"},select:{id:true,title:true,summary:true,skills:true,experiences:true,educations:true,certifications:true,projects:true,languages:true,createdAt:true,updatedAt:true,revision:true,contact:true,design:true,templateId:true,conversationId:true}});return NextResponse.json(cvs)}
 
 const createInput = z.object({ source: z.enum(["PROFILE", "SCRATCH"]) }).strict();
 export async function POST(req: Request) {
@@ -14,7 +15,9 @@ export async function POST(req: Request) {
     const title = profile?.headline || profile?.targetJobTitle || "My resume";
     const lines = (value: string) => value.split(/\n+/).map(line => line.trim()).filter(Boolean);
     const resume = await prisma.cv.create({ data: {
-      title, summary: profile?.summary ? [profile.summary] : [],
+      title: source === "SCRATCH" ? "" : title, summary: profile?.summary ? [profile.summary] : [],
+      contact: resumeContactSchema.parse(profile ? { name: profile.name, email: profile.email, phone: profile.phone, city: profile.address, linkedin: profile.linkedin, website: profile.portfolio } : { email: user.email }),
+      design: resumeDesignSchema.parse({ documentName: title }),
       skills: profile?.skills ? [{ hardskills: profile.skills }] : [],
       experiences: profile?.experiences.map(({ id: _id, description, ...experience }) => ({ ...experience, description: lines(description) })) || [],
       educations: profile?.education.map(({ id: _id, description, ...education }) => ({ ...education, location: "", description: lines(description) })) || [],

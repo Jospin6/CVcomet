@@ -1,0 +1,71 @@
+{
+  "scope": "Actual React page and compiled project styles; API fixtures, no database or billable AI calls.",
+  "checks": [
+    "Reviewed text, evidenced score, requirements, reject/accept resume proposals, editable saved letter/email and application link.",
+    "URL and PDF preview, mandatory review, URL failure and working alternative import.",
+    "12 responsive layouts: FR/EN, light/dark, 375/768/1440 pixels; all inputs labelled."
+  ],
+  "layouts": [
+    {
+      "language": "fr",
+      "dark": false,
+      "width": 375
+    },
+    {
+      "language": "fr",
+      "dark": false,
+      "width": 768
+    },
+    {
+      "language": "fr",
+      "dark": false,
+      "width": 1440
+    },
+    {
+      "language": "fr",
+      "dark": true,
+      "width": 375
+    },
+    {
+      "language": "fr",
+      "dark": true,
+      "width": 768
+    },
+    {
+      "language": "fr",
+      "dark": true,
+      "width": 1440
+    },
+    {
+      "language": "en",
+      "dark": false,
+      "width": 375
+    },
+    {
+      "language": "en",
+      "dark": false,
+      "width": 768
+    },
+    {
+      "language": "en",
+      "dark": false,
+      "width": 1440
+    },
+    {
+      "language": "en",
+      "dark": true,
+      "width": 375
+    },
+    {
+      "language": "en",
+      "dark": true,
+      "width": 768
+    },
+    {
+      "language": "en",
+      "dark": true,
+      "width": 1440
+    }
+  ],
+  "runtimeErrors": []
+}

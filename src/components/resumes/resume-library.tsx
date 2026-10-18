@@ -40,7 +40,7 @@ function ResumePaper({ document }: { document: LibraryResume }) {
     return <div className="document-paper h-full overflow-hidden bg-white p-5"><p className="whitespace-pre-wrap break-words text-[9px] leading-[1.7]">{document.previewText}</p></div>;
   }
   return <div className="document-paper h-full overflow-hidden bg-white p-5 text-[9px] leading-relaxed">
-    <h3 className="border-b pb-3 text-center text-xs font-semibold">{document.title}</h3>
+    <header className="border-b pb-3" style={{ color: document.design?.accent || "#173F35", textAlign: document.design?.layout === "classic" ? "center" : "left" }}><h3 className="text-xs font-semibold">{document.contact?.name || document.title || document.design?.documentName}</h3>{document.contact?.name && <p className="mt-1 text-[9px]">{document.title}</p>}{document.contact?.email && <p className="mt-1 text-[8px] text-slate-500">{document.contact.email}</p>}</header>
     {document.summary?.length > 0 && <section className="mt-4"><h4 className="mb-2 border-b pb-1 font-semibold">{t("summary")}</h4><p>{document.summary.join("\n")}</p></section>}
     {document.experiences?.length ? <section className="mt-4"><h4 className="mb-2 border-b pb-1 font-semibold">{t("experience")}</h4>{document.experiences.slice(0, 3).map((experience, index) => <p key={index} className="mb-2"><b>{experience.title}</b><br />{experience.company}<br />{experience.description?.join(" ")}</p>)}</section> : null}
     {document.educations?.length ? <section className="mt-4"><h4 className="mb-2 border-b pb-1 font-semibold">{t("education")}</h4>{document.educations.slice(0, 2).map((education, index) => <p key={index}>{education.degree} · {education.school}</p>)}</section> : null}
@@ -67,7 +67,7 @@ export function ResumeCards({ documents, loading, onDeleted }: { documents: Libr
   };
   return <>
     {loading ? [0, 1, 2].map(index => <Skeleton key={index} className="h-[350px] rounded-xl" />) : documents.map(document => {
-      const title = document.source === "upload" ? document.name : document.title;
+      const title = document.source === "upload" ? document.name : document.design?.documentName || document.title || t("documents.fromScratch");
       const format = document.source === "upload" ? document.name.split(".").pop()?.toUpperCase() : t("documents.created");
       const preview = <div className="h-64 overflow-hidden border-b bg-muted p-4"><div className="mx-auto h-full max-w-[210px] overflow-hidden rounded-sm border shadow-sm"><ResumePaper document={document} /></div></div>;
       return <article key={`${document.source}-${document.id}`} className="group min-w-0 overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary">

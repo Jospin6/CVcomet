@@ -26,7 +26,9 @@ const copy = {
     security: "Les clés restent côté serveur et sont chiffrées en base. Elles ne sont jamais affichées dans cette page.",
     errors: {
       AI_AUTH_ERROR: "Clé refusée ou accès non autorisé. Vérifiez la clé et les permissions du fournisseur.", AI_RATE_LIMIT: "Quota ou limite du fournisseur atteint. Vérifiez votre offre et votre facturation.",
-      AI_TIMEOUT: "Le fournisseur a mis trop de temps à répondre.", AI_FAILED: "Le fournisseur n’a pas pu terminer la génération. Vérifiez le modèle et sa prise en charge du JSON.",
+      AI_TIMEOUT: "Le fournisseur a mis trop de temps à répondre.", AI_FAILED: "L’appel au fournisseur a échoué. Réessayez ou vérifiez sa configuration.",
+      AI_PROVIDER_UNAVAILABLE: "Le service du fournisseur est temporairement indisponible ou surchargé. Réessayez dans un instant ou choisissez un autre modèle ou fournisseur.",
+      AI_INVALID_RESPONSE: "Le modèle n’a pas renvoyé des données JSON exploitables. Réessayez ou choisissez un autre modèle.",
       AI_UNAVAILABLE: "Ajoutez une clé et un modèle, puis activez le fournisseur.", AI_KEY_REQUIRED: "Ajoutez une clé API avant de charger les modèles.",
       AI_KEY_UNREADABLE: "La clé enregistrée ne peut plus être déchiffrée. Enregistrez une nouvelle clé.", AI_ENCRYPTION_UNAVAILABLE: "Le secret de chiffrement du serveur est manquant.",
       AI_ACTIVE_PROVIDER_REQUIRED: "Activez d’abord un autre fournisseur avant de désactiver celui-ci ou de supprimer sa clé.", AI_PROVIDER_NOT_READY: "Le fournisseur doit être disponible et avoir une clé et un modèle.",
@@ -46,7 +48,9 @@ const copy = {
     security: "Keys stay on the server and are encrypted in the database. They are never displayed on this page.",
     errors: {
       AI_AUTH_ERROR: "Key rejected or access denied. Check the provider key and permissions.", AI_RATE_LIMIT: "The provider quota or rate limit was reached. Check your plan and billing.",
-      AI_TIMEOUT: "The provider took too long to respond.", AI_FAILED: "Generation failed. Check the model and its JSON capabilities.",
+      AI_TIMEOUT: "The provider took too long to respond.", AI_FAILED: "The provider request failed. Try again or check its configuration.",
+      AI_PROVIDER_UNAVAILABLE: "The provider service is temporarily unavailable or overloaded. Try again shortly or choose another model or provider.",
+      AI_INVALID_RESPONSE: "The model did not return usable JSON data. Try again or choose another model.",
       AI_UNAVAILABLE: "Add a key and model, then activate the provider.", AI_KEY_REQUIRED: "Add an API key before loading models.",
       AI_KEY_UNREADABLE: "The stored key cannot be decrypted. Save a new key.", AI_ENCRYPTION_UNAVAILABLE: "The server encryption secret is missing.",
       AI_ACTIVE_PROVIDER_REQUIRED: "Activate another provider before disabling this one or removing its key.", AI_PROVIDER_NOT_READY: "The provider must be available and have a key and model.",

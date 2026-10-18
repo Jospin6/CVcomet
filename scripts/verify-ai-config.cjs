@@ -19,7 +19,7 @@ async function main() {
   console.log("No document submitted and no generation performed. Use the admin model test to check generation.");
 }
 main().catch(error => {
-  const known = new Set(["AI_UNAVAILABLE", "AI_AUTH_ERROR", "AI_RATE_LIMIT", "AI_TIMEOUT", "AI_MODEL_UNAVAILABLE", "AI_KEY_UNREADABLE", "AI_KEY_REQUIRED"]);
+  const known = new Set(["AI_UNAVAILABLE", "AI_AUTH_ERROR", "AI_RATE_LIMIT", "AI_TIMEOUT", "AI_MODEL_UNAVAILABLE", "AI_KEY_UNREADABLE", "AI_KEY_REQUIRED", "AI_PROVIDER_UNAVAILABLE"]);
   const code = error?.code || error?.message;
   console.error("AI configuration check failed:", known.has(code) ? code : "AI_FAILED");
   process.exitCode = 1;

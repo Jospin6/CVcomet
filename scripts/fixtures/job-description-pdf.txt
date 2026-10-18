@@ -1,0 +1,60 @@
+ILLUSTRATIVE JOB DESCRIPTION   •   NOT AN OFFICIAL META POSTING   1
+ROLE PROFILE / ARTIFICIAL INTELLIGENCE
+AI Engineer
+Meta | Job Description
+Department   Artificial Intelligence / Machine Learning
+Work arrangement   Dependent on the specific team and opening
+Seniority   Mid-level to Senior (illustrative scope)
+Employment type   Full-time (illustrative)
+Position Summary
+We are seeking an AI Engineer to design, build, evaluate, and deploy intelligent systems that improve
+products and experiences at scale. The role combines applied machine learning, software engineering,
+and rigorous experimentation, with an emphasis on reliable, efficient, and responsible AI solutions. The
+engineer will collaborate with research scientists, product teams, infrastructure engineers, and
+cross-functional partners to translate complex AI capabilities into measurable product impact.
+Key Responsibilities
+• Design and implement end-to-end machine learning systems, from data preparation and model
+experimentation to deployment and monitoring.
+• Build and improve deep learning and generative AI solutions, including large language model (LLM)
+applications, retrieval-augmented generation (RAG), and multimodal experiences where relevant.
+• Train, fine-tune, evaluate, and optimize models for accuracy, latency, throughput, reliability, and cost.
+• Create robust data pipelines, evaluation datasets, automated tests, model services, and observability
+workflows.
+• Partner with research, infrastructure, privacy, safety, and product teams to move prototypes into
+production.
+• Conduct experiments, analyze model behavior and failure modes, and communicate results and trade-offs
+clearly.
+• Apply security, privacy, fairness, and responsible AI practices throughout the model lifecycle.
+Minimum Qualifications
+• Bachelor’s degree in Computer Science, Engineering, Mathematics, or a related field, or equivalent
+practical experience.
+• Strong programming experience in Python and proficiency with software engineering fundamentals,
+algorithms, and data structures.
+• Hands-on experience developing and shipping machine learning or deep learning solutions.
+• Working knowledge of modern ML frameworks such as PyTorch and data tools such as SQL.
+• Ability to design experiments, interpret offline and online metrics, and troubleshoot production systems.
+• Effective collaboration and written and verbal communication skills.
+Preferred Qualifications
+
+ILLUSTRATIVE JOB DESCRIPTION   •   NOT AN OFFICIAL META POSTING   2
+• Advanced degree in an AI-related discipline or equivalent applied industry experience.
+• Experience with transformer architectures, LLM adaptation, embeddings, vector search, RAG, agents, or
+multimodal models.
+• Experience with distributed training or inference, GPU acceleration, model serving, and ML infrastructure.
+• Familiarity with ranking, recommendation, natural language processing, computer vision, or large-scale
+personalization.
+• Experience with A/B testing, production monitoring, CI/CD, containers, and cloud-native systems.
+Technology & Engineering Focus
+Core: Python, PyTorch, SQL, Git, APIs, model evaluation, and production-quality engineering.
+Role-dependent: Transformers, LLM tooling, vector databases, distributed systems, GPU computing,
+orchestration, Docker/Kubernetes, and experiment tracking.
+Success Measures
+Success in this role is measured by meaningful improvements in model and product quality, dependable
+deployment and monitoring, efficient use of computing resources, safe and privacy-conscious design, and
+effective execution across teams.
+Equal Opportunity & Important Notice
+Meta is known for its commitment to equal employment opportunity. Applicants should consult the
+relevant official job posting for exact eligibility, location, compensation, work arrangements, and hiring
+requirements.
+Document status: Illustrative job description drafted for professional reference. This document is not issued, approved, or
+published by Meta, and it does not represent a verified current vacancy.

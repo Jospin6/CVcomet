@@ -35,9 +35,27 @@ Les clés saisies dans l’admin sont chiffrées avec AES-256-GCM et ne sont jam
 
 Les PDF contenant du texte sont lus localement et fonctionnent avec les cinq fournisseurs ; DOCX et TXT aussi. Les PDF scannés sans texte nécessitent un modèle Google ou Claude prenant en charge les PDF, sinon utilisez un fichier avec du texte. La sélection d’un modèle arbitraire reste possible, mais il doit prendre en charge la génération de texte/JSON : vérifiez-le avec le bouton **Tester le modèle**.
 
+`npm run check:resume-import` effectue un import complet d’un PDF fictif avec le fournisseur actif (requête facturable). Il vérifie la lecture du fichier, la génération du brouillon et la normalisation des liens sans protocole. Aucun profil n’est enregistré et aucun quota utilisateur n’est consommé. Les champs absents restent vides pour relecture ; les règles de validation du profil confirmé restent inchangées.
+
 `npm run check:ai` consulte la liste des modèles du fournisseur actif, sans document ni génération. Le test admin vérifie aussi les réponses JSON. Les erreurs d’accès, quota, délai et modèle indisponible sont distinguées sans exposer de clés ni de données personnelles.
 
 Interfaces utilisées : [Google](https://v4.ai-sdk.dev/providers/ai-sdk-providers/google-generative-ai), [Claude](https://v4.ai-sdk.dev/providers/ai-sdk-providers/anthropic), [Groq compatible OpenAI](https://console.groq.com/docs/openai) et [Hugging Face Router](https://huggingface.co/docs/inference-providers/en/hub-api).
+
+## Éditeur visuel de CV
+
+Depuis **Mes CV > Créer un CV > Partir de zéro**, ouvrez l’éditeur dans `/dashboard/resumes/[id]`. Cliquez sur les textes de la page A4 pour modifier les coordonnées, le titre et toutes les rubriques. Les outils permettent de choisir une mise en page, une couleur, une police, les marges et l’espacement, puis d’ajouter, masquer ou déplacer les rubriques. L’annulation et le rétablissement sont disponibles dans la barre d’outils.
+
+Les changements sont enregistrés automatiquement. Chaque CV conserve ses coordonnées et son style ; deux onglets modifiant le même document déclenchent un conflit explicite plutôt que d’écraser silencieusement les changements. Le téléchargement produit un PDF A4 avec du texte sélectionnable.
+
+Le bouton IA d’une rubrique permet de générer ou améliorer son texte avec le fournisseur actif. Ajoutez des notes factuelles si vous partez d’une page vide. La proposition reste modifiable et ne remplace le texte qu’après clic sur **Insérer dans mon CV**. Les appels utilisent le quota IA de l’utilisateur.
+
+`npm run test:resume-editor` vérifie les sauvegardes, les révisions, les propositions IA et le PDF. Avec le serveur local démarré, `npm run check:resume-editor-ui` vérifie l’édition, l’annulation, la sauvegarde et le rechargement, l’export et l’affichage mobile dans Chrome/Edge. Ce contrôle crée puis supprime son propre compte temporaire et simule la réponse IA sans génération facturable.
+
+## Analyse des offres d’emploi
+
+Depuis Overview, **Analyser une offre d’emploi** ouvre le parcours `/dashboard/job-match` : texte, URL publique ou PDF, relecture, exigences et preuves, score explicable, propositions de CV avec conservation de l’original, lettre/email modifiables et suivi de candidature. Le parcours réutilise le fournisseur IA configuré, le profil central, les documents et les droits d’abonnement existants. Aucun email n’est envoyé automatiquement.
+
+La migration `20261017120000_job_description_analyzer` est nécessaire avant utilisation. Voir [la documentation du parcours, du calcul et des contrôles](docs/job-analyzer.md). `npm run test:job-analyzer` exécute les tests ciblés ; `node scripts/verify-job-analyzer-ui.cjs` vérifie l’interface dans Chrome/Edge avec des réponses simulées, sans génération facturable.
 
 ## Base de donnees
 

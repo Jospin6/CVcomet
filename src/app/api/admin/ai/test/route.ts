@@ -13,7 +13,9 @@ export async function POST(req: Request) {
     const apiKey = input.apiKey || (await getAIProviderConfig(input.provider)).apiKey;
     const started = Date.now();
     await generateObject({ model: createAIModel({ ...input, apiKey, enabled: true }),
-      schema: z.object({ ok: z.literal(true) }), prompt: 'Return the JSON object {"ok":true}.',
+      // The Google SDK converts literal booleans to enum:[true], but Gemini's
+      // responseSchema enum accepts strings only. Validate true locally.
+      schema: z.object({ ok: z.boolean().refine(value => value === true) }), prompt: 'Return the JSON object {"ok":true}.',
       maxTokens: 512, maxRetries: 0, abortSignal: AbortSignal.timeout(45000),
     });
     return aiAdminResponse({ ok: true, latencyMs: Date.now() - started });

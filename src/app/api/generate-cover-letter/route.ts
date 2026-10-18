@@ -9,6 +9,8 @@ import { reserveProfileAI } from "@/lib/career-profile/ai";
 import { generationInputSchema } from "@/lib/career-profile/schema";
 import { profileJson, profileErrorResponse, profileAIError } from "@/lib/career-profile/http";
 import { canAccessUser, getSessionUser } from "@/lib/auth";
+import { jobCoverLetter } from "@/lib/career/job-documents";
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const session = await getSessionUser();
@@ -22,7 +24,9 @@ export async function POST(req: Request) {
 
   let input;
   try {
-    input = generationInputSchema.parse(await profileJson(req));
+    const raw = await profileJson(req);
+    if (raw && typeof raw === "object" && "jobId" in raw) return NextResponse.json(await jobCoverLetter(session.id, raw));
+    input = generationInputSchema.parse(raw);
   } catch (error) { return profileErrorResponse(error); }
   const { description, conversationId, language } = input;
   const curentLanguage = generatedLanguagePrompt(language);
