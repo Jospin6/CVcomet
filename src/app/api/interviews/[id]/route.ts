@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server";import prisma from "../../../../../prisma/prisma";import { requireUser } from "@/lib/career/auth-user";import { apiError } from "@/lib/career/api";
+export async function DELETE(_:Request,{params}:{params:Promise<{id:string}>}){try{const u=await requireUser(),{id}=await params;const r=await prisma.interviewSession.deleteMany({where:{id,userId:u.id}});return r.count?new NextResponse(null,{status:204}):NextResponse.json({error:"NOT_FOUND"},{status:404})}catch(e){return apiError(e)}}

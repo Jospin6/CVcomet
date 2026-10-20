@@ -37,7 +37,7 @@ export function ResumePDF({ resume, pages, copy: c }: { resume: EditorResume; pa
     return null;
   };
   const column = (units: ResumeUnit[]) => units.filter(unit => hasResumeUnitContent(resume, unit)).map((unit, index, all) => <View key={unit.key} style={{ marginBottom: 10 }}>
-    {(index === 0 || all[index - 1].section !== unit.section) && <Text style={{ color: design.accent, fontWeight: 700, fontSize: px(12), letterSpacing: 1.2, textTransform: "uppercase", borderBottomWidth: .6, borderBottomColor: design.accent, paddingBottom: 5, marginTop: 7, marginBottom: 8 }}>{c.sections[unit.section]}</Text>}
+    {(index === 0 || all[index - 1].section !== unit.section) && <Text style={{ color: design.accent, fontWeight: 700, fontSize: px(12), textTransform: "uppercase", borderBottomWidth: .6, borderBottomColor: design.accent, paddingBottom: 5, marginTop: 7, marginBottom: 8 }}>{c.sections[unit.section]}</Text>}
     {body(unit)}
   </View>);
   const contentPages = pages.map(page => ({ main: page.main.filter(unit => hasResumeUnitContent(resume, unit)), side: page.side.filter(unit => hasResumeUnitContent(resume, unit)) })).filter((page, index) => index === 0 || page.main.length || page.side.length);

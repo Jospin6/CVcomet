@@ -1,0 +1,3 @@
+export type JobProvider="HIMALAYAS"|"REMOTIVE"|"REMOTE_OK"|"ARBEITNOW"|"GREENHOUSE"|"LEVER";
+export type UnifiedJob={id:string;provider:JobProvider;externalId:string;title:string;company:string;description:string;logoUrl:string|null;location:string|null;remote:boolean|null;contractType:string|null;seniority:string|null;salaryMin:number|null;salaryMax:number|null;currency:string|null;publishedAt:string|null;expiresAt:string|null;sourceUrl:string;applyUrl:string;skills:string[];eligibleCountries:string[];attribution:string;match?:{score:number;matched:string[];missing:string[];explanation:string}};
+export type ProviderResult={jobs:UnifiedJob[];nextCursor?:string;warning?:string};

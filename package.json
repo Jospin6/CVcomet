@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "check:ai": "node scripts/verify-ai-config.cjs",
     "test:phase1": "node scripts/verify-phase-1.cjs",
-    "test": "node --test scripts/auth.test.cjs scripts/career-profile.test.cjs scripts/resume-documents.test.cjs scripts/ai-providers.test.cjs scripts/resume-editor.test.cjs scripts/linkedin-import.test.cjs scripts/job-analyzer.test.cjs scripts/job-analysis-form.test.cjs scripts/job-renderer.test.cjs",
+    "test": "node --test scripts/auth.test.cjs scripts/career-profile.test.cjs scripts/resume-documents.test.cjs scripts/ai-providers.test.cjs scripts/resume-editor.test.cjs scripts/ats.test.cjs scripts/linkedin-import.test.cjs scripts/job-analyzer.test.cjs scripts/job-analysis-form.test.cjs scripts/job-renderer.test.cjs",
     "test:job-analyzer": "node --test scripts/job-analyzer.test.cjs scripts/job-analysis-form.test.cjs scripts/job-renderer.test.cjs",
     "setup:job-browser": "playwright install --with-deps chromium",
     "test:auth:db": "node scripts/verify-auth-database.cjs",
@@ -19,7 +19,9 @@
     "predev": "node scripts/prepare-pdf-worker.cjs",
     "check:resume-import": "node scripts/verify-resume-import.cjs",
     "test:resume-editor": "node --test scripts/resume-editor.test.cjs",
-    "check:resume-editor-ui": "node scripts/verify-resume-editor-ui.cjs"
+    "check:resume-editor-ui": "node scripts/verify-resume-editor-ui.cjs",
+    "check:resume-ats-ui": "node scripts/verify-resume-ats-ui.cjs"
+    ,"sync:job-boards": "node scripts/sync-job-boards.cjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",

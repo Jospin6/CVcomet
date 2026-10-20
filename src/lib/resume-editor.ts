@@ -8,7 +8,7 @@ export const resumeContactSchema = z.object({ name: text(200), email: text(254),
 export const resumeDesignSchema = z.object({
   documentName: text(160), layout: z.enum(["modern", "classic", "minimal"]).default("modern"),
   accent: z.string().regex(/^#[0-9a-f]{6}$/i).default("#173F35"),
-  font: z.enum(["sans", "serif", "mono"]).default("sans"), fontSize: z.number().min(11).max(16).default(13),
+  font: z.enum(["sans", "serif", "mono"]).default("sans"), fontSize: z.number().min(11).max(16).default(14),
   lineHeight: z.number().min(1.2).max(1.8).default(1.5), padding: z.number().min(28).max(64).default(44),
   sectionOrder: z.array(z.enum(resumeSections)).max(7).default([...resumeSections]),
   hiddenSections: z.array(z.enum(resumeSections)).max(7).default([]),

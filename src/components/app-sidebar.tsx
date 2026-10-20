@@ -3,8 +3,6 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   Orbit,
-  Sparkles,
-  ArrowUpRight,
   Shield,
   Cpu,
   UserRound,
@@ -30,7 +28,6 @@ import {
   footerNavigation,
   type NavigationItem,
 } from "@/components/shell/navigation";
-import { ConversationList } from "@/components/ui/conversationList";
 
 export function AppSidebar() {
   const { t } = useTranslation();
@@ -136,23 +133,8 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroup>
         )}
-        {!compact && <ConversationList />}
       </SidebarContent>
       <SidebarFooter className="gap-2 border-t p-3 group-data-[collapsible=icon]:p-2">
-        {!compact && (
-          <div className="mb-2 rounded-lg border bg-muted/60 p-3">
-            <Sparkles className="mb-2 size-4 text-primary" />
-            <p className="text-xs font-semibold">{t("shell.storyTitle")}</p>
-            <Link
-              href="/dashboard/profile"
-              onClick={() => setOpenMobile(false)}
-              className="mt-2 flex items-center justify-between text-[11px] text-primary"
-            >
-              {t("shell.completeProfile")}
-              <ArrowUpRight className="size-3.5" />
-            </Link>
-          </div>
-        )}
         <SidebarMenu>
           {footerNavigation.map(renderItem)}
           {renderItem({

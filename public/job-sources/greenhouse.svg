@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" role="img" aria-label="Greenhouse">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#143c2f"/><stop offset="1" stop-color="#4c8c6d"/></linearGradient></defs>
+  <rect width="800" height="320" fill="url(#g)"/><circle cx="680" cy="50" r="180" fill="#fff" opacity=".06"/><circle cx="105" cy="295" r="150" fill="#9ee0b5" opacity=".1"/>
+  <path d="M126 195V103l74-44 74 44v92" fill="none" stroke="#d8f4df" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M163 195v-58h74v58M200 137V78" fill="none" stroke="#d8f4df" stroke-width="11"/>
+  <text x="315" y="145" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="52" font-weight="650">Greenhouse</text><text x="318" y="184" fill="#d8f4df" font-family="Segoe UI,Arial,sans-serif" font-size="20" letter-spacing="4">JOB BOARD</text>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" role="img" aria-label="Lever">
+  <defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#172d55"/><stop offset="1" stop-color="#4f70ae"/></linearGradient></defs>
+  <rect width="800" height="320" fill="url(#g)"/><path d="M590-40 820 190M530 10l230 230M-50 260 155 55" stroke="#fff" stroke-width="30" opacity=".055"/>
+  <path d="m121 211 71-112h77l-72 112z" fill="#c9ddff"/><path d="m197 211 72-112 38 57-35 55z" fill="#fff" opacity=".72"/>
+  <text x="348" y="154" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="64" font-weight="650">Lever</text><text x="352" y="193" fill="#c9ddff" font-family="Segoe UI,Arial,sans-serif" font-size="20" letter-spacing="4">CAREERS</text>
+</svg>

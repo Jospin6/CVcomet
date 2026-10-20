@@ -9,6 +9,7 @@ import { reserveProfileAI } from "@/lib/career-profile/ai";
 import { generationInputSchema } from "@/lib/career-profile/schema";
 import { profileJson, profileErrorResponse, profileAIError } from "@/lib/career-profile/http";
 import { canAccessUser, getSessionUser } from "@/lib/auth";
+import { ensureResumeGenerationJob } from "@/lib/career/resume-source-job";
 
 export const maxDuration = 30;
 
@@ -113,6 +114,7 @@ export async function POST(req: Request) {
           },
         });
 
+        await ensureResumeGenerationJob(conversationContent.userId, conversationContent.content);
         await prisma.cv.create({
           data: {
             title: object.cvs.title,

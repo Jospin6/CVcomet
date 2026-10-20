@@ -1,0 +1,8 @@
+CREATE TABLE "JobBoard" ("id" TEXT NOT NULL,"provider" TEXT NOT NULL,"region" TEXT NOT NULL DEFAULT 'GLOBAL',"slug" TEXT NOT NULL,"companyName" TEXT,"careerUrl" TEXT NOT NULL,"discoverySource" TEXT NOT NULL,"status" TEXT NOT NULL DEFAULT 'PENDING',"activeJobs" INTEGER NOT NULL DEFAULT 0,"failureCount" INTEGER NOT NULL DEFAULT 0,"lastError" TEXT,"discoveredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"verifiedAt" TIMESTAMP(3),"lastSyncedAt" TIMESTAMP(3),"nextCheckAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "JobBoard_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "ExternalJob" ("id" TEXT NOT NULL,"boardId" TEXT NOT NULL,"provider" TEXT NOT NULL,"externalId" TEXT NOT NULL,"title" TEXT NOT NULL,"company" TEXT NOT NULL,"description" TEXT NOT NULL,"location" TEXT,"contractType" TEXT,"sourceUrl" TEXT NOT NULL,"applyUrl" TEXT NOT NULL,"publishedAt" TIMESTAMP(3),"active" BOOLEAN NOT NULL DEFAULT true,"firstSeenAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"lastSeenAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "ExternalJob_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "JobBoard_provider_region_slug_key" ON "JobBoard"("provider","region","slug");
+CREATE INDEX "JobBoard_status_nextCheckAt_idx" ON "JobBoard"("status","nextCheckAt");
+CREATE UNIQUE INDEX "ExternalJob_provider_externalId_key" ON "ExternalJob"("provider","externalId");
+CREATE INDEX "ExternalJob_active_lastSeenAt_idx" ON "ExternalJob"("active","lastSeenAt");
+CREATE INDEX "ExternalJob_boardId_active_idx" ON "ExternalJob"("boardId","active");
+ALTER TABLE "ExternalJob" ADD CONSTRAINT "ExternalJob_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "JobBoard"("id") ON DELETE CASCADE ON UPDATE CASCADE;

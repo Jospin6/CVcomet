@@ -71,6 +71,8 @@ model User {
   interviewSessions    InterviewSession[]
   aiUsage              AIUsage[]
   uploadedResumes      UploadedResume[]
+  careerMaps           CareerMap[]
+  careerGoals          CareerGoal[]
   subscription         Subscription?
 
   createdAt DateTime @default(now())
@@ -79,6 +81,37 @@ model User {
   Account Account[]
 
   Session Session[]
+}
+
+model CareerMap {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cvId        String?
+  title       String
+  preferences Json
+  profile     Json
+  graph       Json
+  careerGoals CareerGoal[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([userId, updatedAt])
+}
+
+model CareerGoal {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  careerMapId String?
+  careerMap   CareerMap? @relation(fields: [careerMapId], references: [id], onDelete: SetNull)
+  roleId      String
+  title       String
+  plan        Json
+  completedStepIds String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([userId, updatedAt])
+  @@unique([userId, roleId])
 }
 
 enum UserRole {
@@ -313,6 +346,7 @@ enum ApplicationStatus {
   INTERVIEW
   TECHNICAL_INTERVIEW
   OFFER
+  HIRED
   REJECTED
   WITHDRAWN
 }
@@ -441,7 +475,11 @@ model JobApplication {
   company       String
   jobTitle      String
   location      String?
+  country       String?
+  workMode      String?
+  contractType  String?
   salary        String?
+  currency      String?
   jobUrl        String?
   source        String?
   status        ApplicationStatus @default(SAVED)
@@ -451,11 +489,37 @@ model JobApplication {
   contactPerson String?
   nextAction    String?
   interviewAt   DateTime?
+  archivedAt    DateTime?
+  cvSnapshot    Json?
+  coverLetterSnapshot Json?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   interviews    InterviewSession[]
+  statusEvents  ApplicationStatusEvent[]
+  reminders     ApplicationReminder[]
   @@index([userId, status])
   @@index([userId, createdAt])
+}
+
+model ApplicationStatusEvent {
+  id            String   @id @default(uuid())
+  applicationId String
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  status        ApplicationStatus
+  note          String?
+  createdAt     DateTime @default(now())
+  @@index([applicationId, createdAt])
+}
+
+model ApplicationReminder {
+  id            String   @id @default(uuid())
+  applicationId String
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  dueAt         DateTime
+  note          String?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  @@index([applicationId, dueAt])
 }
 
 model InterviewSession {
@@ -468,6 +532,16 @@ model InterviewSession {
   title         String
   overallScore  Int?
   summary       String?
+  scheduledAt   DateTime?
+  timezone      String?
+  format        String?
+  contactPerson String?
+  preparationNotes String?
+  outcome       String?
+  status        String   @default("ACTIVE")
+  configuration Json?
+  report        Json?
+  currentQuestion Int    @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   messages      InterviewMessage[]
@@ -523,6 +597,49 @@ model AIProviderConfig {
   enabled           Boolean    @default(true)
   updatedBy         String?
   updatedAt         DateTime   @updatedAt
+}
+
+model JobBoard {
+  id             String   @id @default(uuid())
+  provider       String
+  region         String   @default("GLOBAL")
+  slug           String
+  companyName    String?
+  careerUrl      String
+  discoverySource String
+  status         String   @default("PENDING")
+  activeJobs     Int      @default(0)
+  failureCount   Int      @default(0)
+  lastError      String?
+  discoveredAt   DateTime @default(now())
+  verifiedAt     DateTime?
+  lastSyncedAt   DateTime?
+  nextCheckAt    DateTime @default(now())
+  jobs           ExternalJob[]
+  @@unique([provider, region, slug])
+  @@index([status, nextCheckAt])
+}
+
+model ExternalJob {
+  id          String   @id @default(uuid())
+  boardId     String
+  board       JobBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  provider    String
+  externalId  String
+  title       String
+  company     String
+  description String
+  location    String?
+  contractType String?
+  sourceUrl   String
+  applyUrl    String
+  publishedAt DateTime?
+  active      Boolean  @default(true)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  @@unique([provider, externalId])
+  @@index([active, lastSeenAt])
+  @@index([boardId, active])
 }
 
 model Subscription {

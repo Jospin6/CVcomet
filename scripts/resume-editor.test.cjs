@@ -73,6 +73,47 @@ test("AI can draft an empty summary from user notes and returns a proposal witho
   assert.equal(reservations, 1);
 });
 
+test("conversation edits validate allowed fields, persist content and design together, and reject forbidden targets", async () => {
+  let cv = { id: cvId, revision: 0, ...editor.resumeContentSchema.parse({ title: "Developer", summary: ["Built React interfaces."], experiences: [{ title: "Developer", company: "Example Studio", description: ["Improved accessibility."] }] }) };
+  const snapshots = [];
+  const db = {
+    cv: {
+      findFirst: async ({ where }) => where.id === cvId && where.conversation.userId === owner ? cv : null,
+      updateMany: async ({ where, data }) => {
+        if (where.revision !== cv.revision) return { count: 0 };
+        cv = { ...cv, ...data, revision: cv.revision + 1 }; return { count: 1 };
+      },
+      findUniqueOrThrow: async () => cv,
+    },
+    jobMatch: { findFirst: async () => null },
+    resumeVersion: { create: async ({ data }) => snapshots.push(data) },
+    $transaction: async operation => operation(db),
+  };
+  let result = {
+    status: "applied", message: "Updated title and layout.", summary: ["Updated the title", "Changed the layout"],
+    edits: [
+      { type: "setField", path: "title", value: "AI Engineer" },
+      { type: "updateDesign", changes: { layout: "modern", accent: "#1E4B8F", font: "sans" } },
+    ],
+  };
+  const route = loadSource({ [dbKey]: db,
+    "@/lib/auth": { getSessionUser: async () => ({ id: owner, name: "Camille", email: "camille@example.test" }) },
+    "@/lib/career-profile/service": { getCareerProfile: async () => ({}), careerProfileContext: value => value },
+    "@/lib/career-profile/ai": { factualRules: "Never invent facts.", reserveProfileAI: async () => {} },
+    "@/lib/ai/model": { getAIModel: async () => "configured-provider" },
+    ai: { generateObject: async () => ({ object: result }) },
+  })("src/app/api/cvs/[id]/assistant/route.ts");
+  const request = revision => new Request("http://localhost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ instruction: "Change my title and make it two columns", language: "en", revision }) });
+  const response = await route.POST(request(0), { params: Promise.resolve({ id: cvId }) });
+  assert.equal(response.status, 200); assert.equal(cv.title, "AI Engineer"); assert.equal(cv.design.layout, "modern");
+  assert.equal(cv.design.accent, "#1E4B8F"); assert.equal(cv.revision, 1);
+  assert.equal(snapshots[0].label, "Before AI conversation edit"); assert.equal(snapshots[0].snapshot.title, "Developer");
+  result = { status: "applied", message: "Nope", summary: ["Nope"], edits: [{ type: "setField", path: "conversation.userId", value: "forged" }] };
+  assert.equal((await route.POST(request(1), { params: Promise.resolve({ id: cvId }) })).status, 422);
+  assert.equal(cv.title, "AI Engineer");
+  assert.equal((await route.POST(request(0), { params: Promise.resolve({ id: cvId }) })).status, 409);
+});
+
 test("PDF export contains real text and creates multiple A4 pages", async () => {
   const React = require("react"), { renderToBuffer } = await import("@react-pdf/renderer");
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");

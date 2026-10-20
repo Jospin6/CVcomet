@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" role="img" aria-label="Remotive">
+  <defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#3b176d"/><stop offset="1" stop-color="#9c55d4"/></linearGradient></defs><rect width="800" height="320" fill="url(#g)"/>
+  <circle cx="185" cy="154" r="75" fill="none" stroke="#fff" stroke-width="16" opacity=".25"/><circle cx="185" cy="154" r="43" fill="none" stroke="#fff" stroke-width="16" opacity=".55"/><circle cx="185" cy="154" r="13" fill="#fff"/>
+  <text x="315" y="153" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="57" font-weight="650">Remotive</text><text x="320" y="193" fill="#ead8f7" font-family="Segoe UI,Arial,sans-serif" font-size="20" letter-spacing="4">REMOTE WORK</text>
+</svg>

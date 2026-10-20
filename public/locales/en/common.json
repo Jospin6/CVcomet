@@ -115,6 +115,7 @@
   "shell": {
     "workspace": "Personal workspace",
     "workspaceDescription": "Your career, at your pace.",
+    "findJobs": "Find jobs",
     "overview": "Overview",
     "careerProfile": "Career profile",
     "resumes": "Resumes",
@@ -123,6 +124,7 @@
     "jobSearch": "Job search",
     "ats": "ATS checker",
     "jobMatch": "Job match",
+    "careerMap": "Career map",
     "applications": "Applications",
     "interviews": "Interviews",
     "insights": "Insights",

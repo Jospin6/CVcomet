@@ -4,6 +4,7 @@ import {
   FileText,
   ScanLine,
   BriefcaseBusiness,
+  Map,
   Mail,
   ClipboardList,
   MessagesSquare,
@@ -13,6 +14,7 @@ import {
   Settings,
   CreditCard,
   CircleHelp,
+  SearchCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -21,6 +23,7 @@ export const navigationGroups: { key: string; items: NavigationItem[] }[] = [
   {
     key: "workspace",
     items: [
+      { key: "findJobs", icon: SearchCheck, href: "/dashboard/find-jobs" },
       { key: "overview", icon: LayoutDashboard, href: "/" },
       { key: "careerProfile", icon: ContactRound, href: "/dashboard/profile" },
       { key: "documents", icon: FileText, href: "/dashboard/resumes" },
@@ -37,6 +40,7 @@ export const navigationGroups: { key: string; items: NavigationItem[] }[] = [
     items: [
       { key: "ats", icon: ScanLine, href: "/dashboard/ats" },
       { key: "jobMatch", icon: BriefcaseBusiness, href: "/dashboard/job-match" },
+      { key: "careerMap", icon: Map, href: "/dashboard/career-map" },
       { key: "applications", icon: ClipboardList, href: "/dashboard/applications" },
       { key: "interviews", icon: MessagesSquare, href: "/dashboard/interviews" },
     ],
@@ -58,6 +62,7 @@ export const commandActions: NavigationItem[] = [
   { key: "createResume", icon: FileText, href: "/dashboard/resumes" },
   { key: "analyzeResume", icon: ScanLine, href: "/dashboard/ats" },
   { key: "matchJob", icon: BriefcaseBusiness, href: "/dashboard/job-match" },
+  { key: "careerMap", icon: Map, href: "/dashboard/career-map" },
   { key: "createLetter", icon: Mail, href: "/dashboard/cover-letters" },
   { key: "addApplication", icon: ClipboardList, href: "/dashboard/applications" },
   { key: "practiceInterview", icon: MessagesSquare, href: "/dashboard/interviews" },

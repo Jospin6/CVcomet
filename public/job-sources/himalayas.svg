@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" role="img" aria-label="Himalayas">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#312e81"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="800" height="320" fill="url(#g)"/>
+  <path d="m55 238 132-169 72 94 51-63 112 138z" fill="#fff" opacity=".16"/><path d="m118 157 69-88 34 44-31-12-21 29-20-8z" fill="#fff" opacity=".9"/>
+  <text x="345" y="153" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="55" font-weight="650">Himalayas</text><text x="349" y="193" fill="#ddd6fe" font-family="Segoe UI,Arial,sans-serif" font-size="20" letter-spacing="4">REMOTE JOBS</text>
+</svg>

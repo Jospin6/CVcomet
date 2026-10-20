@@ -1,0 +1,1 @@
+ALTER TABLE "InterviewSession" ADD COLUMN "status" TEXT NOT NULL DEFAULT 'ACTIVE', ADD COLUMN "configuration" JSONB, ADD COLUMN "report" JSONB, ADD COLUMN "currentQuestion" INTEGER NOT NULL DEFAULT 0;

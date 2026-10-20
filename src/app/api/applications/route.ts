@@ -4,27 +4,7 @@ import { requireUser } from "@/lib/career/auth-user";
 import { apiError } from "@/lib/career/api";
 import { ProfileError, profileJson } from "@/lib/career-profile/http";
 import { z } from "zod";
-const input = z.object({ company: z.string().trim().max(300).default(""), jobTitle: z.string().trim().max(300).default(""), location: z.string().max(300).optional(), salary: z.string().max(200).optional(), jobUrl: z.string().url().max(2048).optional().or(z.literal("")), source: z.string().max(100).optional(), status: z.enum(["SAVED", "APPLIED", "INTERVIEW", "TECHNICAL_INTERVIEW", "OFFER", "REJECTED", "WITHDRAWN"]).default("SAVED"), notes: z.string().max(12000).optional(), contactPerson: z.string().max(300).optional(), nextAction: z.string().max(1000).optional(), jobId: z.string().uuid().optional(), cvId: z.string().uuid().optional(), coverLetterId: z.string().uuid().optional() }).strict();
-export async function GET() {
-  try {
-    const user = await requireUser();
-    return NextResponse.json(await prisma.jobApplication.findMany({ where: { userId: user.id }, include: { job: { select: { id: true, matches: { where: { userId: user.id }, select: { id: true }, take: 1 } } }, cv: { select: { id: true, title: true } }, coverLetter: { select: { id: true, conversationId: true } } }, orderBy: { updatedAt: "desc" } }));
-  } catch (error) { return apiError(error); }
-}
-export async function POST(req: Request) {
-  try {
-    const user = await requireUser(), body = input.parse(await profileJson(req));
-    const job = body.jobId ? await prisma.jobOpportunity.findFirst({ where: { id: body.jobId, userId: user.id } }) : null;
-    if (body.jobId && !job) throw new ProfileError(404, "NOT_FOUND");
-    if (body.cvId && !await prisma.cv.findFirst({ where: { id: body.cvId, conversation: { userId: user.id } }, select: { id: true } })) throw new ProfileError(404, "RESUME_NOT_FOUND");
-    if (body.coverLetterId && !await prisma.coverLetter.findFirst({ where: { id: body.coverLetterId, conversation: { userId: user.id } }, select: { id: true } })) throw new ProfileError(404, "NOT_FOUND");
-    if (job) {
-      const existing = await prisma.jobApplication.findFirst({ where: { userId: user.id, jobId: job.id } });
-      if (existing) return NextResponse.json(existing);
-    }
-    const company = job?.company || body.company, jobTitle = job?.title || body.jobTitle;
-    if (!jobTitle || (!job && !company)) throw new ProfileError(400, "VALIDATION");
-    const letter = job && !body.coverLetterId ? await prisma.coverLetter.findFirst({ where: { jobId: job.id, conversation: { userId: user.id } }, select: { id: true } }) : null;
-    return NextResponse.json(await prisma.jobApplication.create({ data: { ...body, company, jobTitle, location: job?.location || body.location, jobUrl: job?.sourceUrl || body.jobUrl || null, coverLetterId: body.coverLetterId || letter?.id, source: job ? "JOB_ANALYZER" : body.source, userId: user.id } }), { status: 201 });
-  } catch (error) { return apiError(error); }
-}
+const statuses = ["SAVED", "APPLIED", "INTERVIEW", "TECHNICAL_INTERVIEW", "OFFER", "HIRED", "REJECTED", "WITHDRAWN"] as const;
+const input = z.object({ company:z.string().trim().min(1).max(300),jobTitle:z.string().trim().min(1).max(300),location:z.string().max(300).optional(),country:z.string().max(100).optional(),workMode:z.string().max(60).optional(),contractType:z.string().max(80).optional(),salary:z.string().max(200).optional(),currency:z.string().max(12).optional(),jobUrl:z.string().url().max(2048).optional().or(z.literal("")),source:z.string().max(100).optional(),status:z.enum(statuses).default("SAVED"),appliedAt:z.coerce.date().nullable().optional(),notes:z.string().max(12000).optional(),contactPerson:z.string().max(300).optional(),nextAction:z.string().max(1000).optional(),cvId:z.string().uuid().optional(),coverLetterId:z.string().uuid().optional() }).strict();
+export async function GET(req:Request){try{const u=await requireUser(),q=new URL(req.url).searchParams,p=Math.max(1,Number(q.get("page")||1)),size=Math.min(100,Math.max(1,Number(q.get("pageSize")||30))),term=q.get("q")?.slice(0,200),status=q.get("status")||undefined,archived=q.get("archived");const where={userId:u.id,...(archived==="true"?{archivedAt:{not:null}}:archived==="false"?{archivedAt:null}:{}),...(statuses.includes(status as typeof statuses[number])?{status:status as typeof statuses[number]}:{}),...(term?{OR:[{company:{contains:term,mode:"insensitive" as const}},{jobTitle:{contains:term,mode:"insensitive" as const}}]}:{})};const [items,total]=await prisma.$transaction([prisma.jobApplication.findMany({where,include:{cv:{select:{id:true,title:true}},coverLetter:{select:{id:true,conversationId:true}},statusEvents:{orderBy:{createdAt:"desc"}},reminders:{where:{completedAt:null},orderBy:{dueAt:"asc"}},interviews:{orderBy:{scheduledAt:"asc"}}},orderBy:{updatedAt:"desc"},skip:(p-1)*size,take:size}),prisma.jobApplication.count({where})]);return NextResponse.json({items,total,page:p,pageSize:size})}catch(e){return apiError(e)}}
+export async function POST(req:Request){try{const u=await requireUser(),b=input.parse(await profileJson(req));const [cv,letter]=await Promise.all([b.cvId?prisma.cv.findFirst({where:{id:b.cvId,conversation:{userId:u.id}}}):null,b.coverLetterId?prisma.coverLetter.findFirst({where:{id:b.coverLetterId,conversation:{userId:u.id}}}):null]);if(b.cvId&&!cv)throw new ProfileError(404,"RESUME_NOT_FOUND");if(b.coverLetterId&&!letter)throw new ProfileError(404,"LETTER_NOT_FOUND");if(await prisma.jobApplication.findFirst({where:{userId:u.id,company:b.company,jobTitle:b.jobTitle,archivedAt:null}}))throw new ProfileError(409,"DUPLICATE_APPLICATION");return NextResponse.json(await prisma.jobApplication.create({data:{...b,userId:u.id,cvSnapshot:cv?{id:cv.id,title:cv.title,revision:cv.revision}:undefined,coverLetterSnapshot:letter?{id:letter.id,updatedAt:letter.updatedAt.toISOString()}:undefined,statusEvents:{create:{status:b.status,note:"Création"}}}}),{status:201})}catch(e){return apiError(e)}}

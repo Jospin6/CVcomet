@@ -116,6 +116,7 @@
   "shell": {
     "workspace": "Espace personnel",
     "workspaceDescription": "Votre carrière, à votre rythme.",
+    "findJobs": "Trouver un emploi",
     "overview": "Vue d’ensemble",
     "careerProfile": "Profil carrière",
     "resumes": "CV",
@@ -124,6 +125,7 @@
     "jobSearch": "Recherche d’emploi",
     "ats": "Analyse ATS",
     "jobMatch": "Compatibilité avec une offre",
+    "careerMap": "Parcours de carrière",
     "applications": "Candidatures",
     "interviews": "Entretiens",
     "insights": "Perspectives",

@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateObject, type LanguageModel } from "ai";
 import { getAIModel } from "@/lib/ai/model";
 import { factualRules } from "@/lib/career-profile/ai";
 import { ProfileError, profileAIError } from "@/lib/career-profile/http";
@@ -37,9 +37,9 @@ export function validateJobAnalysis(value: unknown, description: string): JobAna
     requiredSkills: explicit(parsed.requiredSkills), preferredSkills: explicit(parsed.preferredSkills), technologies: explicit(parsed.technologies), keywords: explicit(parsed.keywords), requirements };
 }
 
-export async function analyzeJobDescription(description: string, hints?: { title?: string; company?: string; location?: string }, language = "en"): Promise<JobAnalysis> {
+export async function analyzeJobDescription(description: string, hints?: { title?: string; company?: string; location?: string }, language = "en", configuredModel?: LanguageModel): Promise<JobAnalysis> {
   try {
-    const model = await getAIModel({ structuredOutputs: true });
+    const model = configuredModel || await getAIModel({ structuredOutputs: true });
     const abortSignal = AbortSignal.timeout(45000);
     let correction: { reason: string; untrustedPreviousResponse?: unknown } | undefined;
     for (let attempt = 0; ; attempt++) {

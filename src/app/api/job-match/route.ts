@@ -13,6 +13,7 @@ import { ProfileError, profileJson } from "@/lib/career-profile/http";
 import { jobTextSchema, jobSourceSchema } from "@/lib/career/job-schema";
 import { normalizeJobText } from "@/lib/career/job-input";
 import { normalizeEditorResume } from "@/lib/resume-editor";
+import { savedJobTitle } from "@/lib/career/job-opportunities";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
       const analysis = await analyzeJobDescription(description, undefined, body.language);
       const result = matchJob(profile, analysis, resume);
       return prisma.$transaction(async tx => {
-      const job = await tx.jobOpportunity.create({ data: { userId: user.id, title: analysis.title, company: analysis.company || null, location: analysis.location || null, seniority: analysis.seniority || null,
+      const job = await tx.jobOpportunity.create({ data: { userId: user.id, title: savedJobTitle({ title: analysis.title, description, sourceName: body.source.name }), company: analysis.company || null, location: analysis.location || null, seniority: analysis.seniority || null,
         description, originalText: body.source.originalText || body.text, sourceUrl: body.source.url, sourceType: body.source.type, sourceName: body.source.name,
         analysis: analysis as unknown as Prisma.InputJsonValue, responsibilities: analysis.responsibilities, requiredSkills: analysis.requiredSkills, preferredSkills: analysis.preferredSkills, technologies: analysis.technologies, education: analysis.education, experience: analysis.experience, keywords: analysis.keywords } });
       return tx.jobMatch.create({ data: { userId: user.id, jobId: job.id, cvId: cv?.id, fingerprint, overallScore: result.overallScore, skillScore: result.skillScore, keywordScore: result.keywordScore, experienceScore: result.experienceScore, educationScore: result.educationScore, matchedSkills: result.matchedSkills, missingSkills: result.missingSkills, unverifiedSkills: result.unverifiedSkills, recommendations: result.recommendations, result: result as unknown as Prisma.InputJsonValue }, include: { job: true } });

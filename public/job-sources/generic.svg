@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" role="img" aria-label="Offre d’emploi">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#213d34"/><stop offset="1" stop-color="#6b8d7c"/></linearGradient></defs><rect width="800" height="320" fill="url(#g)"/>
+  <rect x="105" y="91" width="160" height="126" rx="20" fill="none" stroke="#fff" stroke-width="13" opacity=".85"/><path d="M153 91V70h64v21M105 143h160" fill="none" stroke="#fff" stroke-width="13"/>
+  <text x="315" y="153" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="57" font-weight="650">CVComet Jobs</text><text x="320" y="193" fill="#dcfce7" font-family="Segoe UI,Arial,sans-serif" font-size="20" letter-spacing="4">CAREER OPPORTUNITY</text>
+</svg>
