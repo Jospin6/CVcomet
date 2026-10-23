@@ -105,14 +105,6 @@ export function AppSidebar() {
             </Button>
           )}
         </div>
-        {!compact && (
-          <div className="border-y py-3">
-            <p className="text-xs font-semibold">{t("shell.workspace")}</p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {t("shell.workspaceDescription")}
-            </p>
-          </div>
-        )}
       </SidebarHeader>
       <SidebarContent className="gap-0 px-2">
         {navigationGroups.map((group) => (

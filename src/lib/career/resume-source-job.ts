@@ -39,6 +39,10 @@ async function resolveResumeSourceJob(userId: string, cvId: string) {
   // merely made with the original CV must never become its generation source.
   const adapted = await prisma.jobMatch.findFirst({ where: { userId, tailoredCvId: cvId, job: { userId } }, include: { job: true }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] });
   if (adapted) return { job: adapted.job, origin: "ADAPTATION" as const };
+  // A comparison explicitly made with this CV is a valid, user-selected job
+  // context for a cover letter. Prefer it over free-form conversation text.
+  const matched = await prisma.jobMatch.findFirst({ where: { userId, cvId, job: { userId } }, include: { job: true }, orderBy: [{ createdAt: "desc" }, { id: "desc" }] });
+  if (matched) return { job: matched.job, origin: "MATCH" as const };
   const content = cv.conversation.content, text = sourceText(content);
   if (!text) return { job: null, origin: null };
   const existing = await prisma.jobOpportunity.findFirst({ where: sourceWhere(userId, content, text), orderBy: [{ createdAt: "asc" }, { id: "asc" }] });

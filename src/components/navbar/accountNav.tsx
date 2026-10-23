@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
@@ -20,6 +21,12 @@ import {
 
 export function AccountNav() {
   const { user } = useCurrentUser();
+  // The session hook can resolve from the browser cache before hydration while
+  // the server correctly renders a guest. Delay account-specific markup by one
+  // client render so both initial trees are identical.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const visibleUser = mounted ? user : null;
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
@@ -42,9 +49,9 @@ export function AccountNav() {
           aria-label={t("shell.profileMenu")}
           data-testid="profile-menu"
         >
-          {user ? (
+          {visibleUser ? (
             <span className="text-xs font-semibold">
-              {(user.name || user.email).slice(0, 2).toUpperCase()}
+              {(visibleUser.name || visibleUser.email).slice(0, 2).toUpperCase()}
             </span>
           ) : (
             <UserRound />
@@ -53,10 +60,10 @@ export function AccountNav() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuLabel className="break-all">
-          {user?.email || t("shell.guest")}
+          {visibleUser?.email || t("shell.guest")}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {user ? (
+        {visibleUser ? (
           <>
             <DropdownMenuItem asChild>
               <Link href="/dashboard/profile">

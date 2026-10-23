@@ -24,7 +24,7 @@ export async function GET(req: Request) {
     const user = await requireUser();
     const id = new URL(req.url).searchParams.get("id");
     if (id) {
-      const match = await prisma.jobMatch.findFirst({ where: { id, userId: user.id }, include: { job: { include: { applications: { where: { userId: user.id } }, coverLetters: { select: { id: true, conversationId: true } } } }, tailoredCv: { select: { id: true, title: true } } } });
+      const match = await prisma.jobMatch.findFirst({ where: { id, userId: user.id }, include: { job: { include: { applications: { where: { userId: user.id } }, coverLetters: { select: { id: true, cvId: true } } } }, tailoredCv: { select: { id: true, title: true } } } });
       if (!match) throw new ProfileError(404, "NOT_FOUND");
       return NextResponse.json(match, { headers: { "Cache-Control": "no-store" } });
     }

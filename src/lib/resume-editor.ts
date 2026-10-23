@@ -7,6 +7,9 @@ const lines = z.array(z.string().max(8000)).max(30).default([]);
 export const resumeContactSchema = z.object({ name: text(200), email: text(254), phone: text(80), city: text(300), linkedin: text(2048), website: text(2048) }).strict();
 export const resumeDesignSchema = z.object({
   documentName: text(160), layout: z.enum(["modern", "classic", "minimal"]).default("modern"),
+  templateId: z.string().max(160).optional(), templateVersion: z.number().int().positive().optional(),
+  composition: z.string().max(80).optional(), functionalType: z.string().max(80).optional(),
+  paper: z.enum(["A4", "LETTER"]).default("A4"),
   accent: z.string().regex(/^#[0-9a-f]{6}$/i).default("#173F35"),
   font: z.enum(["sans", "serif", "mono"]).default("sans"), fontSize: z.number().min(11).max(16).default(14),
   lineHeight: z.number().min(1.2).max(1.8).default(1.5), padding: z.number().min(28).max(64).default(44),

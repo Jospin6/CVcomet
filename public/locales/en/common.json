@@ -113,8 +113,6 @@
   "welcome": "Welcome to CVcomet",
   "welcomeBack": "Welcome back to CVcomet",
   "shell": {
-    "workspace": "Personal workspace",
-    "workspaceDescription": "Your career, at your pace.",
     "findJobs": "Find jobs",
     "overview": "Overview",
     "careerProfile": "Career profile",

@@ -361,7 +361,7 @@ test("generation accepts existing language names but discards client-supplied fa
   const parsed = schema.generationInputSchema.parse({ description: "Job", conversationId: owner, language: "French", user: { skills: "Invented skill", role: "ADMIN" } });
   assert.deepEqual(parsed, { description: "Job", conversationId: owner, language: "fr" });
 });
-test("CV and letter generation use only the owned central profile and reject cross-account conversations", async () => {
+test("CV generation uses only the owned central profile; cover letters require a CV and job context", async () => {
   for (const routeName of ["src/app/api/generate-cv/route.tsx", "src/app/api/generate-cover-letter/route.ts"]) {
     let seen, usedProfileId, forbidden = false;
     const db = { conversation: { findUnique: async () => ({ userId: forbidden ? other : owner, content: "Original job" }) },
@@ -378,6 +378,10 @@ test("CV and letter generation use only the owned central profile and reject cro
       [dbKey]: db,
     })(routeName);
     const response = await route.POST(request({ description: "Job", conversationId: owner, language: "English", user: { skills: "Invented skill" } }));
+    if (routeName.endsWith("generate-cover-letter/route.ts")) {
+      assert.equal(response.status, 422);
+      continue;
+    }
     assert.equal(response.status, 200); assert.equal(usedProfileId, owner);
     assert.match(JSON.stringify(seen.messages), /Confirmed headline/);
     assert.doesNotMatch(JSON.stringify(seen.messages), /Invented skill/);

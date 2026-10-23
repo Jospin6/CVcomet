@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { ArrowUpRight, CheckCircle2, ContactRound, FilePlus2, FileText, FolderOpen, Linkedin, LoaderCircle, Mail, PanelsTopLeft, Upload } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, ContactRound, FilePlus2, FileText, FolderOpen, Linkedin, LoaderCircle, PanelsTopLeft, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { ResumeCards, useResumeLibrary } from "./resume-library";
@@ -50,8 +50,8 @@ export function DocumentsPage() {
     } catch { setError(t("documents.createError")); setCreating(false); }
   };
   return <div className="space-y-6">
-    <PageHeader eyebrow={t("shell.workspace")} title={t("documents.title")} description={t("documents.description")} action={<Button disabled={busy || creating} onClick={() => input.current?.click()}><Upload />{t("documents.upload")}</Button>} />
-    <nav aria-label={t("documents.tabs")} className="flex gap-6 overflow-x-auto border-b text-sm"><span aria-current="page" className="flex shrink-0 items-center gap-2 border-b-2 border-primary pb-3 font-medium text-primary"><FileText className="size-4" />{t("shell.resumes")}<span className="rounded-md bg-primary/10 px-1.5 text-xs">{documents.length}</span></span><Link href="/dashboard/cover-letters" className="flex shrink-0 items-center gap-2 pb-3 text-muted-foreground hover:text-foreground"><Mail className="size-4" />{t("shell.coverLetters")}</Link></nav>
+    <PageHeader title={t("documents.title")} description={t("documents.description")} action={<Button disabled={busy || creating} onClick={() => input.current?.click()}><Upload />{t("documents.upload")}</Button>} />
+    <nav aria-label={t("documents.tabs")} className="flex gap-6 overflow-x-auto border-b text-sm"><span aria-current="page" className="flex shrink-0 items-center gap-2 border-b-2 border-primary pb-3 font-medium text-primary"><FileText className="size-4" />{t("shell.resumes")}<span className="rounded-md bg-primary/10 px-1.5 text-xs">{documents.length}</span></span></nav>
     <input ref={input} id="resume-documents-input" type="file" multiple accept={RESUME_ACCEPT} className="sr-only" tabIndex={-1} aria-label={t("documents.upload")} onChange={event => { const files = Array.from(event.target.files || []); event.target.value = ""; if (files.length) void upload(files); }} />
     {error && <p role="alert" className="rounded-lg border border-destructive/25 bg-destructive/5 p-4 text-sm text-destructive">{error}</p>}
     {message && <p role="status" className="flex items-center gap-2 rounded-lg border bg-primary/5 p-4 text-sm text-primary"><CheckCircle2 className="size-4 shrink-0" />{message}</p>}

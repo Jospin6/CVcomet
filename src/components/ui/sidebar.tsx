@@ -199,8 +199,8 @@ function Sidebar({
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>{t("shell.workspace")}</SheetTitle>
-            <SheetDescription>{t("shell.workspaceDescription")}</SheetDescription>
+            <SheetTitle>CVcomet</SheetTitle>
+            <SheetDescription>Navigation</SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>

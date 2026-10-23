@@ -1,7 +1,6 @@
 "use client";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Bell, ChevronRight, Check } from "lucide-react";
+import { Search, Bell, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -35,7 +34,7 @@ export function AppHeader({ onSearch }: { onSearch: () => void }) {
           "/admin/ai": "aiSettings",
           "/unauthorized": "accessDenied",
         } as Record<string, string>
-      )[pathname] || "workspace";
+      )[pathname] || "overview";
   return (
     <header className="app-header flex shrink-0 items-center justify-between gap-2 px-3 sm:px-6 lg:px-10">
       <div className="flex min-w-0 items-center gap-2 sm:gap-4">
@@ -45,15 +44,6 @@ export function AppHeader({ onSearch }: { onSearch: () => void }) {
         />
         <nav aria-label={t("shell.breadcrumb")} className="min-w-0">
           <ol className="flex items-center gap-3 text-xs">
-            <li className="hidden text-muted-foreground lg:block">
-              <Link href="/">{t("shell.workspace")}</Link>
-            </li>
-            <li className="hidden lg:block">
-              <ChevronRight
-                className="size-3 text-muted-foreground"
-                aria-hidden="true"
-              />
-            </li>
             <li className="truncate" aria-current="page">
               {t("shell." + key)}
             </li>

@@ -1,9 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { AlignLeft, AlignCenter, AlignRight, ArrowLeft, ArrowDown, ArrowUp, Bold, Check, ChevronDown, Download, GripVertical, Italic, LayoutTemplate, List, Loader2, Minus, Plus, Redo2, Save, ScanLine, Send, Sparkles, Underline, Undo2, X } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignRight, ArrowLeft, ArrowDown, ArrowUp, Bold, Check, ChevronDown, Download, GripVertical, Italic, LayoutTemplate, List, Loader2, Mail, Minus, Plus, Redo2, Save, ScanLine, Send, Sparkles, Underline, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { A4_WIDTH, A4_HEIGHT, addResumeEntry, fieldValue, moveResumeSection, normalizeEditorResume, orderedSections, resumeContentSchema, resumeFieldHasBullets, resumeFieldSupportsBullets, resumeSections, setResumeField, type EditorResume, type ResumeDesign, type ResumePage, type ResumeSection } from "@/lib/resume-editor";
 import { resumeEditorCopy } from "@/lib/resume-editor-copy";
 import { resumeAtsCopy } from "@/lib/resume-ats-copy";
+import { templateCatalog } from "@/lib/template-catalog";
 import type { AtsIssue } from "@/lib/career/ats";
 import { EditableResumeCanvas } from "./editable-resume-canvas";
 import { ResumeAtsPanel } from "./resume-ats-panel";
@@ -23,6 +24,7 @@ const accents = ["#173F35", "#1E4B8F", "#6B4F3A", "#6D3A65", "#111827", "#B35435
 
 export function ResumeEditor() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const { i18n } = useTranslation();
   const locale = i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en";
   const c = resumeEditorCopy[locale], atsCopy = resumeAtsCopy[locale];
@@ -45,6 +47,7 @@ export function ResumeEditor() {
   const [proposal, setProposal] = useState<{ path: string; text: string; original: string } | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]), [chatInput, setChatInput] = useState("");
   const [chatting, setChatting] = useState(false), [chatError, setChatError] = useState("");
+  const [creatingLetter, setCreatingLetter] = useState(false), [letterError, setLetterError] = useState("");
   const chatLock = useRef<"idle" | "saving" | "request">("idle");
   const chatRequest = useRef<AbortController | null>(null);
   const documentId = useRef(id); documentId.current = id;
@@ -261,6 +264,17 @@ export function ResumeEditor() {
     } catch { setError("EXPORT_FAILED"); }
     finally { setExporting(false); }
   };
+  const createCoverLetter = async () => {
+    if (creatingLetter || !await save()) return;
+    setCreatingLetter(true); setLetterError("");
+    try {
+      const response = await fetch(`/api/cvs/${id}/cover-letters`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ language }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "LETTER_FAILED");
+      router.push(`/dashboard/cover-letters/${data.id}`);
+    } catch (cause) { setLetterError(cause instanceof Error ? cause.message : "LETTER_FAILED"); }
+    finally { setCreatingLetter(false); }
+  };
   const toggleStyle = (key: "bold" | "italic" | "underline") => {
     if (!resume) return;
     design("fieldStyles", { ...resume.design.fieldStyles, [selected]: { ...resume.design.fieldStyles[selected], [key]: !resume.design.fieldStyles[selected]?.[key] } });
@@ -282,9 +296,10 @@ export function ResumeEditor() {
   if (!resume) return <div className="rounded-xl border bg-card p-10 text-center"><p role={error ? "alert" : "status"} className="text-sm text-muted-foreground">{error ? c.loadError : c.loading}</p>{!error && <Loader2 className="mx-auto mt-4 size-5 animate-spin text-primary" />}<Button className="mt-6" variant="outline" asChild><Link href="/dashboard/resumes"><ArrowLeft />{c.back}</Link></Button></div>;
   return <div className="resume-studio">
     <header className="studio-header"><Button variant="ghost" size="icon" asChild><Link href="/dashboard/resumes" aria-label={c.back}><ArrowLeft className="size-4" /></Link></Button><div><p className="text-[9px] font-semibold uppercase tracking-[.18em] text-primary">CVcomet / {c.title}</p><Input className="studio-document-name" aria-label={c.name} maxLength={160} value={resume.design.documentName} placeholder={c.untitled} onChange={event => design("documentName", event.target.value)} /><p className="studio-save-status" role="status">{status === "saving" ? <Loader2 className="size-3 animate-spin" /> : status === "saved" ? <Check className="size-3 text-primary" /> : <span className="size-1.5 rounded-full bg-amber-500" />}{c[status === "error" ? "saveError" : status]}</p></div>
-      <div className="studio-header-actions"><Button variant={tab === "ats" ? "secondary" : "outline"} aria-controls="studio-panel-ats" aria-expanded={tab === "ats"} onClick={() => { setTab("ats"); setToolsOpen(true); }}><ScanLine className="size-4" />{atsCopy.title}</Button><Button variant="outline" disabled={status === "saving"} onClick={() => void save()}><Save className="size-4" />{c.save}</Button><Button disabled={exporting || !pages.length} onClick={() => void exportPDF()}>{exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}{exporting ? c.exporting : c.export}</Button></div>
+      <div className="studio-header-actions"><Button variant="outline" disabled={creatingLetter || status === "saving"} onClick={() => void createCoverLetter()}>{creatingLetter ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}{locale === "fr" ? "Générer une lettre" : "Generate cover letter"}</Button><Button variant={tab === "ats" ? "secondary" : "outline"} aria-controls="studio-panel-ats" aria-expanded={tab === "ats"} onClick={() => { setTab("ats"); setToolsOpen(true); }}><ScanLine className="size-4" />{atsCopy.title}</Button><Button variant="outline" disabled={status === "saving"} onClick={() => void save()}><Save className="size-4" />{c.save}</Button><Button disabled={exporting || !pages.length} onClick={() => void exportPDF()}>{exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}{exporting ? c.exporting : c.export}</Button></div>
     </header>
     {error && <p role="alert" className="mb-4 rounded-lg border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{error === "CONFLICT" ? c.conflict : error === "EXPORT_FAILED" ? c.exportError : c.saveError}</p>}
+    {letterError && <p role="alert" className="mb-4 rounded-lg border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{letterError === "JOB_REQUIRED" ? (locale === "fr" ? "Cette lettre doit être générée depuis une offre associée à ce CV. Analysez d’abord l’offre avec ce CV." : "This letter must be generated from a job posting linked to this resume. Analyze the job posting with this resume first.") : (locale === "fr" ? "La lettre n’a pas pu être générée. Réessayez." : "The cover letter could not be generated. Please try again.")}</p>}
     <div className="studio-toolbar"><div className="studio-tool-group">
       <Button variant="ghost" size="icon" disabled={!history.past.length} aria-label={c.undo} title={c.undo} onClick={() => undoRedo(false)}><Undo2 className="size-4" /></Button>
       <Button variant="ghost" size="icon" disabled={!history.future.length} aria-label={c.redo} title={c.redo} onClick={() => undoRedo(true)}><Redo2 className="size-4" /></Button>
@@ -302,7 +317,7 @@ export function ResumeEditor() {
         <Button variant="ghost" size="icon" className="studio-mobile-tools ml-auto mr-2 mt-2" aria-label={c.close} onClick={() => setToolsOpen(false)}><X className="size-4" /></Button>
         <div className="studio-panel" role="tabpanel" id={`studio-panel-${tab}`} aria-labelledby={`studio-tab-${tab}`}>
           {tab === "design" && <>
-            <div><span className="studio-panel-label">{c.templates}</span><div className="studio-template-grid">{(["modern", "classic", "minimal"] as const).map(layout => <button type="button" key={layout} className="studio-template" aria-pressed={resume.design.layout === layout} onClick={() => design("layout", layout)}><div className="studio-template-paper" style={{ borderTop: layout === "modern" ? `3px solid ${resume.design.accent}` : undefined }}><div style={{ height: 5, width: layout === "classic" ? "65%" : "80%", background: resume.design.accent, margin: layout === "classic" ? "0 auto 6px" : "0 0 6px" }} /><div style={{ display: "flex", gap: 4 }}>{layout === "modern" && <div style={{ width: "28%", background: "#EEF3F0", height: 53 }} />}<div style={{ flex: 1 }}>{Array.from({ length: 8 }, (_, index) => <div className="studio-template-lines" key={index} style={{ width: index % 3 === 2 ? "65%" : "100%" }} />)}</div></div></div>{c[layout]}</button>)}</div><p className="mt-3 text-[10px] leading-5 text-muted-foreground">{c.templateHint}</p></div>
+            <div><span className="studio-panel-label">{c.templates}</span><div className="studio-template-grid">{(["modern", "classic", "minimal"] as const).map(layout => <button type="button" key={layout} className="studio-template" aria-pressed={resume.design.layout === layout} onClick={() => design("layout", layout)}><div className="studio-template-paper" style={{ borderTop: layout === "modern" ? `3px solid ${resume.design.accent}` : undefined }}><div style={{ height: 5, width: layout === "classic" ? "65%" : "80%", background: resume.design.accent, margin: layout === "classic" ? "0 auto 6px" : "0 0 6px" }} /><div style={{ display: "flex", gap: 4 }}>{layout === "modern" && <div style={{ width: "28%", background: "#EEF3F0", height: 53 }} />}<div style={{ flex: 1 }}>{Array.from({ length: 8 }, (_, index) => <div className="studio-template-lines" key={index} style={{ width: index % 3 === 2 ? "65%" : "100%" }} />)}</div></div></div>{c[layout]}</button>)}</div><label className="mt-4 block"><span className="studio-panel-label">Studio catalogue</span><select aria-label="Change template" className="h-9 w-full rounded-md border bg-background px-3 text-xs" value={resume.design.templateId || ""} onChange={event => { const template = templateCatalog.find(item => item.id === event.target.value); if (!template || template.type !== "CV") return; change(doc => ({ ...doc, design: { ...doc.design, templateId: template.id, templateVersion: template.version, composition: template.composition, functionalType: template.functionalType, layout: template.layout, accent: template.accent, font: template.font, paper: template.paper } }), "template"); }}><option value="">Custom layout</option>{templateCatalog.filter(item => item.type === "CV").map(template => <option key={template.id} value={template.id}>{template.name} · {template.functionalType.replaceAll("_", " ")}</option>)}</select></label><p className="mt-3 text-[10px] leading-5 text-muted-foreground">{c.templateHint}</p></div>
             <div><span className="studio-panel-label">{c.accent}</span><div className="flex flex-wrap items-center gap-3">{accents.map(color => <button key={color} type="button" className="studio-swatch" style={{ background: color }} aria-label={c.accent + " " + color} aria-pressed={resume.design.accent === color} onClick={() => design("accent", color)} />)}<input type="color" value={resume.design.accent} aria-label={c.accent} className="size-7 cursor-pointer rounded border-0 bg-transparent" onChange={event => design("accent", event.target.value)} /></div></div>
             <label className="block"><span className="studio-panel-label">{c.font}</span><select className="h-9 w-full rounded-md border bg-background px-3 text-xs" value={resume.design.font} onChange={event => design("font", event.target.value as ResumeDesign["font"])}>{(["sans", "serif", "mono"] as const).map(font => <option key={font} value={font}>{c[font]}</option>)}</select></label>
             {[{ key: "fontSize", label: c.fontSize, min: 11, max: 16, step: .5 }, { key: "lineHeight", label: c.spacing, min: 1.2, max: 1.8, step: .05 }, { key: "padding", label: c.margins, min: 28, max: 64, step: 2 }].map(({ key, label, min, max, step }) => <label key={key}><span className="studio-panel-label flex justify-between">{label}<span className="font-normal text-muted-foreground">{Number(resume.design[key as "fontSize" | "lineHeight" | "padding"]).toFixed(key === "lineHeight" ? 2 : 0)}</span></span><input className="w-full accent-primary" type="range" min={min} max={max} step={step} aria-label={label} value={resume.design[key as "fontSize" | "lineHeight" | "padding"]} onChange={event => design(key as "fontSize" | "lineHeight" | "padding", Number(event.target.value))} /></label>)}

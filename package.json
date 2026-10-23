@@ -16,7 +16,7 @@
     "test:auth:db": "node scripts/verify-auth-database.cjs",
     "test:phase2": "node scripts/verify-phase-2.cjs",
     "test:ai": "node --test scripts/ai-providers.test.cjs",
-    "predev": "node scripts/prepare-pdf-worker.cjs",
+    "predev": "prisma generate && node scripts/prepare-pdf-worker.cjs",
     "check:resume-import": "node scripts/verify-resume-import.cjs",
     "test:resume-editor": "node --test scripts/resume-editor.test.cjs",
     "check:resume-editor-ui": "node scripts/verify-resume-editor-ui.cjs",

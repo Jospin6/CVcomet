@@ -17,7 +17,8 @@ import { jobAnalysisSchema } from "./job-schema";
 const emailSchema = z.object({ subject: z.string().trim().min(1).max(300), body: z.string().trim().min(1).max(12000) }).strict();
 const letterSchema = coverLetterSchema.shape.coverLetter;
 const common = { jobId: z.string().uuid(), cvId: z.string().uuid().optional(), action: z.enum(["GENERATE", "SAVE"]).default("GENERATE"), language: z.enum(["fr", "en"]).default("en"), notes: z.string().max(4000).default("") };
-const letterInput = z.object({ ...common, draft: letterSchema.optional() }).strict();
+// A letter is always authored from a selected CV. Email drafts may still use only the profile.
+const letterInput = z.object({ ...common, cvId: z.string().uuid(), draft: letterSchema.optional() }).strict();
 const emailInput = z.object({ ...common, draft: emailSchema.optional() }).strict();
 const draftsSchema = z.object({
   letter: z.object({ fingerprint: z.string(), draft: letterSchema }).optional(),
@@ -66,9 +67,9 @@ export async function jobCoverLetter(userId: string, raw: unknown) {
     if (!body.draft) throw new ProfileError(400, "VALIDATION");
     const draft = { ...body.draft, recipientTitle: body.draft.recipientTitle || "", companyName: data.job.company || "", positionTitle: data.job.title, senderName: data.profile.name, senderEmail: data.profile.email, senderPhone: data.profile.phone, senderAddress: data.profile.address, sendertitle: data.profile.headline };
     const { date: _date, ...fields } = draft;
-    const existing = await prisma.coverLetter.findFirst({ where: { jobId: data.job.id, conversation: { userId } } });
+    const existing = await prisma.coverLetter.findFirst({ where: { jobId: data.job.id, cvId: body.cvId, conversation: { userId } } });
     const letter = existing ? await prisma.coverLetter.update({ where: { id: existing.id }, data: fields })
-      : await prisma.coverLetter.create({ data: { ...fields, job: { connect: { id: data.job.id } }, conversation: { create: { userId, title: data.job.title, content: data.job.description } } } });
+      : await prisma.coverLetter.create({ data: { ...fields, cv: { connect: { id: body.cvId } }, job: { connect: { id: data.job.id } }, conversation: { create: { userId, title: data.job.title, content: data.job.description } } } });
     await saveDrafts(userId, data.job.id, { letter: { fingerprint: data.fingerprint, draft } });
     await prisma.jobApplication.updateMany({ where: { userId, jobId: data.job.id }, data: { coverLetterId: letter.id } });
     return { draft, letterId: letter.id, conversationId: letter.conversationId, saved: true };

@@ -114,8 +114,6 @@
   "welcome": "Bienvenue sur CVcomet",
   "welcomeBack": "Bon retour sur CVcomet",
   "shell": {
-    "workspace": "Espace personnel",
-    "workspaceDescription": "Votre carrière, à votre rythme.",
     "findJobs": "Trouver un emploi",
     "overview": "Vue d’ensemble",
     "careerProfile": "Profil carrière",
