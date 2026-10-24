@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     if (cached) return NextResponse.json({ ...cached, reused: true });
     if (inFlight.has(fingerprint)) return NextResponse.json(await inFlight.get(fingerprint));
     const operation = (async () => {
-      await reserveProfileAI(user.id);
+      await reserveProfileAI(user.id, "JOB_ANALYSIS");
       const analysis = await analyzeJobDescription(description, undefined, body.language);
       const result = matchJob(profile, analysis, resume);
       return prisma.$transaction(async tx => {

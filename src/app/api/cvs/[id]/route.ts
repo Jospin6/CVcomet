@@ -9,7 +9,7 @@ export async function GET(_: Request, { params }: Context) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   const { id } = await params;
-  const cv = await prisma.cv.findFirst({ where: { id, conversation: { userId: user.id } } });
+  const cv = await prisma.cv.findFirst({ where: { id, conversation: { userId: user.id } }, include: { coverLetters: { orderBy: { updatedAt: "desc" }, select: { id: true, positionTitle: true, companyName: true } } } });
   return cv ? NextResponse.json(cv, { headers: { "Cache-Control": "no-store" } }) : NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 }
 export async function PATCH(req: Request, { params }: Context) {

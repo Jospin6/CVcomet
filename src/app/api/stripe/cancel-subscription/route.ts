@@ -1,47 +1,34 @@
-// /app/api/checkout/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import prisma from "../../../../../prisma/prisma"
-import { canAccessUser, getSessionUser } from "@/lib/auth";
+import prisma from "../../../../../prisma/prisma";
+import { z } from "zod";
+import { getSessionUser } from "@/lib/auth";
+import { assertTrustedWriteOrigin } from "@/lib/security/request-origin";
+import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
 
-export async function POST(req: NextRequest) {
-    if (!process.env.STRIPE_SECRET_KEY) {
-        return new NextResponse("Missing STRIPE_SECRET_KEY", { status: 500 });
-    }
+const input = z.object({ userId: z.string().uuid().optional() }).strict();
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: "2025-04-30.basil",
-    });
-
+export async function POST(req: Request) {
+  try {
     const session = await getSessionUser();
-    if (!session) {
-        return new NextResponse("Unauthorized", { status: 401 });
+    if (!session) throw new ProfileError(401, "UNAUTHORIZED");
+    assertTrustedWriteOrigin(req);
+    const { userId } = input.parse(await profileJson(req, 2048));
+    if (userId && userId !== session.id) throw new ProfileError(403, "FORBIDDEN");
+    if (!process.env.STRIPE_SECRET_KEY) throw new ProfileError(503, "STRIPE_NOT_CONFIGURED");
+    const user = await prisma.user.findUnique({ where: { id: session.id }, select: { stripeCustomerId: true,
+      subscription: { select: { stripeSubscriptionId: true, stripeCustomerId: true, status: true } },
+    } });
+    const record = user?.subscription;
+    if (!user?.stripeCustomerId || !record?.stripeSubscriptionId || record.stripeCustomerId !== user.stripeCustomerId) {
+      throw new ProfileError(404, "SUBSCRIPTION_NOT_FOUND");
     }
-
-    const { userId } = await req.json();
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-    });
-    if (!user) {
-        return new NextResponse("User not found", { status: 404 });
-    }
-    if (!canAccessUser(session, userId)) {
-        return new NextResponse("Forbidden", { status: 403 });
-    }
-    if (!user?.subscriptionId) {
-        return new NextResponse("No active subscription", { status: 400 });
-    }
-
-    try {
-        // ⛔ Annule l'abonnement à la fin de la période actuelle
-        await stripe.subscriptions.update(user.subscriptionId, {
-            cancel_at_period_end: true,
-        });
-
-        return new NextResponse("Subscription cancellation scheduled", {
-            status: 200,
-        });
-    } catch (error) {
-        return new NextResponse("Stripe error", { status: 500 });
-    }
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const remote = await stripe.subscriptions.retrieve(record.stripeSubscriptionId);
+    const remoteCustomer = typeof remote.customer === "string" ? remote.customer : remote.customer.id;
+    if (remoteCustomer !== user.stripeCustomerId) throw new ProfileError(403, "SUBSCRIPTION_CUSTOMER_MISMATCH");
+    if (remote.status === "canceled") throw new ProfileError(409, "SUBSCRIPTION_ALREADY_CANCELED");
+    await stripe.subscriptions.update(remote.id, { cancel_at_period_end: true });
+    return NextResponse.json({ scheduled: true }, { headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) { return profileErrorResponse(error); }
 }

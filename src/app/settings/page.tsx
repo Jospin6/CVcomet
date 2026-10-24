@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
-import { Monitor, Moon, Sun, ArrowUpRight, Globe2, CreditCard } from "lucide-react";
+import { Monitor, Moon, Sun, ArrowUpRight, Globe2 } from "lucide-react";
+import { BillingPanel } from "@/components/billing/billing-panel";
 import { PageHeader, SectionHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/ui/languageSwitcher";
@@ -69,7 +70,7 @@ export default function SettingsPage() {
       </section>
       <section className="app-section mb-6">
         <SectionHeader title="Billing" description="Manage your Stripe subscription securely in the hosted customer portal." />
-        <Button variant="outline" onClick={async()=>{const r=await fetch("/api/billing/portal",{method:"POST"});const d=await r.json();if(r.ok&&d.url) location.href=d.url;}}><CreditCard/>Manage billing</Button>
+        <BillingPanel />
       </section>
       <section className="app-section">
         <SectionHeader

@@ -1,7 +1,7 @@
 import { generateObject, type LanguageModel } from "ai";
 import { z } from "zod";
-import prisma from "../../../prisma/prisma";
-import { dayLimit } from "@/helpers/constants";
+import { reserveAIQuota } from "@/lib/ai/quota-service";
+import type { AIQuotaFeature } from "@/lib/ai/quota-policy";
 import { getAIModel } from "@/lib/ai/model";
 import { ProfileError, profileAIError } from "./http";
 export { extractionSchema } from "./extraction";
@@ -14,24 +14,9 @@ export const factualRules = [
   "A target job or a requirement in a job advert is not an existing qualification.",
 ].join("\n");
 
-// Reserve against the existing daily counter with conditional atomic writes.
-// Failed AI attempts count toward the limit; no second AI or quota database.
-export async function reserveProfileAI(userId: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { isSubscribed: true } });
-  if (!user) throw new ProfileError(401, "UNAUTHORIZED");
-  if (user.isSubscribed) return;
-  const now = new Date();
-  const start = new Date(now); start.setUTCHours(0, 0, 0, 0);
-  const reset = await prisma.user.updateMany({
-    where: { id: userId, OR: [{ lastGeneratedAt: null }, { lastGeneratedAt: { lt: start } }] },
-    data: { generationCount: 1, lastGeneratedAt: now },
-  });
-  if (reset.count) return;
-  const increment = await prisma.user.updateMany({
-    where: { id: userId, lastGeneratedAt: { gte: start }, generationCount: { lt: dayLimit } },
-    data: { generationCount: { increment: 1 }, lastGeneratedAt: now },
-  });
-  if (!increment.count) throw new ProfileError(429, "AI_LIMIT");
+/** Compatibility facade: all AI workflows now share the same atomic limits. */
+export async function reserveProfileAI(userId: string, feature: AIQuotaFeature = "GENERAL") {
+  await reserveAIQuota(userId, feature);
 }
 export const improveSchema = z.object({
   field: z.enum(["headline", "summary", "experience"]),
@@ -46,7 +31,7 @@ export const improveSchema = z.object({
 export async function improveText(text: string, field: string, language: string, configuredModel?: LanguageModel) {
   try {
     const { object } = await generateObject({
-      model: configuredModel || await getAIModel(), temperature: 0, maxRetries: 1,
+      model: configuredModel || await getAIModel(), temperature: 0, maxTokens: 2200, maxRetries: 1,
       abortSignal: AbortSignal.timeout(45000),
       schema: z.object({ suggestion: z.string().trim().min(1).max(field === "headline" ? 300 : 8000) }),
       system: factualRules + "\nOnly rephrase the supplied text for clarity, grammar and concision. Do not expand the factual scope. Preserve every number and proper noun.",

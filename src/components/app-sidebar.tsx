@@ -40,7 +40,7 @@ export function AppSidebar() {
     if (!item.href) return false;
     if (item.key === "overview")
       return pathname === "/" && !search.get("document");
-    return pathname === item.href;
+    return pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
   };
   const renderItem = (item: NavigationItem) => (
     <SidebarMenuItem key={item.key}>
@@ -49,7 +49,7 @@ export function AppSidebar() {
         disabled={!item.href}
         isActive={active(item)}
         tooltip={t("shell." + item.key)}
-        className="h-10 gap-3 text-[13px]"
+        className="h-10 gap-3 rounded-lg text-[13px] transition-colors data-[active=true]:font-semibold"
         aria-label={compact ? t("shell." + item.key) : undefined}
       >
         {item.href ? (
@@ -107,6 +107,10 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent className="gap-0 px-2">
+        <div className="mx-2 mb-3 rounded-xl border bg-secondary/50 px-3 py-2.5 group-data-[collapsible=icon]:hidden">
+          <p className="text-[10px] font-semibold uppercase tracking-[.11em] text-muted-foreground">{t("shell.workspaceLabel")}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("shell.workspaceSubtitle")}</p>
+        </div>
         {navigationGroups.map((group) => (
           <SidebarGroup key={group.key} className="py-1">
             {group.key !== "workspace" && (

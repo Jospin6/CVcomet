@@ -80,7 +80,25 @@ export async function boundedBody(req: Pick<Request, "body" | "headers">, max: n
   } finally { reader.releaseLock(); }
   return Buffer.concat(chunks);
 }
-export async function profileJson(req: Request) {
-  if (!req.headers.get("content-type")?.includes("application/json")) throw new ProfileError(415, "INVALID_TYPE");
-  return JSON.parse((await boundedBody(req, 1024 * 1024)).toString("utf8")) as unknown;
+export async function profileJson(req: Request, maxBytes = 1024 * 1024) {
+  if (!req.headers.get("content-type")?.toLowerCase().includes("application/json")) throw new ProfileError(415, "INVALID_TYPE");
+  return JSON.parse((await boundedBody(req, maxBytes)).toString("utf8")) as unknown;
+}
+
+/** Applies a real stream cap, including chunked requests without Content-Length. */
+export async function profileFormData(req: Request, maxBytes: number): Promise<FormData> {
+  const contentType = req.headers.get("content-type") || "";
+  if (!/^multipart\/form-data\s*;/i.test(contentType) || !/boundary=/i.test(contentType)) {
+    throw new ProfileError(415, "INVALID_TYPE");
+  }
+  const bytes = await boundedBody(req, maxBytes);
+  try {
+    return await new Request("http://localhost/__upload", {
+      method: "POST",
+      headers: { "content-type": contentType },
+      body: new Uint8Array(bytes),
+    }).formData();
+  } catch {
+    throw new ProfileError(400, "INVALID_MULTIPART");
+  }
 }

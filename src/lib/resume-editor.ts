@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { documentLanguages, targetMarkets } from "@/lib/career-localization/markets";
 
 export const resumeSections = ["summary", "experiences", "educations", "skills", "projects", "certifications", "languages"] as const;
 export type ResumeSection = typeof resumeSections[number];
@@ -10,6 +11,8 @@ export const resumeDesignSchema = z.object({
   templateId: z.string().max(160).optional(), templateVersion: z.number().int().positive().optional(),
   composition: z.string().max(80).optional(), functionalType: z.string().max(80).optional(),
   paper: z.enum(["A4", "LETTER"]).default("A4"),
+  targetMarket: z.enum(targetMarkets).default("GLOBAL"),
+  documentLanguage: z.enum(documentLanguages).default("auto"),
   accent: z.string().regex(/^#[0-9a-f]{6}$/i).default("#173F35"),
   font: z.enum(["sans", "serif", "mono"]).default("sans"), fontSize: z.number().min(11).max(16).default(14),
   lineHeight: z.number().min(1.2).max(1.8).default(1.5), padding: z.number().min(28).max(64).default(44),
@@ -33,6 +36,7 @@ export type ResumeDesign = EditorResume["design"];
 export type ResumeUnit = { key: string; section: ResumeSection; index: number };
 export type ResumePage = { main: ResumeUnit[]; side: ResumeUnit[] };
 export const A4_WIDTH = 794, A4_HEIGHT = 1123;
+export function resumePaperDimensions(paper: "A4" | "LETTER") { return paper === "LETTER" ? { width: 816, height: 1056 } : { width: A4_WIDTH, height: A4_HEIGHT }; }
 
 export function normalizeEditorResume(value: Record<string, unknown>, fallback: Partial<EditorResume["contact"]> = {}): EditorResume {
   const content = Object.fromEntries(Object.keys(resumeContentSchema.shape).map(key => [key, value[key] ?? undefined]));
@@ -120,7 +124,7 @@ export function isSidebarSection(section: ResumeSection, design: ResumeDesign) {
 
 export function paginateResume(resume: EditorResume, heights: Record<string, number>, headerHeight: number, continuationHeaderHeight = 72, includeEmpty = true): ResumePage[] {
   const units = resumeUnits(resume, includeEmpty);
-  const capacity = A4_HEIGHT - resume.design.padding * 2 - 34;
+  const capacity = resumePaperDimensions(resume.design.paper).height - resume.design.padding * 2 - 34;
   const paginate = (items: ResumeUnit[], sidebar = false) => {
     const columnCapacity = capacity - (sidebar ? 32 : 0);
     const pages: ResumeUnit[][] = [[]]; let used = 0, available = columnCapacity - headerHeight;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { documentLanguages, targetMarkets } from "@/lib/career-localization/markets";
 
 const text = (max: number) => z.string().max(max).default("");
 
@@ -10,6 +11,9 @@ export const coverLetterContentSchema = z.object({
 
 export const coverLetterDesignSchema = z.object({
   accent: z.string().regex(/^#[0-9a-f]{6}$/i).default("#173F35"),
+  paper: z.enum(["A4", "LETTER"]).default("A4"),
+  targetMarket: z.enum(targetMarkets).default("GLOBAL"),
+  documentLanguage: z.enum(documentLanguages).default("auto"),
   font: z.enum(["sans", "serif", "mono"]).default("sans"),
   fontSize: z.number().min(11).max(16).default(13), lineHeight: z.number().min(1.2).max(2).default(1.6),
   padding: z.number().min(32).max(80).default(60), alignment: z.enum(["left", "center", "right"]).default("left"),

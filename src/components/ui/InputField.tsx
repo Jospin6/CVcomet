@@ -26,6 +26,7 @@ interface InputFieldProps<T extends FieldValues> {
   register: UseFormRegister<T>;
   errors: FieldErrors<T>;
   className?: string;
+  readOnly?: boolean;
   onChange?: (_event: ChangeEvent<HTMLInputElement>) => void;
   onClick?: (_event: MouseEvent<HTMLInputElement>) => void;
 }
@@ -39,6 +40,7 @@ export function InputField<T extends FieldValues>({
   register,
   errors,
   className,
+  readOnly = false,
 }: InputFieldProps<T>) {
   const { t } = useTranslation();
   const id = useId();
@@ -54,6 +56,7 @@ export function InputField<T extends FieldValues>({
         id={id}
         type={type}
         placeholder={placeholder}
+        readOnly={readOnly}
         onClick={onClick}
         autoComplete={
           type === "email"

@@ -2,16 +2,14 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getSessionUser, isAdmin } from "@/lib/auth";
 import { ProfileError, profileAIError, boundedBody } from "@/lib/career-profile/http";
+import { assertTrustedWriteOrigin } from "@/lib/security/request-origin";
 
 export async function requireAIAdmin(req: Request, mutation = false) {
   const user = await getSessionUser();
   if (!user) throw new ProfileError(401, "UNAUTHORIZED");
   if (!isAdmin(user)) throw new ProfileError(403, "FORBIDDEN");
   if (mutation) {
-    const origin = req.headers.get("origin");
-    if (req.headers.get("sec-fetch-site") === "cross-site" || (origin && origin !== new URL(req.url).origin)) {
-      throw new ProfileError(403, "FORBIDDEN");
-    }
+    assertTrustedWriteOrigin(req);
   }
   return user;
 }

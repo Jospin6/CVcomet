@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link";
-import { Cpu } from "lucide-react";
+import { Cpu, CreditCard, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AddTemplatePage from "@/components/forms/templeteForm";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
@@ -63,6 +63,8 @@ export default function AdminDashboard() {
       <h1 className="text-2xl text-foreground font-bold mb-8">Admin Dashboard</h1>
 
       <div className="mb-4 flex flex-wrap justify-end gap-3">
+        <Button asChild variant="outline"><Link href="/admin/quality"><ShieldCheck className="size-4" />AI quality</Link></Button>
+        <Button asChild variant="outline"><Link href="/admin/billing"><CreditCard className="size-4" />Billing health</Link></Button>
         <Button asChild><Link href="/admin/ai"><Cpu className="size-4" />{t("shell.aiSettings")}</Link></Button>
         <Dialog>
           <DialogTrigger asChild>

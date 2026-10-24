@@ -3,10 +3,11 @@ import { z } from "zod";
 import prisma from "../../../../../../prisma/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { reserveProfileAI } from "@/lib/career-profile/ai";
-import { getCareerProfile, careerProfileContext } from "@/lib/career-profile/service";
 import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
 import { normalizeEditorResume } from "@/lib/resume-editor";
 import { generateResumeConversation } from "@/lib/resume-conversation-ai";
+import { proposeResumeAI } from "@/lib/resume-ai/proposal-service";
+import { assertTrustedWriteOrigin } from "@/lib/security/request-origin";
 
 const inputSchema = z.object({
   instruction: z.string().trim().min(1).max(4000),
@@ -17,44 +18,36 @@ const inputSchema = z.object({
 }).strict();
 
 export const maxDuration = 60;
+export const runtime = "nodejs";
 type Context = { params: Promise<{ id: string }> };
 
+/** Phase 03: AI suggestions are persisted as time-limited proposals, not CV edits. */
 export async function POST(req: Request, { params }: Context) {
   try {
+    assertTrustedWriteOrigin(req);
     const user = await getSessionUser();
     if (!user) throw new ProfileError(401, "UNAUTHORIZED");
     const { id } = await params;
-    const input = inputSchema.parse(await profileJson(req));
+    const input = inputSchema.parse(await profileJson(req, 32 * 1024));
     const cv = await prisma.cv.findFirst({ where: { id, conversation: { userId: user.id } } });
     if (!cv) throw new ProfileError(404, "NOT_FOUND");
     if (cv.revision !== input.revision) throw new ProfileError(409, "CONFLICT");
-
-    const [profile, linkedMatch] = await Promise.all([
-      getCareerProfile(user.id),
-      prisma.jobMatch.findFirst({
-        where: { userId: user.id, cvId: id }, orderBy: { createdAt: "desc" },
-        include: { job: { select: { title: true, description: true, requiredSkills: true, preferredSkills: true } } },
-      }),
+    const [confirmedEvidence, linkedMatch] = await Promise.all([
+      prisma.careerEvidence.findMany({ where: { userId: user.id, status: "CONFIRMED" }, orderBy: { updatedAt: "desc" }, take: 30, select: { id: true, revision: true, kind: true, statement: true, sourceLabel: true } }),
+      prisma.jobMatch.findFirst({ where: { userId: user.id, cvId: id }, orderBy: { createdAt: "desc" },
+        include: { job: { select: { title: true, description: true, requiredSkills: true, preferredSkills: true } } } }),
     ]);
     const document = normalizeEditorResume(cv);
-    await reserveProfileAI(user.id);
+    await reserveProfileAI(user.id, "RESUME_EDIT");
     const { object, document: edited } = await generateResumeConversation({
-      ...input, document, careerProfile: careerProfileContext(profile), linkedJobAdvert: linkedMatch?.job || null,
+      ...input, document, confirmedEvidence: confirmedEvidence.map(row => ({ kind: row.kind, statement: row.statement, sourceLabel: row.sourceLabel })),
+      linkedJobAdvert: linkedMatch?.job || null,
     });
-    if (object.status === "clarification") return NextResponse.json({ ...object, document: null, revision: cv.revision }, { headers: { "Cache-Control": "no-store" } });
-
+    if (object.status === "clarification") return NextResponse.json({ ...object, preview: null, revision: cv.revision }, { headers: { "Cache-Control": "no-store" } });
     if (!edited) throw new ProfileError(502, "AI_INVALID_RESPONSE");
-    const updated = await prisma.$transaction(async tx => {
-      const latest = await tx.cv.findFirst({ where: { id, conversation: { userId: user.id } } });
-      if (!latest) throw new ProfileError(404, "NOT_FOUND");
-      if (latest.revision !== input.revision) throw new ProfileError(409, "CONFLICT");
-      const changed = await tx.cv.updateMany({ where: { id, revision: latest.revision, conversation: { userId: user.id } }, data: { ...edited, revision: { increment: 1 } } });
-      if (!changed.count) throw new ProfileError(409, "CONFLICT");
-      await tx.resumeVersion.create({ data: { cvId: id, label: "Before AI conversation edit", snapshot: JSON.parse(JSON.stringify(latest)) } });
-      return tx.cv.findUniqueOrThrow({ where: { id } });
-    }, { maxWait: 10000, timeout: 20000 });
-    return NextResponse.json({ ...object, changes: object.summary, document: updated, revision: updated.revision }, { headers: { "Cache-Control": "no-store" } });
-  } catch (error) {
-    return profileErrorResponse(error);
-  }
+    const proposal = await proposeResumeAI({ userId: user.id, cvId: id, revision: input.revision, current: document, edited,
+      edits: object.edits, message: object.message, summary: object.summary, evidence: confirmedEvidence, instruction: input.instruction });
+    return NextResponse.json({ status: "proposal", message: object.message, changes: object.summary, ...proposal,
+      evidenceDisclosure: "owner-confirmed-not-independently-verified" }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) { return profileErrorResponse(error); }
 }

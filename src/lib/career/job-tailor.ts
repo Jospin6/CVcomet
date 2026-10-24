@@ -74,10 +74,10 @@ export async function tailorJobResume(userId: string, raw: unknown) {
   resume.skills.forEach((entry, i) => Object.keys(entry).forEach(key => { fields[`skills.${i}.${key}`] = fieldValue(resume, `skills.${i}.${key}`); }));
   resume.projects.forEach((_, i) => { fields[`projects.${i}.description`] = fieldValue(resume, `projects.${i}.description`); });
   if (!Object.values(fields).some(text => text.trim())) throw new ProfileError(422, "AI_FACTS_REQUIRED");
-  const model = await getAIModel(); await reserveProfileAI(userId);
+  const model = await getAIModel(); await reserveProfileAI(userId, "RESUME_TAILOR");
   let result: z.infer<typeof generated>;
   try {
-    const response = await generateObject({ model, schema: generated, temperature: 0, maxRetries: 1, abortSignal: AbortSignal.timeout(45000),
+    const response = await generateObject({ model, schema: generated, temperature: 0, maxTokens: 5000, maxRetries: 1, abortSignal: AbortSignal.timeout(45000),
       system: factualRules + "\nPropose honest improvements to summary, experience accomplishment wording and skills ordering. Only modify the supplied paths. Each field's new content words MUST already occur in THAT FIELD; change order, punctuation and connecting words only. Preserve every number. Never introduce technologies from the advert. Keep all relevant facts. Return changed fields only, with exact job evidence quotes. Do not claim improved scores. For IMPROVE mode prioritize clarity even if the job is a weak match. If safe rewriting is unnecessary, reorder existing accomplishment lines or skill items by relevance.",
       prompt: JSON.stringify({ mode: body.mode, language: body.language, sourceFields: fields, untrustedJobDescription: match.job.description, requirements: analysis.data.requirements }) });
     result = generated.parse(response.object);

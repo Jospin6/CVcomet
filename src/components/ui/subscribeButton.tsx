@@ -1,5 +1,4 @@
 "use client";
-import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "./button";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTranslation } from "react-i18next";
@@ -17,38 +16,15 @@ export function SubscribeButton() {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          priceId: process.env.NEXT_PUBLIC_PRICE_ID,
-          userId: user.id,
-        }),
+        body: JSON.stringify({ plan: "PRO" }),
       });
-      if (!response.ok) throw new Error("Checkout unavailable");
-      const session = await response.json();
-      if (session.url) {
-        window.location.assign(session.url);
-        return;
-      }
-      const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-      if (!key) throw new Error("Checkout configuration unavailable");
-      const stripe = await loadStripe(key);
-      if (!stripe) throw new Error("Checkout unavailable");
-      const result = await stripe.redirectToCheckout({
-        sessionId: session.sessionId,
-      });
-      if (result.error) throw result.error;
+      const data: { url?: string } = await response.json().catch(() => ({}));
+      if (!response.ok || !data.url || !/^https:\/\//.test(data.url)) throw new Error("Checkout unavailable");
+      window.location.assign(data.url);
     } catch {
       toast.error(t("shell.actionError"));
-    } finally {
       setLoading(false);
     }
   }
-  return (
-    <Button
-      onClick={subscribe}
-      disabled={loading || !user?.id}
-      className="w-full"
-    >
-      {t(loading ? "shell.loading" : "upgradePlan")}
-    </Button>
-  );
+  return <Button onClick={subscribe} disabled={loading || !user?.id} className="w-full">{t(loading ? "shell.loading" : "upgradePlan")}</Button>;
 }

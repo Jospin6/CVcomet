@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "../../../prisma/prisma";
 import { emptyProfile, awardSchema, linkSchema, type CareerProfile, type ProfileData } from "./schema";
 import { ProfileError } from "./http";
+import { accountEmailChanged } from "@/lib/security/account-email";
 
 export const careerProfileSelect = {
   name: true, email: true, phone: true, address: true, headline: true, summary: true,
@@ -71,7 +72,12 @@ export async function saveCareerProfile(userId: string, profile: ProfileData, re
   return prisma.$transaction(async tx => {
     const current = await tx.user.findUnique({ where: { id: userId }, select: careerProfileSelect });
     if (!current) throw new ProfileError(401, "UNAUTHORIZED");
-    const { experiences, education, projects, certifications, ...fields } = profile;
+    // The profile is NOT an email-ownership verification workflow.
+    if (accountEmailChanged(current.email, profile.email)) {
+      throw new ProfileError(409, "EMAIL_CHANGE_REQUIRES_VERIFICATION");
+    }
+    const { experiences, education, projects, certifications, email: _email, ...fields } = profile;
+    void _email;
     assertOwnedIds(experiences, current.Experience);
     assertOwnedIds(education, current.Education);
     assertOwnedIds(projects, current.Project);

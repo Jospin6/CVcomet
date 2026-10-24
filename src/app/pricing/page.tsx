@@ -1,1 +1,13 @@
-import Link from "next/link";import {Check} from "lucide-react";import {Button} from "@/components/ui/button";const p=[['Free',['Resume creation','Basic AI']],['Pro',['Advanced ATS','Job Match','Resume tailoring','Cover letters']],['Career Pro',['Everything in Pro','Interview Coach','Career Assistant','Advanced analytics']]];export default function Pricing(){return <div className="py-10"><div className="mx-auto max-w-2xl text-center"><p className="eyebrow">Pricing</p><h1 className="mt-4 type-display">Choose the support your search needs.</h1><p className="mt-4 text-muted-foreground">Exact recurring prices are managed in Stripe and shown during secure checkout.</p></div><div className="mt-10 grid gap-5 lg:grid-cols-3">{p.map(([n,fs])=><article className="rounded-2xl border bg-card p-6" key={n as string}><h2 className="text-xl font-semibold">{n}</h2><div className="mt-6 space-y-3">{(fs as string[]).map(f=><p className="flex gap-2 text-sm" key={f}><Check className="size-4 text-primary"/>{f}</p>)}</div><Button asChild className="mt-8 w-full" variant={n==='Free'?'outline':'default'}><Link href={n==='Free'?'/signup':'/upgrade'}>{n==='Free'?'Start free':'Choose plan'}</Link></Button></article>)}</div></div>}
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+/** Pricing never hardcodes monetary amounts; billing/upgrade reads live configured Stripe prices. */
+export default function Pricing() {
+  return <div className="mx-auto max-w-3xl space-y-6 py-16 text-center">
+    <p className="eyebrow">Pricing</p>
+    <h1 className="type-display">Career support that scales with you.</h1>
+    <p className="text-muted-foreground">Start free, then compare Pro and Career Pro with their actual recurring Stripe prices, allowances and billing periods.</p>
+    <Button asChild><Link href="/upgrade">View plans and prices <ArrowUpRight/></Link></Button>
+    <p className="text-xs text-muted-foreground">All subscription payments are completed through Stripe Checkout. Final prices, taxes and discounts are shown before payment.</p>
+  </div>;
+}

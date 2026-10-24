@@ -61,9 +61,12 @@ export function canAccessUser(user: SessionUser | null, targetUserId: string) {
   return Boolean(user && (user.role === "ADMIN" || user.id === targetUserId));
 }
 
-export function sanitizeUser<T extends { password?: unknown; verificationCode?: unknown }>(user: T): Omit<T, "password" | "verificationCode"> {
-  const { password, verificationCode, ...rest } = user;
+export function sanitizeUser<T extends { password?: unknown; verificationCode?: unknown; verificationCodeExpiresAt?: unknown; verificationCodeSentAt?: unknown; verificationCodeAttempts?: unknown }>(user: T): Omit<T, "password" | "verificationCode" | "verificationCodeExpiresAt" | "verificationCodeSentAt" | "verificationCodeAttempts"> {
+  const { password, verificationCode, verificationCodeExpiresAt, verificationCodeSentAt, verificationCodeAttempts, ...rest } = user;
   void password;
   void verificationCode;
+  void verificationCodeExpiresAt;
+  void verificationCodeSentAt;
+  void verificationCodeAttempts;
   return rest;
 }

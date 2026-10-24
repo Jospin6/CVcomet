@@ -13,6 +13,7 @@ export type UploadedResume = {
 };
 
 export type SavedResume = {
+  coverLetters?: { id: string; positionTitle: string | null; companyName: string | null }[];
   id: string;
   title: string;
   summary: string[];

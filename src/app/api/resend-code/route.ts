@@ -1,49 +1,28 @@
-// app/api/resend-code/route.ts
 import { NextResponse } from "next/server";
-import prisma from "../../../../prisma/prisma";
-import { generateVerifyCode } from "@/lib/utils";
-import { sendVerificationEmail } from "@/lib/resend";
+import { profileJson, profileErrorResponse } from "@/lib/career-profile/http";
+import { enforceAuthThrottle } from "@/lib/security/auth-throttle";
+import { assertTrustedWriteOrigin } from "@/lib/security/request-origin";
+import { normalizeVerificationEmail } from "@/lib/auth/email-verification-code";
+import { requestEmailVerification } from "@/lib/auth/email-verification-service";
 
-// Instancie ton client Resend (ou Nodemailer si tu préfères)
-
-export async function POST(req: Request) {
+export async function POST(request: Request) {
+  let payload: unknown;
   try {
-    const { email } = await req.json();
-
-    if (!email) {
-      return NextResponse.json(
-        { message: "Email requis" },
-        { status: 400 }
-      );
-    }
-
-    // Vérifie si l'utilisateur existe
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return NextResponse.json(
-        { message: "Utilisateur non trouvé" },
-        { status: 404 }
-      );
-    }
-
-    // Génère un nouveau code
-    const verifyCode = generateVerifyCode();
-
-    // Mets à jour l'utilisateur avec le nouveau code
-    await prisma.user.update({
-      where: { email },
-      data: { verificationCode: verifyCode },
-    });
-
-    // Envoie l'email avec Resend
-    await sendVerificationEmail(email, verifyCode);
-
-    return NextResponse.json({ message: "Code renvoyé avec succès" });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { message: "Erreur serveur" },
-      { status: 500 }
-    );
+    payload = await profileJson(request);
+  } catch {
+    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
+  const email = normalizeVerificationEmail((payload as { email?: unknown } | null)?.email);
+  if (!email) return NextResponse.json({ error: "Email invalide" }, { status: 400 });
+  try { assertTrustedWriteOrigin(request); await enforceAuthThrottle(request, "EMAIL_RESEND", email); } catch (error) { return profileErrorResponse(error); }
+
+  try {
+    await requestEmailVerification(email);
+  } catch {
+    return NextResponse.json({ error: "Service temporairement indisponible" }, { status: 503 });
+  }
+  return NextResponse.json(
+    { success: true, message: "Si ce compte nécessite une vérification, un code sera envoyé." },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }

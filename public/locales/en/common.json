@@ -244,7 +244,11 @@
     "signingUp": "Creating account…",
     "email": "Email address",
     "download": "Download PDF",
-    "aiSettings": "AI settings"
+    "aiSettings": "AI settings",
+    "evidenceVault": "Evidence vault",
+    "applicationAgent": "Application packets",
+    "workspaceLabel": "Career workspace",
+    "workspaceSubtitle": "Resumes · Jobs · AI"
   },
   "career": {
     "title": "Career Profile",
@@ -518,5 +522,66 @@
     "saveError": "We could not save your resume. Please try again.",
     "previousPage": "Previous page",
     "nextPage": "Next page"
+  },
+  "evidence": {
+    "title": "Career Evidence Vault",
+    "intro": "Keep your professional facts with their sources, and explicitly confirm only accurate information.",
+    "privacy": "Your facts are private. Confirmation means you attest to them; it is not independent verification. Unconfirmed suggestions will not be used by future AI evidence tools.",
+    "addTitle": "Add a professional fact",
+    "importButton": "Suggest from my profile",
+    "importHelp": "Import is optional, skips previously imported sources, and never confirms facts automatically. Review each proposed item.",
+    "category": "Category",
+    "statement": "Statement",
+    "placeholder": "E.g. I built a React Native app used by 500 people.",
+    "source": "Source (optional)",
+    "sourcePlaceholder": "E.g. Portfolio, certificate, former employer",
+    "addButton": "Add as draft",
+    "myFacts": "My facts",
+    "filter": "Filter",
+    "all": "All",
+    "failed": "Error",
+    "retryHelp": "Refresh the page after a revision conflict.",
+    "created": "Draft added.",
+    "importDone": "Import complete. Review proposed statements.",
+    "updated": "Change saved as draft.",
+    "confirmed": "Fact confirmed.",
+    "rejected": "Suggestion rejected.",
+    "revoked": "Confirmation revoked.",
+    "deleted": "Fact permanently deleted.",
+    "loadedMore": "More facts loaded.",
+    "editWarning": "Editing a fact withdraws its previous confirmation. You must confirm it again.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "reject": "Reject",
+    "revoke": "Revoke",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Permanently delete this fact from your vault?",
+    "noSource": "No source provided",
+    "loading": "Loading…",
+    "empty": "No facts in this category. Add one or import suggestions from your profile.",
+    "more": "Load more",
+    "kind": {
+      "SKILL": "Skill",
+      "EXPERIENCE": "Experience",
+      "EDUCATION": "Education",
+      "PROJECT": "Project",
+      "CERTIFICATION": "Certification",
+      "ACHIEVEMENT": "Achievement",
+      "LANGUAGE": "Language",
+      "OTHER": "Other"
+    },
+    "status": {
+      "DRAFT": "Needs confirmation",
+      "CONFIRMED": "Confirmed by me",
+      "REJECTED": "Rejected",
+      "REVOKED": "Revoked"
+    },
+    "origin": {
+      "MANUAL": "Manually added",
+      "PROFILE_IMPORT": "Proposed from my profile",
+      "AI_SUGGESTION": "AI suggestion"
+    }
   }
 }

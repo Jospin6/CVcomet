@@ -1,3 +1,15 @@
-import { NextResponse } from "next/server";import prisma from "../../../../../../prisma/prisma";import { requireUser } from "@/lib/career/auth-user";import { apiError } from "@/lib/career/api";import { z } from "zod";
-const s=z.object({answer:z.string().min(2).max(8000)});const fallback=["Describe a difficult problem you solved and how you approached it.","Tell me about a time you received difficult feedback.","What would you prioritize in your first 30 days?"];
-export async function POST(req:Request,{params}:{params:Promise<{id:string}>}){try{const u=await requireUser(),{id}=await params,session=await prisma.interviewSession.findFirst({where:{id,userId:u.id},include:{messages:true}});if(!session||session.status==="COMPLETED")return NextResponse.json({error:"SESSION_UNAVAILABLE"},{status:404});const {answer}=s.parse(await req.json()),score=Math.max(45,Math.min(95,55+Math.round(Math.min(answer.length,900)/30))),feedback={relevance:score,clarity:Math.min(95,score+3),structure:Math.max(40,score-4),star:/situation|task|action|result/i.test(answer),suggestion:"Use a concise situation → action → verifiable result structure, without inventing facts."};const userMsg=await prisma.interviewMessage.create({data:{sessionId:id,role:"user",content:answer,score,feedback}}),config=session.configuration as {questionSet?:{questions?:{question:string}[]}}|null,prepared=config?.questionSet?.questions||[],asked=session.messages.filter(m=>m.role==="assistant").length,next=prepared[asked]?.question||fallback[Math.min(asked-1,fallback.length-1)]||"What questions would you ask the hiring manager?",ai=await prisma.interviewMessage.create({data:{sessionId:id,role:"assistant",content:next}});await prisma.interviewSession.update({where:{id},data:{status:"ACTIVE",currentQuestion:{increment:1},overallScore:score,summary:"Practice score is an estimate based on answer completeness and structure."}});return NextResponse.json({answer:userMsg,next:ai,feedback})}catch(e){return apiError(e)}}
+import { NextResponse } from "next/server";
+import { requireUser } from "@/lib/career/auth-user";
+import { apiError } from "@/lib/career/api";
+import { recordInterviewAnswer } from "@/lib/career/interview";
+import { z } from "zod";
+
+const input=z.object({answer:z.string().trim().min(2).max(8000)}).strict();
+export async function POST(req:Request,{params}:{params:Promise<{id:string}>}){
+  try{
+    const user=await requireUser();
+    const {id}=await params;
+    const {answer}=input.parse(await req.json());
+    return NextResponse.json(await recordInterviewAnswer(user.id,id,answer));
+  }catch(error){return apiError(error);}
+}

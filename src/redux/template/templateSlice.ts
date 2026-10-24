@@ -6,7 +6,8 @@ export interface Template {
   id: string;
   name: string;
   type: 'CV' | 'COVER_LETTER';
-  templateFile: string;
+  /** Preview bytes never appear in JSON. Use /api/avatar?id=<template.id>. */
+  templateFile?: string;
   createdAt: string;
   plan?: "FREE" | "PAID";
   markets?: string[];

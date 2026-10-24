@@ -20,6 +20,9 @@ model User {
   name                 String?
   emailVerified        Boolean         @default(false)
   verificationCode     String?
+  verificationCodeExpiresAt DateTime?
+  verificationCodeSentAt DateTime?
+  verificationCodeAttempts Int @default(0)
   image                String?
   phone                String?
   address              String?
@@ -70,9 +73,16 @@ model User {
   jobApplications      JobApplication[]
   interviewSessions    InterviewSession[]
   aiUsage              AIUsage[]
+  careerAgentObservations CareerAgentObservation[]
+  aiQuotaWindows       AiQuotaWindow[]
   uploadedResumes      UploadedResume[]
   careerMaps           CareerMap[]
   careerGoals          CareerGoal[]
+  careerEvidence       CareerEvidence[]
+  resumeAIProposals   ResumeAIProposal[]
+  coverLetterAIProposals CoverLetterAIProposal[]
+  careerMissions CareerMission[]
+  applicationPackets CareerApplicationPacket[]
   subscription         Subscription?
 
   createdAt DateTime @default(now())
@@ -178,7 +188,7 @@ model Conversation {
   title     String?
   content   String
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -196,7 +206,7 @@ model Experience {
   end         String?
   description String?
   userId      String
-  user        User    @relation(fields: [userId], references: [id])
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Education {
@@ -207,7 +217,7 @@ model Education {
   end         String?
   description String?
   userId      String
-  user        User    @relation(fields: [userId], references: [id])
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Certification {
@@ -217,7 +227,7 @@ model Certification {
   date         String
   description  String?
   userId       String
-  user         User    @relation(fields: [userId], references: [id])
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Project {
@@ -228,7 +238,7 @@ model Project {
   url         String?
   description String?
   userId      String
-  user        User    @relation(fields: [userId], references: [id])
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Cv {
@@ -248,14 +258,16 @@ model Cv {
   updatedAt      DateTime @default(now()) @updatedAt
 
   conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   templateId     String?
   template       Template?    @relation(fields: [templateId], references: [id])
   versions       ResumeVersion[]
+  aiProposals    ResumeAIProposal[]
   atsAnalyses    AtsAnalysis[]
   jobMatches     JobMatch[]
   tailoredMatches JobMatch[] @relation("TailoredResume")
   applications  JobApplication[]
+  applicationPackets CareerApplicationPacket[]
   coverLetters  CoverLetter[]
 }
 
@@ -292,7 +304,7 @@ model CoverLetter {
   sendertitle   String?
 
   conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   templateId     String?
   template       Template?    @relation(fields: [templateId], references: [id])
   jobId          String?
@@ -302,6 +314,8 @@ model CoverLetter {
   design         Json?
   revision       Int             @default(0)
   applications   JobApplication[]
+  applicationPackets CareerApplicationPacket[]
+  aiProposals    CoverLetterAIProposal[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -331,7 +345,7 @@ model Template {
 model Message {
   id             String       @id @default(uuid())
   conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   role           String // 'user' | 'assistant'
   content        String
   createdAt      DateTime     @default(now())
@@ -438,6 +452,7 @@ model JobOpportunity {
   updatedAt       DateTime @updatedAt
   matches         JobMatch[]
   applications    JobApplication[]
+  applicationPackets CareerApplicationPacket[]
   coverLetters    CoverLetter[]
   @@index([userId, createdAt])
 }
@@ -567,6 +582,18 @@ model InterviewMessage {
   @@index([sessionId, createdAt])
 }
 
+// Atomic reservation counters shared by all app instances (not provider billing amounts).
+model AiQuotaWindow {
+  key         String   @id
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  period      String
+  windowStart DateTime
+  requests    Int      @default(0)
+  credits     Int      @default(0)
+  @@index([userId, period, windowStart])
+}
+
 model AIUsage {
   id            String   @id @default(uuid())
   userId        String
@@ -579,6 +606,37 @@ model AIUsage {
   estimatedCost Decimal? @db.Decimal(12, 6)
   createdAt     DateTime @default(now())
   @@index([userId, feature, createdAt])
+}
+
+enum CareerAgentOutcome {
+  COMPLETED
+  FAILED
+}
+
+enum CareerAgentPhase {
+  PLAN
+  TOOLS
+  ANSWER
+}
+
+enum CareerAgentFeedback {
+  HELPFUL
+  NOT_HELPFUL
+}
+
+// Minimal telemetry only. No prompts, CV contents, response text, tool payloads, IPs or emails.
+model CareerAgentObservation {
+  id         String             @id @default(uuid())
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outcome    CareerAgentOutcome
+  phase      CareerAgentPhase
+  durationMs Int
+  toolCount  Int                @default(0)
+  errorCode  String?            @db.VarChar(60)
+  createdAt  DateTime           @default(now())
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 enum AIProvider {
@@ -660,6 +718,249 @@ model Subscription {
   stripePriceId        String?
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean  @default(false)
+  lastStripeEventCreated Int     @default(0)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
+
+// Persisted idempotency record: each verified Stripe event is applied at most once.
+model BillingWebhookEvent {
+  id          String   @id
+  type        String
+  processedAt DateTime @default(now())
+  @@index([processedAt])
+}
+
+// Shared credential abuse counters across instances (no raw email/IP stored).
+model AuthThrottleWindow {
+  key       String   @id
+  attempts  Int      @default(0)
+  resetsAt  DateTime
+  @@index([resetsAt])
+}
+
+// Career Identity & Evidence Vault (phase 02). Confirmation is a USER
+// attestation, NOT an external/background identity verification.
+enum CareerEvidenceKind {
+  SKILL
+  EXPERIENCE
+  EDUCATION
+  PROJECT
+  CERTIFICATION
+  ACHIEVEMENT
+  LANGUAGE
+  OTHER
+}
+
+enum CareerEvidenceStatus {
+  DRAFT
+  CONFIRMED
+  REJECTED
+  REVOKED
+}
+
+enum CareerEvidenceSource {
+  MANUAL
+  PROFILE_IMPORT
+  AI_SUGGESTION
+}
+
+model CareerEvidence {
+  id              String               @id @default(uuid())
+  userId          String
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind            CareerEvidenceKind
+  statement       String               @db.VarChar(1600)
+  source          CareerEvidenceSource @default(MANUAL)
+  sourceLabel     String?              @db.VarChar(200)
+  sourceKey       String?              @db.VarChar(180)
+  status          CareerEvidenceStatus @default(DRAFT)
+  revision        Int                  @default(0)
+  confirmedAt     DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@unique([userId, sourceKey])
+  @@index([userId, status, id])
+  @@index([userId, kind, id])
+}
+
+// Phase 03 — proposed AI edits are separately reviewed, never persisted directly to a CV.
+enum ResumeAIProposalStatus {
+  PENDING
+  APPLIED
+  DISCARDED
+}
+
+model ResumeAIProposal {
+  id                String                 @id @default(uuid())
+  userId            String
+  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cvId              String
+  cv                Cv                     @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  baseRevision      Int
+  status            ResumeAIProposalStatus @default(PENDING)
+  edits             Json
+  message           String                 @db.VarChar(1000)
+  summary           Json
+  evidenceRevisions Json                   @default("[]")
+  expiresAt         DateTime
+  createdAt         DateTime               @default(now())
+  decidedAt         DateTime?
+
+  @@index([userId, cvId, status])
+  @@index([expiresAt])
+}
+
+// Phase 04 — LLM output is an immutable reviewable cover letter draft, never a direct edit.
+enum CoverLetterAIProposalStatus {
+  PENDING
+  APPLIED
+  DISCARDED
+}
+
+model CoverLetterAIProposal {
+  id                String                     @id @default(uuid())
+  userId            String
+  user              User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  letterId          String
+  letter            CoverLetter                @relation(fields: [letterId], references: [id], onDelete: Cascade)
+  baseRevision      Int
+  status            CoverLetterAIProposalStatus @default(PENDING)
+  document          Json
+  message           String                     @db.VarChar(1000)
+  changes           Json
+  evidenceRevisions Json                       @default("[]")
+  expiresAt         DateTime
+  createdAt         DateTime                   @default(now())
+  decidedAt         DateTime?
+
+  @@index([userId, letterId, status])
+  @@index([expiresAt])
+}
+
+// Phase 07: a mission is an OPT-IN private conversation, not a global AI memory.
+// Only an active mission can start an agent run; the temporary lease limits races.
+enum CareerMissionStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum CareerMissionRunStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum CareerMissionApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CONSUMED
+}
+
+enum CareerMissionApprovalAction {
+  DRAFT_RESUME_CHANGES
+  DRAFT_COVER_LETTER
+  SUBMIT_APPLICATION
+  SEND_APPLICATION_EMAIL
+}
+
+model CareerMission {
+  id          String              @id @default(uuid())
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String              @db.VarChar(120)
+  status      CareerMissionStatus @default(ACTIVE)
+  revision    Int                 @default(0)
+  activeRunId String?             @db.Uuid
+  runs        CareerMissionRun[]
+  approvals   CareerMissionApproval[]
+  applicationPackets CareerApplicationPacket[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  @@index([userId, updatedAt, id])
+}
+
+model CareerMissionRun {
+  id          String                 @id @default(uuid())
+  missionId   String
+  mission     CareerMission          @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  userId      String
+  requestKey  String                 @db.Uuid
+  question    String                 @db.VarChar(6000)
+  answer      String?                @db.VarChar(10000)
+  steps       Json?
+  status      CareerMissionRunStatus @default(RUNNING)
+  attempt     Int                    @default(1)
+  leaseToken  String                 @db.Uuid
+  leaseUntil  DateTime
+  errorCode   String?                @db.VarChar(60)
+  feedbackRating CareerAgentFeedback?
+  feedbackAt  DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  @@unique([missionId, requestKey])
+  @@index([missionId, createdAt, id])
+  @@index([userId, status])
+  @@index([feedbackAt])
+}
+
+// Approvals bind one exact proposed action digest to its owner and mission.
+// Recording APPROVED never executes that action; consumption must be atomic.
+model CareerMissionApproval {
+  id          String                      @id @default(uuid())
+  missionId   String
+  mission     CareerMission               @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  userId      String
+  action      CareerMissionApprovalAction
+  payloadHash String                      @db.VarChar(64)
+  summary     String                      @db.VarChar(240)
+  status      CareerMissionApprovalStatus @default(PENDING)
+  expiresAt   DateTime
+  decidedAt   DateTime?
+  consumedAt  DateTime?
+  createdAt   DateTime                    @default(now())
+  @@index([missionId, status, expiresAt])
+  @@index([userId, createdAt])
+}
+
+// Phase 09: user-reviewed application packets. READY is NOT externally submitted.
+enum CareerApplicationPacketStatus {
+  DRAFT
+  READY
+  CANCELED
+}
+
+model CareerApplicationPacket {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestKey     String   @db.Uuid
+  intentHash     String   @db.VarChar(64)
+  missionId      String?
+  mission        CareerMission? @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  jobId          String
+  job            JobOpportunity @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  cvId           String
+  cv             Cv @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  coverLetterId  String?
+  coverLetter    CoverLetter? @relation(fields: [coverLetterId], references: [id], onDelete: Cascade)
+  cvRevision     Int
+  letterRevision Int?
+  jobUpdatedAt   DateTime
+  subject        String   @db.VarChar(300)
+  body           String   @db.VarChar(12000)
+  recipientEmail String?  @db.VarChar(254)
+  language       String   @db.VarChar(2)
+  status         CareerApplicationPacketStatus @default(DRAFT)
+  revision       Int      @default(0)
+  approvedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([userId, requestKey])
+  @@index([userId, updatedAt, id])
+  @@index([missionId, createdAt])
+}
+

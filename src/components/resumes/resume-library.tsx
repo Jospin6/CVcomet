@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { LibraryResume, SavedResume, UploadedResume } from "@/lib/resume-documents";
 import { PdfPreview } from "./pdf-preview";
+import { LinkedCoverLetters } from "./linked-cover-letters";
 
 export function useResumeLibrary(enabled = true) {
   const [documents, setDocuments] = useState<LibraryResume[]>([]);
@@ -74,8 +75,9 @@ export function ResumeCards({ documents, loading, onDeleted }: { documents: Libr
         {document.source === "created" ? <Link href={`/dashboard/resumes/${document.id}`} aria-label={t("documents.openNamed", { name: title })} className="block">{preview}</Link> : <button className="block w-full text-left" onClick={() => setSelected(document)} aria-label={t("documents.openNamed", { name: title })}>{preview}</button>}
         <div className="p-4"><p className="truncate text-sm font-medium" title={title}>{title}</p>
           <div className="mt-1.5 flex items-center gap-2 text-[11px] text-muted-foreground"><span className="rounded border px-1.5 py-0.5">{format}</span><span>{new Date(document.createdAt).toLocaleDateString(i18n.resolvedLanguage)}</span>{document.source === "upload" && <span className="ml-auto">{(document.size / 1024).toFixed(0)} KB</span>}</div>
-          <div className="mt-3 flex items-center gap-1 border-t pt-2">
+          <div className="mt-3 flex flex-wrap items-center gap-1 border-t pt-2">
             {document.source === "upload" ? <><Button variant="ghost" size="sm" onClick={() => setSelected(document)}><Eye className="size-3.5" />{t("documents.view")}</Button><Button variant="ghost" size="icon" className="ml-auto size-8" asChild><a href={`/api/resume-documents/${document.id}?download=1`} aria-label={t("documents.downloadNamed", { name: title })}><Download className="size-4" /></a></Button><Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-destructive" onClick={() => { setRemoving(document); setError(""); }} aria-label={t("documents.deleteNamed", { name: title })}><Trash2 className="size-4" /></Button></> : <Button variant="ghost" size="sm" asChild><Link href={`/dashboard/resumes/${document.id}`}><Eye className="size-3.5" />{t("documents.edit")}</Link></Button>}
+            {document.source === "created" && <LinkedCoverLetters letters={document.coverLetters || []} compact />}
           </div>
         </div>
       </article>;

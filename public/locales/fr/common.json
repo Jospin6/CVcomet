@@ -245,7 +245,11 @@
     "signingUp": "Création du compte…",
     "email": "Adresse e-mail",
     "download": "Télécharger le PDF",
-    "aiSettings": "Réglages IA"
+    "aiSettings": "Réglages IA",
+    "evidenceVault": "Coffre de preuves",
+    "applicationAgent": "Dossiers de candidature",
+    "workspaceLabel": "Espace carrière",
+    "workspaceSubtitle": "CV · Emplois · IA"
   },
   "career": {
     "title": "Profil professionnel",
@@ -519,5 +523,66 @@
     "saveError": "Impossible d’enregistrer le CV. Réessayez.",
     "previousPage": "Page précédente",
     "nextPage": "Page suivante"
+  },
+  "evidence": {
+    "title": "Coffre de preuves professionnelles",
+    "intro": "Conservez vos expériences et compétences avec leur origine, puis confirmez uniquement les informations exactes.",
+    "privacy": "Vos faits restent privés. La confirmation signifie que vous les approuvez : ce n’est pas une vérification indépendante. Les suggestions non confirmées ne sont pas utilisées par les futurs outils IA.",
+    "addTitle": "Ajouter un fait professionnel",
+    "importButton": "Proposer depuis mon profil",
+    "importHelp": "L'import est volontaire, sans doublons des mêmes sources, et ne confirme aucun fait automatiquement. Vérifiez chaque proposition.",
+    "category": "Catégorie",
+    "statement": "Information",
+    "placeholder": "Ex. J’ai développé une application React Native utilisée par 500 personnes.",
+    "source": "Source (facultative)",
+    "sourcePlaceholder": "Ex. Portfolio, certificat, ancien employeur",
+    "addButton": "Ajouter comme brouillon",
+    "myFacts": "Mes faits",
+    "filter": "Filtrer",
+    "all": "Tous",
+    "failed": "Erreur",
+    "retryHelp": "Actualisez la page après un conflit de mise à jour.",
+    "created": "Brouillon ajouté.",
+    "importDone": "Import terminé. Vérifiez les faits proposés.",
+    "updated": "Modification enregistrée en brouillon.",
+    "confirmed": "Fait confirmé.",
+    "rejected": "Proposition rejetée.",
+    "revoked": "Confirmation révoquée.",
+    "deleted": "Fait supprimé définitivement.",
+    "loadedMore": "Faits supplémentaires chargés.",
+    "editWarning": "Modifier une information annule sa confirmation. Vous devrez la confirmer à nouveau.",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "reject": "Rejeter",
+    "revoke": "Révoquer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "deleteConfirm": "Supprimer définitivement cette information de votre coffre ?",
+    "noSource": "Aucune source indiquée",
+    "loading": "Chargement…",
+    "empty": "Aucun fait dans cette catégorie. Ajoutez un fait ou importez des propositions de votre profil.",
+    "more": "Afficher la suite",
+    "kind": {
+      "SKILL": "Compétence",
+      "EXPERIENCE": "Expérience",
+      "EDUCATION": "Formation",
+      "PROJECT": "Projet",
+      "CERTIFICATION": "Certification",
+      "ACHIEVEMENT": "Réalisation",
+      "LANGUAGE": "Langue",
+      "OTHER": "Autre"
+    },
+    "status": {
+      "DRAFT": "À confirmer",
+      "CONFIRMED": "Confirmé par moi",
+      "REJECTED": "Rejeté",
+      "REVOKED": "Révoqué"
+    },
+    "origin": {
+      "MANUAL": "Ajout manuel",
+      "PROFILE_IMPORT": "Proposé depuis mon profil",
+      "AI_SUGGESTION": "Suggestion IA"
+    }
   }
 }

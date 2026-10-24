@@ -4,13 +4,15 @@ import { getAIProviderConfig } from "@/lib/ai/config";
 import { createAIModel } from "@/lib/ai/model";
 import { aiTestSchema } from "@/lib/ai/admin-schema";
 import { requireAIAdmin, aiAdminBody, aiAdminResponse, aiAdminError } from "@/lib/ai/admin-http";
+import { reserveProfileAI } from "@/lib/career-profile/ai";
 
 export const maxDuration = 60;
 export async function POST(req: Request) {
   try {
-    await requireAIAdmin(req, true);
+    const user = await requireAIAdmin(req, true);
     const input = aiTestSchema.parse(await aiAdminBody(req));
     const apiKey = input.apiKey || (await getAIProviderConfig(input.provider)).apiKey;
+    await reserveProfileAI(user.id);
     const started = Date.now();
     await generateObject({ model: createAIModel({ ...input, apiKey, enabled: true }),
       // The Google SDK converts literal booleans to enum:[true], but Gemini's

@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, Link } from "@react-pdf/renderer";
 import { hasResumeUnitContent, resumeBulletItems, resumeFieldHasBullets, safeResumeLink, tintAccent, type EditorResume, type ResumePage, type ResumeUnit } from "@/lib/resume-editor";
 import type { ResumeEditorCopy } from "@/lib/resume-editor-copy";
+import { sectionHeading } from "@/lib/career-localization/markets";
 
 const fonts = { sans: "Helvetica", serif: "Times-Roman", mono: "Courier" };
 const px = (value: number) => value * .75;
@@ -37,13 +38,13 @@ export function ResumePDF({ resume, pages, copy: c }: { resume: EditorResume; pa
     return null;
   };
   const column = (units: ResumeUnit[]) => units.filter(unit => hasResumeUnitContent(resume, unit)).map((unit, index, all) => <View key={unit.key} style={{ marginBottom: 10 }}>
-    {(index === 0 || all[index - 1].section !== unit.section) && <Text style={{ color: design.accent, fontWeight: 700, fontSize: px(12), textTransform: "uppercase", borderBottomWidth: .6, borderBottomColor: design.accent, paddingBottom: 5, marginTop: 7, marginBottom: 8 }}>{c.sections[unit.section]}</Text>}
+    {(index === 0 || all[index - 1].section !== unit.section) && <Text style={{ color: design.accent, fontWeight: 700, fontSize: px(12), textTransform: "uppercase", borderBottomWidth: .6, borderBottomColor: design.accent, paddingBottom: 5, marginTop: 7, marginBottom: 8 }}>{sectionHeading(unit.section, design.targetMarket, design.documentLanguage, c.sections.summary === "Profil" ? "fr" : "en")}</Text>}
     {body(unit)}
   </View>);
   const contentPages = pages.map(page => ({ main: page.main.filter(unit => hasResumeUnitContent(resume, unit)), side: page.side.filter(unit => hasResumeUnitContent(resume, unit)) })).filter((page, index) => index === 0 || page.main.length || page.side.length);
   const actualPages = contentPages.length ? contentPages : [{ main: [], side: [] }];
   return <Document title={design.documentName || contact.name || c.untitled} author={contact.name}>
-    {actualPages.map((page, index) => <Page key={index} size="A4" style={{ ...base, padding: px(design.padding), paddingBottom: px(design.padding + 20), borderTopWidth: design.layout === "modern" ? 5 : 0, borderTopColor: design.accent }}>
+    {actualPages.map((page, index) => <Page key={index} size={design.paper} style={{ ...base, padding: px(design.padding), paddingBottom: px(design.padding + 20), borderTopWidth: design.layout === "modern" ? 5 : 0, borderTopColor: design.accent }}>
       <View style={{ marginBottom: px(index === 0 ? 16 : 8), paddingBottom: px(index === 0 ? 24 : 16), borderBottomWidth: design.layout === "minimal" ? 1.5 : design.layout === "classic" ? .75 : 0, borderBottomColor: design.accent, alignItems: design.layout === "classic" ? "center" : "stretch" }}>
         <Text style={{ fontSize: px(index === 0 ? 34 : 20), fontWeight: design.fieldStyles["contact.name"]?.bold === false ? 400 : 700, lineHeight: 1.15, letterSpacing: -1,
           fontStyle: design.fieldStyles["contact.name"]?.italic ? "italic" : "normal", textDecoration: design.fieldStyles["contact.name"]?.underline ? "underline" : "none", textAlign: design.fieldStyles["contact.name"]?.align || (design.layout === "classic" ? "center" : "left") }}>{contact.name}</Text>

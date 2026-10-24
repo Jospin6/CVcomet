@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { ArrowUpRight, ContactRound, FileText, LoaderCircle, PanelsTopLeft, Sparkles, Upload } from "lucide-react";
+import { CareerCommandCenter } from "@/components/career/career-command-center";
 import type { AppDispatch } from "@/redux/store";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { fetchUser, selectUser } from "@/redux/user/userSlice";
 import { Button } from "@/components/ui/button";
-import { PageHeader, SectionHeader } from "@/components/ui/page-header";
+import { SectionHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ResumeCards, useResumeLibrary } from "@/components/resumes/resume-library";
 import { JobAnalysisForm, useJobAnalysisForm } from "@/components/career/job-analysis-form";
@@ -29,7 +30,11 @@ export default function Overview() {
   useEffect(() => { if (session?.id) void dispatch(fetchUser(session.id)); }, [session?.id, dispatch]);
   const documentHref = session ? "/dashboard/resumes" : "/login";
   return <div className="space-y-7">
-    <PageHeader eyebrow={t("shell.homeEyebrow")} title={user?.name ? t("shell.greeting", { name: user.name.split(" ")[0] }) : t("shell.homeTitle")} description={t("shell.homeDescription")} action={<Button asChild><Link href={documentHref}><Upload />{t("documents.upload")}</Link></Button>} />
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <p className="text-sm font-medium text-muted-foreground">{user?.name ? t("shell.greeting", { name: user.name.split(" ")[0] }) : t("shell.guest")}</p>
+      <Button size="sm" variant="outline" asChild><Link href={documentHref}><Upload className="size-4" />{t("documents.upload")}</Link></Button>
+    </div>
+    <CareerCommandCenter signedIn={Boolean(session?.id)} resumes={error ? null : documents.length} resumesPending={loading} />
     <section className="min-w-0 w-full rounded-xl border bg-hero p-6 text-hero-foreground sm:p-8" aria-labelledby="overview-job-title">
       <p className="mb-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest"><Sparkles className="size-3.5" />{t("shell.heroLabel")}</p>
       <h2 id="overview-job-title" className="max-w-lg text-3xl font-semibold leading-tight tracking-[-.04em] sm:text-4xl">{jobForm.c.title}</h2>

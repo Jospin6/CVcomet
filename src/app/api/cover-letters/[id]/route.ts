@@ -5,7 +5,7 @@ import { coverLetterPatchSchema } from "@/lib/cover-letter-editor";
 import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
 
 type Context = { params: Promise<{ id: string }> };
-const mine = (id: string, userId: string) => ({ id, cv: { conversation: { userId } } });
+const mine = (id: string, userId: string) => ({ id, conversation: { userId } });
 
 export async function GET(_: Request, { params }: Context) {
   try {

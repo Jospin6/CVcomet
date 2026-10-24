@@ -53,7 +53,7 @@ export async function POST(req: Request) {
   try {
     model = await getAIModel();
     user = careerProfileContext(await getCareerProfile(conversationContent.userId));
-    await reserveProfileAI(session.id);
+    await reserveProfileAI(conversationContent.userId);
   } catch (error) { return profileErrorResponse(error); }
 
   await prisma.message.create({
@@ -73,12 +73,13 @@ export async function POST(req: Request) {
       role: true,
       content: true,
     },
-    orderBy: { createdAt: "asc" },
+    take: 20,
+    orderBy: { createdAt: "desc" },
   });
 
-  const chatHistory: CoreMessage[] = messages.map((m) => ({
+  const chatHistory: CoreMessage[] = messages.reverse().map((m) => ({
     role: m.role as "user" | "assistant",
-    content: m.content,
+    content: m.content.slice(0, 8000),
   }));
 
   if (conversationContent?.content) {
@@ -98,6 +99,7 @@ export async function POST(req: Request) {
       model,
       output: "object",
       schema: cvSchema,
+      maxTokens: 5200, maxRetries: 0, abortSignal: AbortSignal.timeout(45000),
       system,
       messages: chatHistory,
       async onFinish({ object, error }) {

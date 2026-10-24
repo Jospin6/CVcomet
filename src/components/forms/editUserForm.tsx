@@ -124,9 +124,11 @@ export default function EditUserForm({ user, onSuccess }: EditUserFormProps) {
           name="email"
           placeholder="example@email.com"
           type="email"
+          readOnly
           register={register}
           errors={errors}
         />
+        <p className="text-xs text-muted-foreground">L’adresse de connexion ne peut pas être modifiée depuis le profil. Un parcours de changement vérifié sera ajouté séparément.</p>
       </UserProfilItem>
 
       <UserProfilItem

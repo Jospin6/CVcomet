@@ -45,10 +45,10 @@ export async function POST(req: Request) {
     const model = await getAIModel();
     const nativePDF = pdf && !resumeText && /^(google|anthropic)/.test(model.provider);
     if (pdf && !resumeText && !nativePDF) throw new ProfileError(422, "PDF_TEXT_REQUIRED");
-    await reserveProfileAI(session.id);
+    await reserveProfileAI(session.id, "PROFILE_IMPORT");
     try {
       const result = await generateObject({
-        model, schema: extractionSchema, temperature: 0, maxRetries: 1,
+        model, schema: extractionSchema, temperature: 0, maxTokens: 5200, maxRetries: 1,
         abortSignal: AbortSignal.timeout(45000),
         system: factualRules + "\nYou are a senior resume parser. Extract every explicit professional fact into the matching structured field. Preserve names, dates, numbers, technologies, links and wording faithfully. Split experience, education, projects and certifications into separate records. Do not upgrade qualifications or infer missing facts. If a headline/summary is explicitly present, extract it; otherwise leave it empty. Return empty strings/arrays for unknown values. Preserve records with an explicit company or school even when the job title or degree is missing; keep that missing label empty for user review. Website addresses may be prefixed with https:// but never guess a missing domain or profile path.",
         messages: [{ role: "user", content: nativePDF

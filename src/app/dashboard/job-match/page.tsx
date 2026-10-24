@@ -11,6 +11,8 @@ import { ScoreRing } from "@/components/ui/score-ring";
 import { useApi } from "@/components/career/data-state";
 import { JobAnalysisForm, jobRequest as request, useJobAnalysisForm } from "@/components/career/job-analysis-form";
 import { type JobAnalysis, type JobSource, type MatchResult, type TailorProposal } from "@/lib/career/job-schema";
+import { buildJobIntelligence } from "@/lib/career/job-intelligence";
+import { JobIntelligencePanel } from "@/components/career/job-intelligence-panel";
 import type { z } from "zod";
 import type { coverLetterSchema } from "@/helpers/schema";
 
@@ -70,6 +72,7 @@ export default function JobMatch() {
   const saveApplication = () => act("application", async () => { const data = await request<{ id: string }>("/api/applications", { jobId: result!.job.id, cvId: result!.tailoredCvId || cvId || undefined }); setApplicationId(data.id); setMessage(c.saved); });
   const copy = (value: string) => act("copy", async () => { await navigator.clipboard.writeText(value); setMessage(c.copied); });
   const analysis = result?.job.analysis, match = result?.result;
+  const intelligence = analysis && match ? buildJobIntelligence(analysis, match, i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en") : null;
   const requirements = match?.requirements.filter(item => (!category || item.category === category) && (!status || item.status === status)) || [];
 
   return <div className="space-y-7">
@@ -91,6 +94,7 @@ export default function JobMatch() {
         <p className="break-all text-xs text-muted-foreground">{c.source} : {result.job.sourceType} {result.job.sourceName}{result.job.sourceUrl && <a className="ml-2 underline" href={result.job.sourceUrl} target="_blank" rel="noopener noreferrer">{result.job.sourceUrl}</a>}</p>
         <details><summary className="cursor-pointer text-sm">{c.original}</summary><pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-muted p-3 font-sans text-xs leading-6">{result.job.originalText || result.job.description}</pre></details>
       </section>
+      {intelligence && <JobIntelligencePanel intelligence={intelligence} language={i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en"} />}
       <section className="app-section space-y-4"><h2 className="type-h2">{c.requirements}</h2><div className="flex flex-wrap gap-3"><label className="text-xs">{c.category}<select className="ml-2 rounded-md border bg-background p-2" value={category} onChange={event => setCategory(event.target.value)}><option value="">{c.all}</option>{Object.entries(c.categories).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><label className="text-xs">{c.status}<select className="ml-2 rounded-md border bg-background p-2" value={status} onChange={event => setStatus(event.target.value)}><option value="">{c.all}</option>{Object.entries(c.statuses).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label></div>
         {!requirements.length && <p className="text-sm text-muted-foreground">{c.none}</p>}
         {requirements.map(item => <article key={item.id} className="rounded-xl border p-4"><div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="text-sm font-semibold">{item.title}</h3><p className="mt-1 text-xs text-muted-foreground">{c.categories[item.category]} · {c.priorities[item.priority]}</p></div><span className={`rounded-full px-2.5 py-1 text-xs ${item.status === "DEMONSTRATED" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{c.statuses[item.status]}</span></div><p className="mt-3 text-sm">{item.description}</p><details className="mt-3 text-sm"><summary className="cursor-pointer text-primary">{c.evidence}</summary><p className="mt-3">{c.explanations[item.explanation as keyof typeof c.explanations]}</p><p className="mt-3 text-xs font-semibold">{c.jobEvidence}</p><blockquote className="mt-1 border-l-2 border-primary/30 pl-3 text-muted-foreground">{item.evidence}</blockquote>{item.ambiguity && <p className="mt-2">{item.ambiguity}</p>}<p className="mt-3 text-xs font-semibold">{c.profileEvidence}</p>{item.evidenceSources.length ? item.evidenceSources.map(evidence => <blockquote key={evidence.path} className="mt-2 border-l-2 pl-3"><p className="text-xs font-medium">{evidence.label}</p><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{evidence.quote}</p></blockquote>) : <p className="mt-2 text-muted-foreground">{c.noEvidence}</p>}</details></article>)}

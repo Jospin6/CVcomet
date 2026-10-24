@@ -32,6 +32,10 @@ export default function AddTemplateForm() {
 
     try {
       const validated = schema.parse({ name, type, templateFile });
+      if (validated.templateFile.size > 2 * 1024 * 1024) {
+        toast.error("L'image doit être inférieure à 2 Mo.");
+        return;
+      }
 
       const formData = new FormData();
       formData.append("name", validated.name);
@@ -100,7 +104,7 @@ export default function AddTemplateForm() {
         <Label>Image du template</Label>
         <Input
           type="file"
-          accept="image/*"
+          accept="image/png,image/jpeg,image/webp"
           onChange={(e) => setTemplateFile(e.target.files?.[0] || null)}
           required
         />

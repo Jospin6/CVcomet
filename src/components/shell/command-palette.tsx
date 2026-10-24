@@ -29,11 +29,9 @@ export function CommandPalette({
   useEffect(() => {
     if (open) setQuery("");
   }, [open]);
-  const actions = commandActions.filter((item) =>
-    t("shell." + item.key)
-      .toLocaleLowerCase()
-      .includes(query.toLocaleLowerCase()),
-  );
+  const normalize = (value: string) => value.toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const words = normalize(query.trim()).split(/\s+/).filter(Boolean);
+  const actions = commandActions.filter((item) => words.every(word => normalize(t("shell." + item.key)).includes(word)));
   const move = (direction: number) => {
     const buttons = Array.from(
       list.current?.querySelectorAll<HTMLButtonElement>(
@@ -82,9 +80,11 @@ export function CommandPalette({
               }
               if (event.key === "Enter") {
                 event.preventDefault();
-                list.current
-                  ?.querySelector<HTMLButtonElement>("button:not(:disabled)")
-                  ?.click();
+                const focused = document.activeElement;
+                const buttons = list.current?.querySelectorAll<HTMLButtonElement>("button:not(:disabled)");
+                const target = focused instanceof HTMLButtonElement && list.current?.contains(focused)
+                  ? focused : buttons?.[0];
+                target?.click();
               }
             }}
           />

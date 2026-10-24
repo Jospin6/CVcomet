@@ -193,6 +193,10 @@
     border-bottom: 1px solid var(--border);
     background: var(--card);
   }
+  .career-command-hero {
+    background: linear-gradient(115deg, var(--hero) 0%, var(--card) 112%);
+    isolation: isolate;
+  }
   .app-section {
     border: 1px solid var(--border);
     background: var(--card);

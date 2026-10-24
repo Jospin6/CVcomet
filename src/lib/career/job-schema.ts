@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { JobIntelligence } from "./job-intelligence";
 
 export const MAX_JOB_TEXT = 50000;
 export const MIN_JOB_TEXT = 100;
@@ -54,7 +55,7 @@ export type MatchResult = {
   components: { essentialSkills: number | null; desirableSkills: number | null; experience: number | null; qualifications: number | null };
   requirements: RequirementResult[]; evaluatedCount: number; unverifiedCount: number; totalCount: number;
   matchedSkills: string[]; missingSkills: string[]; unverifiedSkills: string[]; recommendations: string[];
-  scoreExplanation: string; source: "PROFILE" | "PROFILE_AND_RESUME";
+  scoreExplanation: string; source: "PROFILE" | "PROFILE_AND_RESUME"; intelligence?: JobIntelligence;
 };
 export type TailorChange = { path: string; current: string; proposed: string; reason: string; evidence: string };
 export type TailorProposal = { id: string; cvId: string; sourceSignature: string; mode: "TAILOR" | "IMPROVE"; changes: TailorChange[]; rejectedCount: number };

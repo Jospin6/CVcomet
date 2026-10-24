@@ -1,4 +1,28 @@
-import { NextResponse } from "next/server";import prisma from "../../../../prisma/prisma";import { requireUser } from "@/lib/career/auth-user";import { apiError } from "@/lib/career/api";import { z } from "zod";import { createPreparation, preparationInput } from "@/lib/career/interview";
-const s=z.object({type:z.enum(["HR","BEHAVIORAL","TECHNICAL","LEADERSHIP"]),applicationId:z.string().uuid().optional(),title:z.string().min(1).max(160)});
-export async function GET(){try{const u=await requireUser();return NextResponse.json(await prisma.interviewSession.findMany({where:{userId:u.id},include:{messages:true},orderBy:{createdAt:"desc"},take:30}))}catch(e){return apiError(e)}}
-export async function POST(req:Request){try{const u=await requireUser(),raw=await req.json();if(raw?.mode==="PREPARATION"){const {mode:_mode,...preparation}=raw;return NextResponse.json(await createPreparation(u.id,preparationInput.parse(preparation)),{status:201})}const b=s.parse(raw);if(b.applicationId&&!await prisma.jobApplication.findFirst({where:{id:b.applicationId,userId:u.id}}))return NextResponse.json({error:"Application not found"},{status:404});const session=await prisma.interviewSession.create({data:{...b,userId:u.id,status:"ACTIVE",messages:{create:{role:"assistant",content:"Tell me about yourself and why this role is a strong next step for you."}}},include:{messages:true}});return NextResponse.json(session,{status:201})}catch(e){return apiError(e)}}
+import { NextResponse } from "next/server";
+import prisma from "../../../../prisma/prisma";
+import { requireUser } from "@/lib/career/auth-user";
+import { apiError } from "@/lib/career/api";
+import { z } from "zod";
+import { createPreparation, preparationInput } from "@/lib/career/interview";
+import { fallbackQuestions } from "@/lib/career/interview-coach-policy";
+
+const input=z.object({type:z.enum(["HR","BEHAVIORAL","TECHNICAL","LEADERSHIP"]),applicationId:z.string().uuid().optional(),title:z.string().trim().min(1).max(160)}).strict();
+export async function GET(){
+  try{const user=await requireUser();return NextResponse.json(await prisma.interviewSession.findMany({where:{userId:user.id},include:{messages:{orderBy:{createdAt:"asc"},take:42}},orderBy:{createdAt:"desc"},take:30}));}
+  catch(error){return apiError(error);}
+}
+export async function POST(req:Request){
+  try{
+    const user=await requireUser(),raw=await req.json();
+    if(raw?.mode==="PREPARATION"){
+      const {mode:_mode,...preparation}=raw;
+      return NextResponse.json(await createPreparation(user.id,preparationInput.parse(preparation)),{status:201});
+    }
+    const body=input.parse(raw);
+    const application=body.applicationId?await prisma.jobApplication.findFirst({where:{id:body.applicationId,userId:user.id},select:{id:true}}):null;
+    if(body.applicationId&&!application)return NextResponse.json({error:"APPLICATION_NOT_FOUND"},{status:404});
+    const questions=fallbackQuestions(5,"fr");
+    const session=await prisma.interviewSession.create({data:{...body,userId:user.id,status:"ACTIVE",configuration:{role:body.title,language:"fr",questionCount:5,questionSet:{questions,recruiterQuestions:[]}},messages:{create:{role:"assistant",content:questions[0].question}}},include:{messages:true}});
+    return NextResponse.json(session,{status:201});
+  }catch(error){return apiError(error);}
+}

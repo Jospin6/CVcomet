@@ -1,26 +1,16 @@
-import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
-import type { SessionUser } from "@/lib/auth";
+import { originRejectionReason } from "@/lib/security/origin-policy";
 
-export async function middleware(request: NextRequest) {
-  const loginURL = new URL("/login", request.url);
-  loginURL.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);
-  if (!getSessionCookie(request.headers)) return NextResponse.redirect(loginURL);
-
-  const response = await fetch(new URL("/api/auth/get-session", request.url), {
-    headers: { cookie: request.headers.get("cookie") || "" },
-    cache: "no-store",
-  });
-  if (!response.ok) return NextResponse.redirect(loginURL);
-  const session: { user: SessionUser } | null = await response.json();
-  if (!session?.user) return NextResponse.redirect(loginURL);
-
-  if (request.nextUrl.pathname.startsWith("/admin") && session.user.role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/unauthorized", request.url));
+/** Defense in depth: all cookie-backed API mutations must originate from CVComet. */
+export function middleware(req: NextRequest) {
+  if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) return NextResponse.next();
+  // Stripe has signature verification; the cron endpoint uses its own Bearer secret.
+  if (req.nextUrl.pathname === "/api/webhooks" || req.nextUrl.pathname === "/api/internal/job-boards/sync") {
+    return NextResponse.next();
   }
+  const reason = originRejectionReason(req, process.env);
+  if (reason) return NextResponse.json({ error: reason }, { status: 403, headers: { "Cache-Control": "no-store" } });
   return NextResponse.next();
 }
 
-export const config = {
-  matcher: ["/dashboard/:path*", "/onboarding/:path*", "/settings/:path*", "/g/:path*", "/admin/:path*", "/profil/:path*", "/templates/:path*", "/upgrade/:path*"],
-};
+export const config = { matcher: ["/api/:path*"] };

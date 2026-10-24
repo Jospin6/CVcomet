@@ -1,8 +1,9 @@
 "use client";
 import { useLayoutEffect, useRef, type CSSProperties } from "react";
 import { GripVertical, Plus, Sparkles, Trash2, Copy } from "lucide-react";
-import { A4_HEIGHT, A4_WIDTH, fieldValue, paginateResume, resumeBulletItems, resumeFieldHasBullets, resumeFonts, resumeUnits, isSidebarSection, tintAccent, type EditorResume, type ResumeUnit, type ResumePage, type ResumeSection } from "@/lib/resume-editor";
+import { resumePaperDimensions, fieldValue, paginateResume, resumeBulletItems, resumeFieldHasBullets, resumeFonts, resumeUnits, isSidebarSection, tintAccent, type EditorResume, type ResumeUnit, type ResumePage, type ResumeSection } from "@/lib/resume-editor";
 import type { ResumeEditorCopy } from "@/lib/resume-editor-copy";
+import { sectionHeading } from "@/lib/career-localization/markets";
 
 type Props = {
   resume: EditorResume; pages: ResumePage[]; copy: ResumeEditorCopy; selected: string; preview: boolean;
@@ -98,7 +99,7 @@ function ResumeColumn({ units, props, measuring = false }: { units: ResumeUnit[]
     onDragOver={event => { if (event.dataTransfer.types.includes("text/x-resume-section")) event.preventDefault(); }}
     onDrop={event => { const section = event.dataTransfer.getData("text/x-resume-section") as ResumeSection; if (section) { event.preventDefault(); props.onMove(section, unit.section); } }}>
     {(i === 0 || units[i - 1].section !== unit.section) && <div className="resume-section-heading" style={{ color: props.resume.design.accent }}>
-      <span>{props.copy.sections[unit.section]}</span>
+      <span>{sectionHeading(unit.section, props.resume.design.targetMarket, props.resume.design.documentLanguage, props.copy.sections.summary === "Profil" ? "fr" : "en")}</span>
       {!props.preview && !measuring && <div className="resume-heading-tools">
         <button draggable type="button" title={props.copy.structureHint} aria-label={props.copy.sections[unit.section] + " — " + props.copy.structure}
           onDragStart={event => { event.dataTransfer.setData("text/x-resume-section", unit.section); event.dataTransfer.effectAllowed = "move"; }}><GripVertical size={12} /></button>
@@ -137,7 +138,7 @@ export function EditableResumeCanvas(props: Props) {
     root.querySelectorAll<HTMLElement>("[data-unit-body]").forEach(element => { heights[element.dataset.unitBody!] = element.offsetHeight + 12; });
     props.onPages(paginateResume(resume, heights, (root.querySelector<HTMLElement>("[data-resume-header]")?.offsetHeight || 150) + 16, (root.querySelector<HTMLElement>("[data-compact-header]")?.offsetHeight || 64) + 8, !props.preview));
   }, [resume, c, props.onPages, props.preview]);
-  const paperStyle: CSSProperties = { width: A4_WIDTH, minHeight: A4_HEIGHT, padding: design.padding, fontFamily: resumeFonts[design.font], fontSize: design.fontSize, lineHeight: design.lineHeight, "--resume-accent": design.accent, "--resume-tint": tintAccent(design.accent) } as CSSProperties;
+  const paperStyle: CSSProperties = { width: resumePaperDimensions(design.paper).width, minHeight: resumePaperDimensions(design.paper).height, padding: design.padding, fontFamily: resumeFonts[design.font], fontSize: design.fontSize, lineHeight: design.lineHeight, "--resume-accent": design.accent, "--resume-tint": tintAccent(design.accent) } as CSSProperties;
   const columns = (page: ResumePage, measuring = false) => <div className="resume-paper-columns">
     {design.layout === "modern" && <aside className="resume-paper-side"><ResumeColumn units={page.side} props={props} measuring={measuring} /></aside>}
     <div className="resume-paper-main"><ResumeColumn units={page.main} props={props} measuring={measuring} /></div>

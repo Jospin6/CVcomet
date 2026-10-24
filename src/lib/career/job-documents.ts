@@ -10,6 +10,7 @@ import { factualRules, reserveProfileAI } from "@/lib/career-profile/ai";
 import { careerProfileContext, getCareerProfile } from "@/lib/career-profile/service";
 import { ProfileError, profileAIError } from "@/lib/career-profile/http";
 import { normalizeEditorResume } from "@/lib/resume-editor";
+import { marketPrompt, resolveDocumentLanguage } from "@/lib/career-localization/markets";
 import { requireFeature } from "./entitlements";
 import { canonicalTerm, careerEvidence } from "./job-match";
 import { jobAnalysisSchema } from "./job-schema";
@@ -56,9 +57,11 @@ async function context(userId: string, body: z.infer<typeof letterInput> | z.inf
   const facts = professionalFacts;
   const parsed = jobAnalysisSchema.safeParse(job.analysis);
   const technicalRequirements = parsed.success ? parsed.data.requirements.filter(item => item.category === "TECHNICAL").flatMap(item => item.terms) : [];
-  const fingerprint = createHash("sha256").update(JSON.stringify({ job: job.description, profile: confirmedProfile, resume, notes: body.notes, language: body.language })).digest("hex");
+  const localization = marketPrompt(resume?.design.targetMarket ?? "GLOBAL", resume?.design.documentLanguage ?? "auto", body.language);
+  const documentLanguage = resolveDocumentLanguage(resume?.design.targetMarket ?? "GLOBAL", resume?.design.documentLanguage ?? "auto", body.language);
+  const fingerprint = createHash("sha256").update(JSON.stringify({ job: job.description, profile: confirmedProfile, resume, notes: body.notes, language: body.language, localization })).digest("hex");
   const drafts = draftsSchema.safeParse(job.documentDrafts);
-  return { job, profile, resume, confirmedProfile, facts, technicalRequirements, fingerprint, drafts: drafts.success ? drafts.data : {} };
+  return { job, profile, resume, confirmedProfile, facts, technicalRequirements, fingerprint, localization, documentLanguage, drafts: drafts.success ? drafts.data : {} };
 }
 
 export async function jobCoverLetter(userId: string, raw: unknown) {
@@ -68,19 +71,19 @@ export async function jobCoverLetter(userId: string, raw: unknown) {
     const draft = { ...body.draft, recipientTitle: body.draft.recipientTitle || "", companyName: data.job.company || "", positionTitle: data.job.title, senderName: data.profile.name, senderEmail: data.profile.email, senderPhone: data.profile.phone, senderAddress: data.profile.address, sendertitle: data.profile.headline };
     const { date: _date, ...fields } = draft;
     const existing = await prisma.coverLetter.findFirst({ where: { jobId: data.job.id, cvId: body.cvId, conversation: { userId } } });
-    const letter = existing ? await prisma.coverLetter.update({ where: { id: existing.id }, data: fields })
-      : await prisma.coverLetter.create({ data: { ...fields, cv: { connect: { id: body.cvId } }, job: { connect: { id: data.job.id } }, conversation: { create: { userId, title: data.job.title, content: data.job.description } } } });
+    const letter = existing ? await prisma.coverLetter.update({ where: { id: existing.id }, data: { ...fields, revision: { increment: 1 } } })
+      : await prisma.coverLetter.create({ data: { ...fields, design: data.resume ? { targetMarket: data.resume.design.targetMarket, documentLanguage: data.resume.design.documentLanguage, paper: data.resume.design.paper } : undefined, cv: { connect: { id: body.cvId } }, job: { connect: { id: data.job.id } }, conversation: { create: { userId, title: data.job.title, content: data.job.description } } } });
     await saveDrafts(userId, data.job.id, { letter: { fingerprint: data.fingerprint, draft } });
     await prisma.jobApplication.updateMany({ where: { userId, jobId: data.job.id }, data: { coverLetterId: letter.id } });
     return { draft, letterId: letter.id, conversationId: letter.conversationId, saved: true };
   }
   await requireFeature(userId, "COVER_LETTER");
   if (data.drafts.letter?.fingerprint === data.fingerprint) return { draft: data.drafts.letter.draft, reused: true };
-  const model = await getAIModel(); await reserveProfileAI(userId);
+  const model = await getAIModel(); await reserveProfileAI(userId, "COVER_LETTER");
   try {
-    const { object } = await generateObject({ model, schema: coverLetterSchema, temperature: 0, maxRetries: 1, abortSignal: AbortSignal.timeout(45000),
-      system: generateCoverLetterSystemPrompt() + "\nDo not include any experience-duration or achievement number absent from candidate evidence. Never claim a required technology absent from candidate evidence. Do not invent personal motivations. Use only provided notes for personal motivations. Never invent company information.",
-      prompt: generateCoverLetterPrompt({ description: JSON.stringify({ jobDescription: data.job.description, candidateResume: data.resume, notes: body.notes }), user: data.confirmedProfile, curentLanguage: generatedLanguagePrompt(body.language) }) });
+    const { object } = await generateObject({ model, schema: coverLetterSchema, temperature: 0, maxTokens: 3200, maxRetries: 1, abortSignal: AbortSignal.timeout(45000),
+      system: generateCoverLetterSystemPrompt() + "\n" + data.localization + "\nDo not include any experience-duration or achievement number absent from candidate evidence. Never claim a required technology absent from candidate evidence. Do not invent personal motivations. Use only provided notes for personal motivations. Never invent company information.",
+      prompt: generateCoverLetterPrompt({ description: JSON.stringify({ jobDescription: data.job.description, candidateResume: data.resume, notes: body.notes }), user: data.confirmedProfile, curentLanguage: data.documentLanguage === "de" ? "German (Deutsch)" : generatedLanguagePrompt(data.documentLanguage) }) });
     const draft = letterSchema.parse({ ...object.coverLetter, companyName: data.job.company || "", companyAddress: "", positionTitle: data.job.title, recipientName: "", recipientTitle: "", senderName: data.profile.name, senderEmail: data.profile.email, senderPhone: data.profile.phone, senderAddress: data.profile.address, sendertitle: data.profile.headline });
     assertDocumentFacts([draft.introduction, draft.body, draft.conclusion].join("\n"), data.facts, data.technicalRequirements);
     await saveDrafts(userId, data.job.id, { letter: { fingerprint: data.fingerprint, draft } });
@@ -97,11 +100,11 @@ export async function jobApplicationEmail(userId: string, raw: unknown) {
   }
   await requireFeature(userId, "COVER_LETTER");
   if (data.drafts.email?.fingerprint === data.fingerprint) return { ...data.drafts.email.draft, reused: true };
-  const model = await getAIModel(); await reserveProfileAI(userId);
+  const model = await getAIModel(); await reserveProfileAI(userId, "APPLICATION_EMAIL");
   try {
-    const { object } = await generateObject({ model, schema: emailSchema, temperature: 0, maxRetries: 1, abortSignal: AbortSignal.timeout(45000),
-      system: factualRules + "\nWrite a concise application email: subject, generic greeting, introduction, target role, one or two evidenced strengths, polite close and the provided candidate signature. Do not invent a recruiter email or motivations. Do not mention technologies absent from candidate evidence. Do not include numbers absent from candidate evidence.",
-      prompt: JSON.stringify({ language: body.language, jobDescription: data.job.description, confirmedProfile: data.confirmedProfile, candidateResume: data.resume, notes: body.notes }) });
+    const { object } = await generateObject({ model, schema: emailSchema, temperature: 0, maxTokens: 1200, maxRetries: 1, abortSignal: AbortSignal.timeout(45000),
+      system: factualRules + "\n" + data.localization + "\nWrite a concise application email: subject, generic greeting, introduction, target role, one or two evidenced strengths, polite close and the provided candidate signature. Do not invent a recruiter email or motivations. Do not mention technologies absent from candidate evidence. Do not include numbers absent from candidate evidence.",
+      prompt: JSON.stringify({ language: data.documentLanguage, jobDescription: data.job.description, confirmedProfile: data.confirmedProfile, candidateResume: data.resume, notes: body.notes }) });
     const email = emailSchema.parse(object);
     assertDocumentFacts(email.body, data.facts, data.technicalRequirements, [data.profile.name, data.profile.email, data.profile.phone, data.profile.address]);
     await saveDrafts(userId, data.job.id, { email: { fingerprint: data.fingerprint, draft: email } });

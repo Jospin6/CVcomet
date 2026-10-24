@@ -26,7 +26,7 @@ export async function assessAtsResume({ userId, resume, keywords = [], language 
   if (savedAnalysis) jobMatch = assessAtsJobMatch(visible, matchJob(emptyProfile(), savedAnalysis, visible));
   try {
     const model = await getAIModel({ structuredOutputs: true });
-    await reserveProfileAI(userId);
+    await reserveProfileAI(userId, "ATS_REVIEW");
     const [review, match] = await Promise.allSettled([
       reviewAtsContent(visible, language, model),
       jobDescription && !savedAnalysis ? analyzeJobDescription(jobDescription, undefined, language, model).then(job => {

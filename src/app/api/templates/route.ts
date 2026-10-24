@@ -1,50 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { z } from "zod";
 import prisma from "../../../../prisma/prisma";
 import { getSessionUser, isAdmin } from "@/lib/auth";
+import { ProfileError, profileErrorResponse, profileFormData } from "@/lib/career-profile/http";
+import { MAX_TEMPLATE_FORM_BYTES, validTemplatePreview } from "@/lib/security/template-preview";
 
-export async function POST(req: NextRequest) {
-  const session = await getSessionUser();
+const fields = z.object({
+  name: z.string().trim().min(1).max(120),
+  type: z.enum(["CV", "COVER_LETTER"]),
+  styleFamily: z.enum(["MODERN", "CLASSIC", "MINIMAL", "EXECUTIVE", "TECHNICAL", "EUROPASS_INSPIRED"]).default("MODERN"),
+  markets: z.array(z.string().regex(/^[A-Z0-9_-]{2,40}$/)).max(30),
+});
 
-  if (!isAdmin(session)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+const publicTemplateFields = {
+  id: true, name: true, type: true, plan: true, markets: true,
+  styleFamily: true, customizable: true, accentColors: true, createdAt: true, updatedAt: true,
+} as const;
 
+export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-
-    const name = formData.get("name") as string;
-    const type = formData.get("type") as string;
-    const templateFile = formData.get("templateFile") as File;
-    const markets = String(formData.get("markets") || "").split(",").map(v => v.trim()).filter(Boolean);
-    const styleFamily = String(formData.get("styleFamily") || "MODERN");
-
-    if (!templateFile) {
-      return NextResponse.json({ error: "Preview image is required" }, { status: 400 });
-    }
-
-    const previewBuffer = Buffer.from(await templateFile.arrayBuffer());
-
-    const template = await prisma.template.create({
-      data: {
-        name,
-        type: type as "CV" | "COVER_LETTER",
-        templateFile: previewBuffer, markets, styleFamily,
-      },
+    const session = await getSessionUser();
+    if (!session) throw new ProfileError(401, "UNAUTHORIZED");
+    if (!isAdmin(session)) throw new ProfileError(403, "FORBIDDEN");
+    const form = await profileFormData(req, MAX_TEMPLATE_FORM_BYTES);
+    const markets = String(form.get("markets") || "").split(",").map(v => v.trim()).filter(Boolean);
+    const data = fields.parse({ name: form.get("name"), type: form.get("type"),
+      markets, styleFamily: form.get("styleFamily") || "MODERN" });
+    const upload = form.get("templateFile");
+    if (!(upload instanceof File)) throw new ProfileError(400, "IMAGE_REQUIRED");
+    if (upload.size > 2 * 1024 * 1024 || upload.size === 0) throw new ProfileError(413, "INVALID_IMAGE");
+    const image = new Uint8Array(await upload.arrayBuffer());
+    if (!validTemplatePreview(image, upload.type)) throw new ProfileError(400, "INVALID_IMAGE");
+    const created = await prisma.template.create({
+      data: { ...data, templateFile: Buffer.from(image) },
+      select: publicTemplateFields,
     });
-
-    return NextResponse.json(template, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+    return NextResponse.json(created, { status: 201, headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) { return profileErrorResponse(error); }
 }
 
 export async function GET() {
   const session = await getSessionUser();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const templates = await prisma.template.findMany();
-  return NextResponse.json(templates);
+  if (!session) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  const templates = await prisma.template.findMany({ select: publicTemplateFields, orderBy: { createdAt: "desc" } });
+  return NextResponse.json(templates, { headers: { "Cache-Control": "private, no-store" } });
 }

@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { careerGoals, experienceLevels, workModes, type ProfileData } from "@/lib/career-profile/schema";
 
-export function ProfileField({ name, value, onChange, multiline = false, options, required = false, type = "text" }: {
-  name: string; value: string; onChange: (_value: string) => void; multiline?: boolean; options?: readonly string[]; required?: boolean; type?: string;
+export function ProfileField({ name, value, onChange, multiline = false, options, required = false, type = "text", readOnly = false }: {
+  name: string; value: string; onChange: (_value: string) => void; multiline?: boolean; options?: readonly string[]; required?: boolean; type?: string; readOnly?: boolean;
 }) {
   const { t } = useTranslation();
   const key = name.split("-").at(-1)!;
@@ -20,7 +20,7 @@ export function ProfileField({ name, value, onChange, multiline = false, options
       <option value="">{t("career.choose")}</option>{options.map(option => <option key={option} value={option}>{t("career.options." + option)}</option>)}
     </select> : multiline
       ? <Textarea id={name} value={value} onChange={e => onChange(e.target.value)} rows={5} maxLength={8000} className="min-h-32 rounded-xl border-input/80 bg-background px-4 py-3 leading-6 shadow-sm focus-visible:ring-primary/15" required={required} />
-      : <Input id={name} value={value} onChange={e => onChange(e.target.value)} type={type} required={required} maxLength={type === "url" ? 2048 : 500} className="h-12 rounded-xl border-input/80 bg-background px-4 shadow-sm focus-visible:ring-primary/15" />}
+      : <Input id={name} value={value} onChange={e => onChange(e.target.value)} readOnly={readOnly} type={type} required={required} maxLength={type === "url" ? 2048 : 500} className="h-12 rounded-xl border-input/80 bg-background px-4 shadow-sm focus-visible:ring-primary/15" />}
   </div>;
 }
 
@@ -109,7 +109,8 @@ export function ProfileFields({ profile, update, includeTarget = true }: { profi
     {includeTarget && <section id="section-target" className="app-section space-y-5 rounded-2xl border-border/70 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><h2 className="type-h2 tracking-[-0.02em]">{t("career.sections.target")}</h2><TargetFields profile={profile} set={set} /></section>}
     <section id="section-personal" className="app-section space-y-5 rounded-2xl border-border/70 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
       <h2 className="type-h2 tracking-[-0.02em]">{t("career.sections.personal")}</h2>
-      <div className="grid gap-5 sm:grid-cols-2">{(["name", "email", "phone", "address"] as const).map(key => <ProfileField key={key} name={key} value={profile[key]} type={key === "email" ? "email" : "text"} onChange={v => set(key, v)} required={key === "email"} />)}</div>
+      <div className="grid gap-5 sm:grid-cols-2">{(["name", "email", "phone", "address"] as const).map(key => <ProfileField key={key} name={key} value={profile[key]} type={key === "email" ? "email" : "text"} readOnly={key === "email"} onChange={v => set(key, v)} required={key === "email"} />)}</div>
+      <p className="text-xs text-muted-foreground">L'adresse de connexion est protégée ; le changement d'email nécessite une vérification dédiée.</p>
     </section>
     {(["headline", "summary"] as const).map(key => <section key={key} id={"section-" + key} className="app-section space-y-4">
       <h2 className="type-h2 tracking-[-0.02em]">{t("career.sections." + key)}</h2>

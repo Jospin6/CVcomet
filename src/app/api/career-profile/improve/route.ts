@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       if (!owned) throw new ProfileError(403, "FORBIDDEN");
     }
     const model = await getAIModel();
-    await reserveProfileAI(session.id);
+    await reserveProfileAI(session.id, "CAREER_PROFILE");
     const suggestion = await improveText(data.text, data.field, data.language, model);
     return NextResponse.json({ suggestion }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return profileErrorResponse(error); }
