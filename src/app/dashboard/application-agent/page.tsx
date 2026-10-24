@@ -50,6 +50,18 @@ export default function ApplicationAgentPage() {
     } catch (e) { setError(e instanceof Error ? e.message : "LOAD_FAILED"); }
   }, []);
   useEffect(() => { void load(); }, [load]);
+  const seededContext = useRef(false);
+  useEffect(() => {
+    if (seededContext.current || !options.jobs.length || !options.resumes.length) return;
+    const params = new URLSearchParams(window.location.search);
+    const requestedJob = params.get("jobId");
+    const requestedCv = params.get("cvId");
+    if (requestedJob && options.jobs.some(item => item.id === requestedJob)) {
+      setJobId(requestedJob);
+      if (requestedCv && options.resumes.some(item => item.id === requestedCv)) setCvId(requestedCv);
+    }
+    seededContext.current = true;
+  }, [options]);
   const letterOptions = useMemo(() => options.letters.filter(letter => letter.cvId === cvId && (!letter.jobId || letter.jobId === jobId)), [options.letters, cvId, jobId]);
   const showPacket = (packet: Packet) => { setActive(packet); setSubject(packet.subject); setBody(packet.body); setRecipientEmail(packet.recipientEmail || ""); setReviewed(false); setCopied(false); };
   const guarded = async (action: () => Promise<void>) => { setBusy(true); setError(""); try { await action(); } catch (e) { setError(e instanceof Error ? e.message : "REQUEST_FAILED"); } finally { setBusy(false); } };

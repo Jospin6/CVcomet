@@ -1,8 +1,91 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Archive, Trash2, ClipboardList } from "lucide-react";
-import { PageHeader } from "@/components/ui/page-header"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input";
-type App={id:string;company:string;jobTitle:string;status:string;updatedAt:string;notes?:string|null;reminders:{id:string;dueAt:string;note?:string|null}[]}; type Result={items:App[];total:number;page:number;pageSize:number};
-const statuses=["SAVED","APPLIED","INTERVIEW","TECHNICAL_INTERVIEW","OFFER","HIRED","REJECTED","WITHDRAWN"];
-export default function Applications(){const [data,setData]=useState<Result|null>(null),[q,setQ]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[form,setForm]=useState({company:"",jobTitle:""});const load=async()=>{const r=await fetch(`/api/applications?archived=false&q=${encodeURIComponent(q)}`,{cache:"no-store"});if(r.ok)setData(await r.json());else setError("Impossible de charger les candidatures.")};useEffect(()=>{void load()},[q]);const create=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setError("");const r=await fetch("/api/applications",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(form)});setBusy(false);if(!r.ok){setError((await r.json()).error||"Création impossible");return}setForm({company:"",jobTitle:""});void load()};const update=async(id:string,body:unknown)=>{setBusy(true);const r=await fetch(`/api/applications/${id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify(body)});setBusy(false);if(!r.ok)setError("Mise à jour impossible.");void load()};const remove=async(id:string)=>{if(!confirm("Supprimer cette candidature ?"))return;await fetch(`/api/applications/${id}`,{method:"DELETE"});void load()};const counts=Object.fromEntries(statuses.map(s=>[s,data?.items.filter(x=>x.status===s).length||0]));return <div className="space-y-7"><PageHeader title="Job Tracker" description="Centralisez vos candidatures, documents, entretiens et relances. Les rappels restent dans l’application : aucun message externe n’est envoyé." action={<Button onClick={()=>document.getElementById("new-application")?.scrollIntoView()}><Plus />Ajouter</Button>}/><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{[["Total",data?.total||0],["En cours",(counts.APPLIED||0)+(counts.INTERVIEW||0)+(counts.TECHNICAL_INTERVIEW||0)],["Entretiens",(counts.INTERVIEW||0)+(counts.TECHNICAL_INTERVIEW||0)],["Offres",counts.OFFER||0]].map(([label,value])=><div key={String(label)} className="app-section"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-semibold">{value}</p></div>)}</div><div className="app-section flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">Application Agent</h2><p className="text-sm text-muted-foreground">Préparez un dossier de candidature, révisez l’email et approuvez-le avant toute utilisation manuelle.</p></div><Button variant="outline" asChild><Link href="/dashboard/application-agent">Préparer un dossier</Link></Button></div><section id="new-application" className="app-section"><h2 className="type-h2">Ajouter une candidature</h2><form onSubmit={create} className="mt-4 grid gap-3 md:grid-cols-3"><Input required placeholder="Entreprise" value={form.company} onChange={e=>setForm({...form,company:e.target.value})}/><Input required placeholder="Poste" value={form.jobTitle} onChange={e=>setForm({...form,jobTitle:e.target.value})}/><Button disabled={busy}><Plus />Enregistrer</Button></form></section><div className="flex gap-3"><Input value={q} onChange={e=>setQ(e.target.value)} placeholder="Rechercher entreprise ou poste"/><Button variant="outline" onClick={()=>void load()}>Actualiser</Button></div>{error&&<p role="alert" className="text-sm text-destructive">{error}</p>}<section className="grid gap-4 xl:grid-cols-4">{statuses.slice(0,6).map(status=><div key={status} className="rounded-xl border bg-muted/30 p-3"><h2 className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground">{status} · {counts[status]}</h2><div className="space-y-3">{data?.items.filter(x=>x.status===status).map(app=><article key={app.id} className="rounded-lg border bg-card p-4"><ClipboardList className="size-4 text-primary"/><h3 className="mt-3 font-semibold">{app.jobTitle}</h3><p className="text-sm text-muted-foreground">{app.company}</p><select className="mt-3 w-full rounded border bg-background p-1.5 text-xs" value={app.status} disabled={busy} onChange={e=>void update(app.id,{status:e.target.value})}>{statuses.map(s=><option key={s}>{s}</option>)}</select>{app.reminders[0]&&<p className="mt-2 text-xs text-warning">Relance : {new Date(app.reminders[0].dueAt).toLocaleDateString()}</p>}<div className="mt-3 flex gap-1"><Button size="sm" variant="ghost" onClick={()=>void update(app.id,{archived:true})}><Archive />Archiver</Button><Button size="icon" variant="ghost" aria-label="Supprimer" onClick={()=>void remove(app.id)}><Trash2 /></Button></div></article>)}</div></div>)}</section></div>}
+import { ArrowRight, BriefcaseBusiness, Plus, Search, X, LoaderCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { applicationStatusLabel, applicationStatusTone } from "@/lib/career/application-workspace";
+
+type Application = { id: string; company: string; jobTitle: string; status: string; location?: string | null; updatedAt: string; reminders: { id: string; dueAt: string }[] };
+type Result = { items: Application[]; total: number; page: number; pageSize: number };
+const filters = [{ label: "Toutes", value: "" }, { label: "Enregistrées", value: "SAVED" }, { label: "Envoyées", value: "APPLIED" }, { label: "Entretiens", value: "INTERVIEW" }, { label: "Offres", value: "OFFER" }];
+
+export default function Applications() {
+  const [data, setData] = useState<Result | null>(null);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({ company: "", jobTitle: "" });
+  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async (signal?: AbortSignal) => {
+    const params = new URLSearchParams({ archived: "false", page: String(page), pageSize: "20" });
+    if (search.trim()) params.set("q", search.trim());
+    if (filter) params.set("status", filter);
+    const response = await fetch(`/api/applications?${params}`, { signal, cache: "no-store" });
+    if (!response.ok) throw new Error("Impossible de charger vos candidatures.");
+    return response.json() as Promise<Result>;
+  }, [search, filter, page]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      setLoading(true);
+      void load(controller.signal).then(result => { setData(result); setError(""); }).catch(() => {
+        if (!controller.signal.aborted) setError("Impossible de charger vos candidatures.");
+      }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    }, search.trim() ? 220 : 0);
+    return () => { clearTimeout(timeout); controller.abort(); };
+  }, [load, search]);
+
+  const create = async (event: React.FormEvent) => {
+    event.preventDefault(); setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/applications", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(form) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result?.error === "DUPLICATE_APPLICATION" ? "Une candidature similaire existe déjà." : "Création impossible.");
+      window.location.assign(`/dashboard/applications/${encodeURIComponent(result.id)}`);
+    } catch (failure) { setError(failure instanceof Error ? failure.message : "Création impossible."); setBusy(false); }
+  };
+
+  return <main className="mx-auto max-w-6xl space-y-6 pb-12">
+    <header className="flex flex-wrap items-center justify-between gap-3">
+      <div><p className="text-xs font-medium text-muted-foreground">Mon espace de carrière</p><h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Mes candidatures</h1></div>
+      <Button size="sm" onClick={() => setCreating(value => !value)} aria-expanded={creating} aria-controls="application-create"><Plus className="size-4" /> Nouvelle candidature</Button>
+    </header>
+
+    {creating && <section id="application-create" className="ux-surface ux-enter p-4 sm:p-5" aria-label="Nouvelle candidature">
+      <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold">Ajouter un poste</h2><Button size="icon" variant="ghost" onClick={() => setCreating(false)} aria-label="Fermer"><X className="size-4"/></Button></div>
+      <form className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]" onSubmit={create}>
+        <Input aria-label="Entreprise" required maxLength={300} placeholder="Entreprise (ex. Google)" value={form.company} onChange={e => setForm(value => ({ ...value, company: e.target.value }))} />
+        <Input aria-label="Intitulé du poste" required maxLength={300} placeholder="Poste (ex. Software Engineer)" value={form.jobTitle} onChange={e => setForm(value => ({ ...value, jobTitle: e.target.value }))} />
+        <Button size="sm" disabled={busy || !form.company.trim() || !form.jobTitle.trim()}><Plus className="size-4"/> Créer</Button>
+      </form>
+    </section>}
+
+    <div className="ux-surface overflow-hidden">
+      <div className="flex flex-col gap-3 border-b p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+        <div className="relative min-w-0 flex-1 sm:max-w-sm"><Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/><Input className="h-9 pl-9" aria-label="Rechercher des candidatures" placeholder="Rechercher un poste ou une entreprise" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}/></div>
+        <span className="text-xs text-muted-foreground" aria-live="polite">{loading ? "Chargement…" : data ? `${data.total} candidature${data.total > 1 ? "s" : ""}` : "—"}</span>
+      </div>
+      <div role="group" aria-label="Filtrer les candidatures" className="flex gap-1 overflow-x-auto border-b px-3 py-2 sm:px-4">
+        {filters.map(item => <button type="button" key={item.value} onClick={() => { setFilter(item.value); setPage(1); }} aria-pressed={filter === item.value} className={`ux-filter shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${filter === item.value ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{item.label}</button>)}
+      </div>
+      {error && <p role="alert" className="p-4 text-sm text-destructive">{error} <button className="underline" onClick={() => void load().then(setData).catch(() => {})}>Réessayer</button></p>}
+      {loading ? <div className="space-y-2 p-4" aria-label="Chargement des candidatures">{[1,2,3].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-muted/60" />)}</div>
+        : !data?.items.length ? <div className="flex flex-col items-center gap-3 p-12 text-center"><BriefcaseBusiness className="size-8 text-muted-foreground"/><p className="text-sm font-medium">Aucune candidature ici</p><p className="text-xs text-muted-foreground">Ajoutez votre première candidature pour commencer.</p><Button variant="outline" size="sm" onClick={() => setCreating(true)}><Plus className="size-4"/> Ajouter</Button></div>
+        : <div className="divide-y" aria-label="Liste des candidatures">{data.items.map(app => <Link key={app.id} href={`/dashboard/applications/${app.id}`} className="ux-application-row group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring sm:gap-4 sm:px-5">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-sm font-bold text-primary" aria-hidden="true">{app.company.slice(0, 1).toUpperCase()}</div>
+          <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{app.jobTitle}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{app.company}{app.location ? ` · ${app.location}` : ""}</p></div>
+          <span className={`hidden rounded-md px-2.5 py-1 text-[11px] font-medium sm:inline-flex ${applicationStatusTone(app.status)}`}>{applicationStatusLabel(app.status)}</span>
+          <span className="hidden w-24 text-right text-xs text-muted-foreground md:block">{new Date(app.updatedAt).toLocaleDateString("fr-FR")}</span>
+          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" aria-hidden="true"/>
+        </Link>)}</div>}
+      {data && data.total > data.pageSize && <div className="flex items-center justify-between border-t p-3"><Button size="sm" variant="ghost" disabled={page === 1} onClick={() => setPage(v => v - 1)}>Précédent</Button><span className="text-xs text-muted-foreground">Page {page}</span><Button size="sm" variant="ghost" disabled={page * data.pageSize >= data.total} onClick={() => setPage(v => v + 1)}>Suivant</Button></div>}
+    </div>
+  </main>;
+}

@@ -21,8 +21,23 @@ export default function Interviews(){
   const [busy,setBusy]=useState(false),[error,setError]=useState(""),[isListening,setIsListening]=useState(false),[speechAvailable,setSpeechAvailable]=useState(false);
   const [form,setForm]=useState({role:"",level:"",language:"fr" as "fr"|"en",questionCount:10,jobDescription:""});
   const listening=useRef<Recognition|null>(null);
+  const [applicationId, setApplicationId] = useState("");
   const load=useCallback(async()=>{try{const r=await fetch("/api/interviews",{cache:"no-store"});if(r.ok)setSessions(await r.json());}catch{/* retry on navigation */}},[]);
   useEffect(()=>{void load();const w=window as SpeechWindow;setSpeechAvailable(!!(w.SpeechRecognition||w.webkitSpeechRecognition));return ()=>{listening.current?.stop();window.speechSynthesis?.cancel();};},[load]);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("applicationId");
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return;
+    const controller = new AbortController();
+    void fetch(`/api/applications/${encodeURIComponent(id)}`, { cache: "no-store", signal: controller.signal }).then(async response => {
+      if (!response.ok) throw new Error("APPLICATION_NOT_FOUND");
+      return response.json();
+    }).then(application => {
+      if (controller.signal.aborted) return;
+      setApplicationId(application.id);
+      setForm(previous => ({ ...previous, role: application.jobTitle?.slice(0,160) || previous.role, jobDescription: application.job?.description?.slice(0,12000) || previous.jobDescription }));
+    }).catch(() => { /* User can still prepare an independent interview. */ });
+    return () => controller.abort();
+  }, []);
   const request=async(url:string,method="POST",body?:unknown)=>{
     const r=await fetch(url,{method,headers:body===undefined?undefined:{"content-type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
     const value=await r.json().catch(()=>({}));
@@ -30,7 +45,7 @@ export default function Interviews(){
     return value;
   };
   const guard=async(fn:()=>Promise<void>)=>{setBusy(true);setError("");try{await fn();}catch(e){setError(e instanceof Error?e.message:"Action indisponible.");}finally{setBusy(false);}};
-  const prepare=async(e:React.FormEvent)=>{e.preventDefault();await guard(async()=>{const next:Session=await request("/api/interviews","POST",{...form,questionCount:Number(form.questionCount),mode:"PREPARATION"});setPrep(next);setSessions(v=>[next,...v]);});};
+  const prepare=async(e:React.FormEvent)=>{e.preventDefault();await guard(async()=>{const next:Session=await request("/api/interviews","POST",{...form,...(applicationId ? { applicationId } : {}),questionCount:Number(form.questionCount),mode:"PREPARATION"});setPrep(next);setSessions(v=>[next,...v]);});};
   const start=async(s:Session)=>guard(async()=>{const started:Session=await request(`/api/interviews/${s.id}/start`);setCurrent(started);setPrep(null);setSessions(v=>v.map(item=>item.id===started.id?started:item));});
   const send=async()=>{
     if(!current||!answer.trim())return;

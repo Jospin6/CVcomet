@@ -7,7 +7,7 @@ import { applicationCount, chooseCareerNextStep, missionCount } from "@/lib/care
 import {
   ArrowRight, ArrowUpRight, BrainCircuit, BriefcaseBusiness, CheckCircle2,
   ClipboardList, FileCheck2, FileText, MessageSquareText, ScanSearch,
-  ShieldCheck, Sparkles, WandSparkles,
+  ShieldCheck, Sparkles,
 } from "lucide-react";
 
 /** Only render numbers returned by authenticated endpoints; unavailable data is never displayed as zero. */
@@ -86,16 +86,16 @@ const copy = {
 
 type IconComponent = typeof FileText;
 function ActionCard({ href, icon: Icon, title, description }: { href: string; icon: IconComponent; title: string; description: string }) {
-  return <Link href={href} className="group flex min-h-32 min-w-0 flex-col justify-between gap-4 rounded-2xl border bg-card p-4 shadow-sm transition-[border-color,transform,box-shadow] hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-5">
+  return <Link href={href} className="group flex min-h-24 min-w-0 flex-col justify-between gap-2 rounded-xl border bg-card p-3 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-primary/45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
     <div className="flex items-start justify-between gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-secondary text-primary"><Icon className="size-5" aria-hidden="true" /></span><ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" /></div>
     <div><h3 className="text-sm font-semibold leading-snug">{title}</h3><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p></div>
   </Link>;
 }
 function Metric({ label, value, icon: Icon, pending, unavailable }: { label: string; value: number | null; icon: IconComponent; pending: boolean; unavailable: string }) {
-  return <div className="min-w-0 rounded-xl border bg-card p-4">
-    <div className="flex items-center gap-2 text-muted-foreground"><Icon className="size-4" aria-hidden="true"/><span className="text-xs">{label}</span></div>
-    <p className="mt-2 text-2xl font-semibold tabular-nums" aria-label={value === null ? unavailable : `${value} ${label}`}>
-      {pending ? <span className="inline-block h-7 w-10 animate-pulse rounded bg-muted" aria-hidden="true"/> : value ?? "—"}
+  return <div className="min-w-0 rounded-xl border bg-card px-3 py-3 sm:px-4">
+    <div className="flex items-center gap-1.5 text-muted-foreground"><Icon className="size-4" aria-hidden="true"/><span className="text-xs">{label}</span></div>
+    <p className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl" aria-label={value === null ? unavailable : `${value} ${label}`}>
+      {pending ? <span className="inline-block h-5 w-8 animate-pulse rounded bg-muted" aria-hidden="true"/> : value ?? "—"}
     </p>
   </div>;
 }
@@ -117,39 +117,45 @@ export function CareerCommandCenter({ signedIn, resumes, resumesPending }: { sig
     { href: "/dashboard/interviews", icon: BriefcaseBusiness, title: c.interview, description: c.interviewDesc },
     { href: "/dashboard/evidence", icon: ShieldCheck, title: c.vault, description: c.vaultDesc },
   ];
-  return <div className="space-y-7">
-    <section className="career-command-hero relative overflow-hidden rounded-3xl border border-primary/20 p-6 text-hero-foreground sm:p-8 lg:p-10" aria-labelledby="career-command-title">
-      <div className="pointer-events-none absolute -right-14 -top-20 size-72 rounded-full border border-primary/10" aria-hidden="true" />
-      <div className="pointer-events-none absolute right-4 top-4 size-48 rounded-full border border-primary/10" aria-hidden="true" />
-      <div className="relative grid items-center gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(250px,0.8fr)]">
-        <div className="space-y-4">
-          <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.14em]"><Sparkles className="size-4" aria-hidden="true"/>{c.eyebrow}</p>
-          <h1 id="career-command-title" className="max-w-xl text-3xl font-semibold leading-[1.15] tracking-[-.045em] sm:text-4xl lg:text-5xl">{c.title}</h1>
-          <p className="max-w-lg text-sm leading-7 opacity-85">{c.description}</p>
-          <Link href="/dashboard/assistant" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><BrainCircuit className="size-4" aria-hidden="true"/>{c.leadAction}<ArrowRight className="size-4" aria-hidden="true"/></Link>
-        </div>
-        <div className="rounded-2xl border border-primary/15 bg-card/85 p-5 text-card-foreground shadow-sm backdrop-blur-sm sm:p-6">
-          <span className="mb-3 flex size-11 items-center justify-center rounded-xl bg-secondary text-primary"><WandSparkles className="size-6" aria-hidden="true"/></span>
-          <p className="font-semibold">{c.lead}</p><p className="mt-2 text-sm leading-6 text-muted-foreground">{c.leadDescription}</p>
-          <div className="mt-5 flex items-start gap-2 border-t pt-4 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true"/>{c.privacy}</div>
-        </div>
-      </div>
+  return <div className="space-y-5">
+    <section className="flex flex-wrap items-start justify-between gap-4" aria-labelledby="career-command-title">
+      <div><p className="text-xs text-muted-foreground">{c.eyebrow}</p><h1 id="career-command-title" className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{c.title}</h1></div>
+      <Link href="/dashboard/assistant" className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition-[transform,background-color] hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><Sparkles className="size-4" aria-hidden="true"/>{c.leadAction}<ArrowRight className="size-3.5" aria-hidden="true"/></Link>
     </section>
-    <section aria-labelledby="career-pulse-title" className="space-y-3">
-      <h2 id="career-pulse-title" className="text-base font-semibold">{c.pulse}</h2>
-      {!signedIn && <p className="text-xs text-muted-foreground">{c.guest}</p>}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-live="polite">
-        <Metric label={c.docs} icon={FileText} value={signedIn ? resumes : null} pending={signedIn && resumesPending} unavailable={c.unavailable}/>
-        <Metric label={c.apps} icon={ClipboardList} value={pulse.applications} pending={pending} unavailable={c.unavailable}/>
-        <Metric label={c.missions} icon={BrainCircuit} value={pulse.missions} pending={pending} unavailable={c.unavailable}/>
-      </div>
+    <section aria-label={c.pulse} className="grid grid-cols-3 gap-2 sm:gap-3">
+      <Metric label={c.docs} icon={FileText} value={signedIn ? resumes : null} pending={signedIn && resumesPending} unavailable={c.unavailable}/>
+      <Metric label={c.apps} icon={ClipboardList} value={pulse.applications} pending={pending} unavailable={c.unavailable}/>
+      <Metric label={c.missions} icon={BrainCircuit} value={pulse.missions} pending={pending} unavailable={c.unavailable}/>
     </section>
-    {next && <aside className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 sm:p-5" aria-label={c.next}>
-      <div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true"/><div><h2 className="text-sm font-semibold">{c.next}</h2><p className="mt-1 text-sm text-muted-foreground">{next.text}</p></div></div>
-      <Link href={next.href} className="inline-flex min-h-10 items-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors hover:bg-accent">{c.nextButton}<ArrowRight className="size-4" aria-hidden="true"/></Link>
+    {next && <aside className="ux-surface flex flex-wrap items-center justify-between gap-3 px-4 py-3" aria-label={c.next}>
+      <div className="flex min-w-0 items-center gap-2"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><CheckCircle2 className="size-4" aria-hidden="true"/></span><p className="text-sm"><span className="font-semibold">{c.next}</span><span className="ml-2 text-muted-foreground">{next.text}</span></p></div>
+      <Link href={next.href} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">{c.nextButton}<ArrowRight className="size-3.5" aria-hidden="true"/></Link>
     </aside>}
-    <section aria-labelledby="career-actions-title" className="space-y-4"><div><h2 id="career-actions-title" className="text-xl font-semibold tracking-tight">{c.quickTitle}</h2><p className="mt-1 text-sm text-muted-foreground">{c.quickDescription}</p></div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">{actions.map(action => <ActionCard key={action.href} {...action}/>)}</div>
-    </section>
+    <RecentApplications enabled={signedIn} />
+    <details className="group rounded-xl border bg-card">
+      <summary className="cursor-pointer list-none px-4 py-3 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">{c.quickTitle} <span className="ml-2 text-primary">+</span></summary>
+      <div className="grid gap-2 border-t p-3 sm:grid-cols-2 lg:grid-cols-3">{actions.map(action => <ActionCard key={action.href} {...action}/>)}</div>
+    </details>
   </div>;
+}
+
+type RecentApplication = { id: string; company: string; jobTitle: string; status: string };
+function RecentApplications({ enabled }: { enabled: boolean }) {
+  const { i18n } = useTranslation();
+  const fr = i18n.resolvedLanguage?.startsWith("fr");
+  const [items, setItems] = useState<RecentApplication[] | null>(null);
+  useEffect(() => {
+    if (!enabled) { setItems([]); return; }
+    const controller = new AbortController();
+    void fetch("/api/applications?archived=false&pageSize=4", { cache: "no-store", credentials: "same-origin", signal: controller.signal }).then(r => {
+      if (!r.ok) throw new Error("UNAVAILABLE"); return r.json();
+    }).then(data => { if (!controller.signal.aborted) setItems(Array.isArray(data.items) ? data.items : null); }).catch(() => { if (!controller.signal.aborted) setItems(null); });
+    return () => controller.abort();
+  }, [enabled]);
+  return <section className="ux-surface overflow-hidden" aria-labelledby="recent-apps-title">
+    <div className="flex items-center justify-between gap-2 border-b px-4 py-3"><h2 id="recent-apps-title" className="text-sm font-semibold">{fr ? "Candidatures récentes" : "Recent applications"}</h2><Link className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline" href="/dashboard/applications">{fr ? "Tout voir" : "View all"}<ArrowRight className="size-3.5"/></Link></div>
+    {items === null ? <p className="px-4 py-6 text-xs text-muted-foreground">{fr ? "Données indisponibles" : "Data unavailable"}</p>
+      : items.length === 0 ? <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-6"><p className="text-sm text-muted-foreground">{fr ? "Aucune candidature enregistrée." : "No saved applications yet."}</p><Link className="text-xs font-semibold text-primary hover:underline" href="/dashboard/applications">{fr ? "Commencer" : "Get started"}</Link></div>
+      : <div className="divide-y">{items.map(item => <Link key={item.id} href={`/dashboard/applications/${item.id}`} className="group flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-muted/30"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-xs font-semibold text-primary">{item.company.slice(0,1).toUpperCase()}</span><span className="min-w-0 flex-1"><span className="block truncate font-medium">{item.jobTitle}</span><span className="block truncate text-xs text-muted-foreground">{item.company}</span></span><ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"/></Link>)}</div>}
+  </section>;
 }
