@@ -53,7 +53,13 @@ export async function POST(req: Request) {
     const sub = await stripe.subscriptions.retrieve(subId);
     const customerId = stripeCustomerId(sub);
     const priceIds = sub.items.data.map(item => item.price.id);
-    const plan = priceIds.length === 1 ? planForStripePrice(priceIds[0], process.env) : null;
+    const plan = priceIds.length === 1
+  ? planForStripePrice(priceIds[0], {
+      STRIPE_PRO_PRICE_ID: process.env.STRIPE_PRO_PRICE_ID,
+      STRIPE_CAREER_PRO_PRICE_ID:
+        process.env.STRIPE_CAREER_PRO_PRICE_ID,
+    })
+  : null;
     if (!plan) {
       console.error("billing-webhook: unrecognized subscription price");
       // Retry until the recognized Stripe price IDs are configured correctly.
