@@ -10,12 +10,12 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-8 flex flex-wrap items-center justify-between gap-5">
+    <div className="mb-6 flex min-h-9 flex-wrap items-center justify-between gap-4 border-b border-border pb-5">
       <div className="min-w-0">
-        {eyebrow && <p className="eyebrow mb-3">{eyebrow}</p>}
+        {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
         <h1 className="type-h1 break-words">{title}</h1>
         {description && (
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          <p className="sr-only">
             {description}
           </p>
         )}
@@ -34,11 +34,11 @@ export function SectionHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
       <div>
         <h2 className="type-h2">{title}</h2>
         {description && (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          <p className="sr-only">{description}</p>
         )}
       </div>
       {action}

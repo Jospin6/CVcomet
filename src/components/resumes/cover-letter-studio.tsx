@@ -210,7 +210,7 @@ export function CoverLetterEditor() {
     finally { setExporting(false); }
   };
 
-  if (!document || !letter) return <div className="rounded-xl border bg-card p-10 text-center"><p role={error ? "alert" : "status"} className="text-sm text-muted-foreground">{error ? (fr ? "Impossible d’ouvrir cette lettre." : "Unable to open this letter.") : c.loading}</p>{!error && <Loader2 className="mx-auto mt-4 size-5 animate-spin text-primary" />}{error && <Button className="mt-6" variant="outline" onClick={() => void load()}>{c.retry}</Button>}</div>;
+  if (!document || !letter) return <div className="border bg-card p-10 text-center"><p role={error ? "alert" : "status"} className="text-sm text-muted-foreground">{error ? (fr ? "Impossible d’ouvrir cette lettre." : "Unable to open this letter.") : c.loading}</p>{!error && <Loader2 className="mx-auto mt-4 size-5 animate-spin text-primary" />}{error && <Button className="mt-6" variant="outline" onClick={() => void load()}>{c.retry}</Button>}</div>;
   const fieldLabel = (field: TextField) => fieldNames[field][fr ? 0 : 1];
   const editable = (field: TextField) => {
     const styles = document.design.fieldStyles[field];

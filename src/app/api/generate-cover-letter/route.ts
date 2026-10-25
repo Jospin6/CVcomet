@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const user = await getSessionUser();
     if (!user) throw new ProfileError(401, "UNAUTHORIZED");
     const input = await profileJson(req);
-    if (!input || typeof input !== "object" || !("jobId" in input) || !("cvId" in input)) throw new ProfileError(422, "CV_JOB_REQUIRED");
+    if (!input || typeof input !== "object" || !("jobId" in input)) throw new ProfileError(422, "JOB_REQUIRED");
     return NextResponse.json(await jobCoverLetter(user.id, input));
   } catch (error) { return profileErrorResponse(error); }
 }

@@ -161,14 +161,14 @@ export default function FindJobs() {
   const totalPages = Math.max(1, Math.ceil(data.totalAvailable / data.pageSize));
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-5">
       <PageHeader
         eyebrow="Find Jobs"
         title="Découvrez des offres réelles"
         description="Offres issues de sources publiques. Le score est un indicateur de correspondance, jamais une probabilité d’embauche."
       />
 
-      <section className="app-section flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col gap-2 border-y bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-3xl font-semibold tabular-nums text-foreground">
             {data.totalAvailable.toLocaleString("fr-FR")}
@@ -182,7 +182,7 @@ export default function FindJobs() {
         )}
       </section>
 
-      <form className="app-section flex gap-2" onSubmit={(event) => {
+      <form className="flex gap-2 border-b pb-5" onSubmit={(event) => {
         event.preventDefault();
         setPage(1);
         setTerm(q.trim());
@@ -192,10 +192,11 @@ export default function FindJobs() {
         <Button type="submit"><Search />Rechercher</Button>
       </form>
 
-      <div className="flex gap-2" role="tablist">
+      <div className="flex gap-1 border-b" role="tablist">
         {([['all', 'Toutes'], ['recommended', 'Recommandées'], ['saved', 'Enregistrées']] as const).map(([id, label]) => (
           <Button key={id} role="tab" aria-selected={tab === id}
-            variant={tab === id ? "default" : "outline"}
+            variant="ghost"
+            className={`rounded-none border-b-2 px-3 ${tab === id ? "border-primary text-primary hover:bg-transparent hover:text-primary" : "border-transparent text-muted-foreground"}`}
             onClick={() => { setPage(1); setTab(id); }}>
             {label}
           </Button>
@@ -209,7 +210,7 @@ export default function FindJobs() {
 
       {loading ? <p role="status" className="text-sm text-muted-foreground">Chargement des offres…</p> : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {data.jobs.map((job) => <article key={job.id} className="app-section">
+          {data.jobs.map((job) => <article key={job.id} className="overflow-hidden border bg-card p-4">
             <div className="flex justify-between gap-4">
               <div>
                 <p className="text-xs text-muted-foreground">{job.attribution}</p>
@@ -220,7 +221,7 @@ export default function FindJobs() {
                 {job.match.score}%
               </span>}
             </div>
-            <div className="-mx-6 mt-4"><JobVisual job={job} /></div>
+            <div className="-mx-4 mt-4 border-y"><JobVisual job={job} /></div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
               {job.remote === true && <span className="rounded bg-muted px-2 py-1">Remote</span>}
               {job.contractType && <span className="rounded bg-muted px-2 py-1">{job.contractType}</span>}
@@ -241,7 +242,7 @@ export default function FindJobs() {
         </div>
       )}
 
-      {!loading && !data.jobs.length && <div className="app-section text-sm text-muted-foreground">
+      {!loading && !data.jobs.length && <div className="border bg-card p-4 text-sm text-muted-foreground">
         Aucune offre disponible pour cette recherche. Essayez un métier plus large ou retirez un filtre géographique.
       </div>}
 
@@ -260,7 +261,7 @@ export default function FindJobs() {
 
       {selected && <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4"
         role="dialog" aria-modal="true" aria-label={selected.title}>
-        <section className="max-h-[92vh] w-full max-w-4xl overflow-auto rounded-xl border bg-card shadow-2xl">
+        <section className="max-h-[92vh] w-full max-w-4xl overflow-auto rounded-[6px] border bg-card shadow-2xl">
           <JobVisual job={selected} large />
           <div className="p-6 sm:p-8">
           <div className="flex items-start justify-between gap-4">

@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { ArrowUpRight, BriefcaseBusiness, Copy, FileText, LoaderCircle, Mail, Save, Sparkles } from "lucide-react";
+import { ArrowUpRight, BriefcaseBusiness, Copy, FileCheck2, FileText, LoaderCircle, Mail, Save, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,9 @@ export default function JobMatch() {
     },
   });
   const { c, resumes, cvId, setCvId, setText, setSource, setConfirmed, busy, setBusy, error, setError, message, setMessage, act, errorText } = form;
+  const tailoringErrorText = error === "AI_FACTS_REQUIRED"
+    ? (i18n.resolvedLanguage?.startsWith("fr") ? "Ajoutez d’abord un résumé, une expérience, des compétences ou un projet à votre CV. L’IA ne peut reformuler que des faits présents dans ces champs." : "Add a summary, experience, skills, or a project to your resume first. AI can only rephrase facts already present in those fields.")
+    : errorText;
   const loadMatch = useCallback(async (id: string) => {
     setBusy("history"); setError(""); setMessage("");
     try {
@@ -55,8 +58,12 @@ export default function JobMatch() {
   }, [setBusy, setError, setMessage, setText, setSource, setConfirmed, setCvId]);
   useEffect(() => { const id = new URL(window.location.href).searchParams.get("analysis"); if (id) void loadMatch(id); }, [loadMatch]);
   const generateProposal = (mode: "TAILOR" | "IMPROVE") => act("tailor", async () => {
-    if (!result || !cvId) return;
-    const data = await request<TailorProposal>("/api/tailor-resume", { action: "PROPOSE", mode, matchId: result.id, cvId, language });
+    if (!result) return;
+    // A targeted resume always starts from confirmed profile data when the user
+    // has not explicitly chosen a legacy resume for comparison.
+    const sourceCvId = cvId || (await request<{ id: string }>("/api/cvs", { source: "PROFILE" })).id;
+    if (!cvId) { setCvId(sourceCvId); await resumes.reload(); }
+    const data = await request<TailorProposal>("/api/tailor-resume", { action: "PROPOSE", mode, matchId: result.id, cvId: sourceCvId, language });
     setProposal(data); setPaths(data.changes.map(change => change.path));
   });
   const saveProposal = () => act("accept", async () => {
@@ -72,12 +79,13 @@ export default function JobMatch() {
   const saveApplication = () => act("application", async () => { const data = await request<{ id: string }>("/api/applications", { jobId: result!.job.id, cvId: result!.tailoredCvId || cvId || undefined }); setApplicationId(data.id); setMessage(c.saved); });
   const copy = (value: string) => act("copy", async () => { await navigator.clipboard.writeText(value); setMessage(c.copied); });
   const analysis = result?.job.analysis, match = result?.result;
+  const applicationCvId = result?.tailoredCvId || cvId;
   const intelligence = analysis && match ? buildJobIntelligence(analysis, match, i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en") : null;
   const requirements = match?.requirements.filter(item => (!category || item.category === category) && (!status || item.status === status)) || [];
 
   return <div className="space-y-7">
     <PageHeader title={c.title} description={c.description} />
-    {error && <div role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 p-4 text-sm text-destructive">{errorText}{error === "FEATURE_NOT_AVAILABLE" && <Link className="ml-2 underline" href="/upgrade">{c.upgrade}</Link>}</div>}
+    {error && <div role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 p-4 text-sm text-destructive">{tailoringErrorText}{error === "AI_FACTS_REQUIRED" && cvId && <Link className="ml-2 underline" href={`/dashboard/resumes/${cvId}`}>{c.manual}</Link>}{error === "FEATURE_NOT_AVAILABLE" && <Link className="ml-2 underline" href="/upgrade">{c.upgrade}</Link>}</div>}
     {busy && <p role="status" aria-live="polite" className="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin" />{busy === "extract" ? c.extracting : busy === "analyze" ? c.analyzing : c.working}</p>}
     {message && <p role="status" className="text-sm text-primary">{message}</p>}
     <section className="app-section" aria-label={c.title}><JobAnalysisForm form={form} /></section>
@@ -99,7 +107,7 @@ export default function JobMatch() {
         {!requirements.length && <p className="text-sm text-muted-foreground">{c.none}</p>}
         {requirements.map(item => <article key={item.id} className="rounded-xl border p-4"><div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="text-sm font-semibold">{item.title}</h3><p className="mt-1 text-xs text-muted-foreground">{c.categories[item.category]} · {c.priorities[item.priority]}</p></div><span className={`rounded-full px-2.5 py-1 text-xs ${item.status === "DEMONSTRATED" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{c.statuses[item.status]}</span></div><p className="mt-3 text-sm">{item.description}</p><details className="mt-3 text-sm"><summary className="cursor-pointer text-primary">{c.evidence}</summary><p className="mt-3">{c.explanations[item.explanation as keyof typeof c.explanations]}</p><p className="mt-3 text-xs font-semibold">{c.jobEvidence}</p><blockquote className="mt-1 border-l-2 border-primary/30 pl-3 text-muted-foreground">{item.evidence}</blockquote>{item.ambiguity && <p className="mt-2">{item.ambiguity}</p>}<p className="mt-3 text-xs font-semibold">{c.profileEvidence}</p>{item.evidenceSources.length ? item.evidenceSources.map(evidence => <blockquote key={evidence.path} className="mt-2 border-l-2 pl-3"><p className="text-xs font-medium">{evidence.label}</p><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{evidence.quote}</p></blockquote>) : <p className="mt-2 text-muted-foreground">{c.noEvidence}</p>}</details></article>)}
       </section>
-      <section className="app-section space-y-4"><h2 className="type-h2">{c.actions}</h2><p className="text-sm leading-6 text-muted-foreground">{c.honest}</p><div className="flex flex-wrap gap-3"><Button disabled={!!busy || !cvId} onClick={() => void generateProposal("TAILOR")}><Sparkles />{c.tailor}</Button><Button variant="outline" disabled={!!busy || !cvId} onClick={() => void generateProposal("IMPROVE")}><Sparkles />{c.improve}</Button>{cvId && <Button variant="outline" asChild><Link href={"/dashboard/resumes/" + cvId}><FileText />{c.manual}</Link></Button>}{result.tailoredCvId && <Button asChild><Link href={"/dashboard/resumes/" + result.tailoredCvId}>{c.adapted}<ArrowUpRight /></Link></Button>}</div>{!cvId && <p className="text-xs text-muted-foreground">{c.chooseResume}</p>}
+      <section className="app-section space-y-4"><h2 className="type-h2">{c.actions}</h2><p className="text-sm leading-6 text-muted-foreground">{c.honest}</p><div className="flex flex-wrap gap-3"><Button disabled={!!busy} onClick={() => void generateProposal("TAILOR")}><Sparkles />{c.tailor}</Button><Button variant="outline" disabled={!!busy} onClick={() => void generateProposal("IMPROVE")}><Sparkles />{c.improve}</Button>{cvId && <Button variant="outline" asChild><Link href={"/dashboard/resumes/" + cvId}><FileText />{c.manual}</Link></Button>}{result.tailoredCvId && <Button asChild><Link href={"/dashboard/resumes/" + result.tailoredCvId}>{c.adapted}<ArrowUpRight /></Link></Button>}{applicationId ? <Button asChild><Link href={"/dashboard/applications/" + applicationId}>{c.viewApplication}<ArrowUpRight /></Link></Button> : applicationCvId ? <Button asChild><Link href={`/dashboard/application-agent?jobId=${encodeURIComponent(result.job.id)}&cvId=${encodeURIComponent(applicationCvId)}`}><FileCheck2 />{c.actions}</Link></Button> : null}</div>
         {proposal && <div className="space-y-4 rounded-xl border p-4"><h3 className="font-semibold">{c.proposal}</h3>{proposal.rejectedCount > 0 && <p className="text-xs text-muted-foreground">{c.rejected}</p>}{proposal.changes.map(change => <div key={change.path} className="space-y-2 border-b pb-4"><label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={paths.includes(change.path)} onChange={event => setPaths(current => event.target.checked ? [...current, change.path] : current.filter(path => path !== change.path))} />{change.path.startsWith("summary") ? c.summary : change.path.startsWith("experiences") ? c.experience : c.essentialSkills}</label><div className="grid gap-3 md:grid-cols-2"><div><p className="text-xs text-muted-foreground">{c.before}</p><p className="mt-1 whitespace-pre-wrap text-sm">{change.current}</p></div><div><p className="text-xs text-primary">{c.after}</p><p className="mt-1 whitespace-pre-wrap text-sm">{change.proposed}</p></div></div><p className="text-xs text-muted-foreground">{change.reason}</p><blockquote className="border-l-2 pl-3 text-xs text-muted-foreground">{change.evidence}</blockquote></div>)}<div className="flex flex-wrap gap-3"><Button disabled={!!busy || !paths.length} onClick={() => void saveProposal()}>{c.accept}</Button><Button variant="outline" disabled={!!busy} onClick={() => void act("discard", async () => { await request("/api/tailor-resume", { action: "REJECT", matchId: result.id }); setProposal(null); })}>{c.discard}</Button></div></div>}
         <div className="grid gap-4 border-t pt-4 sm:grid-cols-[1fr_160px]"><div><label htmlFor="job-notes" className="text-sm">{c.notes}</label><Textarea id="job-notes" className="mt-2" value={notes} maxLength={4000} onChange={event => setNotes(event.target.value)} /></div><div><label htmlFor="job-language" className="text-sm">{c.language}</label><select id="job-language" className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm" value={language} onChange={event => setLanguage(event.target.value as "fr" | "en")}><option value="fr">Français</option><option value="en">English</option></select></div></div>
         <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={!!busy} onClick={() => void generateLetter()}><Mail />{c.letter}</Button><Button variant="outline" disabled={!!busy} onClick={() => void generateEmail()}><Mail />{c.email}</Button>{applicationId ? <Button asChild><Link href={"/dashboard/applications/" + applicationId}>{c.viewApplication}<ArrowUpRight /></Link></Button> : <Button disabled={!!busy} onClick={() => void saveApplication()}><BriefcaseBusiness />{c.application}</Button>}</div>

@@ -39,6 +39,28 @@ test('job match is allowed to create one owned application', () => {
   assert.match(content, /prisma\.jobOpportunity\.findFirst/);
   assert.match(content, /JOB_NOT_FOUND/);
   assert.match(read('src/app/dashboard/job-match/page.tsx'), /"\/dashboard\/applications\/" \+ applicationId/);
+  assert.match(read('src/app/dashboard/job-match/page.tsx'), /application-agent\?jobId=/);
+  assert.match(read('src/app/dashboard/job-match/page.tsx'), /applicationCvId/);
+});
+test('new applications start from an analysed job description and reuse an existing workspace', () => {
+  const page = read('src/app/dashboard/applications/page.tsx');
+  const intake = read('src/components/career/application-intake.tsx');
+  const api = read('src/app/api/applications/route.ts');
+  assert.match(page, /ApplicationIntake/);
+  assert.match(intake, /showResumeSelection=\{false\}/);
+  assert.match(intake, /reopenExisting: true/);
+  assert.match(intake, /Analyze this job|Analyser cette offre/);
+  assert.match(api, /reopenExisting:z\.boolean\(\)\.optional/);
+  assert.match(api, /reused: true/);
+});
+test('job-document intake accepts text, PDF and DOCX without trusting the file contents', () => {
+  const input = read('src/lib/career/job-input.ts');
+  const form = read('src/components/career/job-analysis-form.tsx');
+  assert.match(input, /mammoth/);
+  assert.match(input, /endsWith\("\.docx"\)/);
+  assert.match(input, /endsWith\("\.txt"\)/);
+  assert.match(form, /application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document/);
+  assert.match(form, /text\/plain/);
 });
 test('overview keeps advanced tools available but collapsed', () => {
   const content = read('src/app/page.tsx');

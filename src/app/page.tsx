@@ -25,14 +25,17 @@ export default function Overview() {
   return <div className="mx-auto max-w-6xl space-y-5 pb-10">
     <div className="flex items-center justify-end"><Button size="sm" variant="outline" asChild><Link href={documentHref}><Upload className="size-4" />{t("documents.upload")}</Link></Button></div>
     <CareerCommandCenter signedIn={Boolean(session?.id)} resumes={error ? null : documents.length} resumesPending={loading} />
-    <details className="rounded-xl border bg-card" id="overview-analyze">
-      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold">{jobForm.c.title} <span className="ml-2 text-primary">+</span></summary>
-      <div className="space-y-3 border-t p-4">
-        {jobForm.error && <p role="alert" className="text-sm text-destructive">{jobForm.errorText}</p>}
-        {jobForm.busy && <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin"/> {jobForm.c.working}</p>}
-        <JobAnalysisForm form={jobForm} />
-      </div>
-    </details>
+    <section aria-labelledby="overview-job-title">
+      <h2 id="overview-job-title" className="sr-only">{jobForm.c.title}</h2>
+      <details className="rounded-xl border bg-card" id="overview-analyze">
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold">{jobForm.c.title} <span className="ml-2 text-primary">+</span></summary>
+        <div className="space-y-3 border-t p-4">
+          {jobForm.error && <p role="alert" className="text-sm text-destructive">{jobForm.errorText}</p>}
+          {jobForm.busy && <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin"/> {jobForm.c.working}</p>}
+          <JobAnalysisForm form={jobForm} />
+        </div>
+      </details>
+    </section>
     <details className="rounded-xl border bg-card">
       <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold">{t("documents.recent")} <span className="ml-2 text-primary">+</span></summary>
       <section className="border-t p-4">

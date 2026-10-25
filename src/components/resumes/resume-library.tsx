@@ -67,11 +67,11 @@ export function ResumeCards({ documents, loading, onDeleted }: { documents: Libr
     finally { setDeleting(false); }
   };
   return <>
-    {loading ? [0, 1, 2].map(index => <Skeleton key={index} className="h-[350px] rounded-xl" />) : documents.map(document => {
+    {loading ? [0, 1, 2].map(index => <Skeleton key={index} className="h-[350px] rounded-[6px]" />) : documents.map(document => {
       const title = document.source === "upload" ? document.name : document.design?.documentName || document.title || t("documents.fromScratch");
       const format = document.source === "upload" ? document.name.split(".").pop()?.toUpperCase() : t("documents.created");
       const preview = <div className="h-64 overflow-hidden border-b bg-muted p-4"><div className="mx-auto h-full max-w-[210px] overflow-hidden rounded-sm border shadow-sm"><ResumePaper document={document} /></div></div>;
-      return <article key={`${document.source}-${document.id}`} className="group min-w-0 overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary">
+      return <article key={`${document.source}-${document.id}`} className="group min-w-0 overflow-hidden border bg-card transition-[border-color,background-color] duration-150 hover:border-primary hover:bg-muted/[0.12]">
         {document.source === "created" ? <Link href={`/dashboard/resumes/${document.id}`} aria-label={t("documents.openNamed", { name: title })} className="block">{preview}</Link> : <button className="block w-full text-left" onClick={() => setSelected(document)} aria-label={t("documents.openNamed", { name: title })}>{preview}</button>}
         <div className="p-4"><p className="truncate text-sm font-medium" title={title}>{title}</p>
           <div className="mt-1.5 flex items-center gap-2 text-[11px] text-muted-foreground"><span className="rounded border px-1.5 py-0.5">{format}</span><span>{new Date(document.createdAt).toLocaleDateString(i18n.resolvedLanguage)}</span>{document.source === "upload" && <span className="ml-auto">{(document.size / 1024).toFixed(0)} KB</span>}</div>

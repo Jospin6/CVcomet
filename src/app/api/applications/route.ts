@@ -5,7 +5,7 @@ import { apiError } from "@/lib/career/api";
 import { ProfileError, profileJson } from "@/lib/career-profile/http";
 import { z } from "zod";
 const statuses = ["SAVED", "APPLIED", "INTERVIEW", "TECHNICAL_INTERVIEW", "OFFER", "HIRED", "REJECTED", "WITHDRAWN"] as const;
-const input = z.object({ jobId:z.string().uuid().optional(),company:z.string().trim().min(1).max(300).optional(),jobTitle:z.string().trim().min(1).max(300).optional(),location:z.string().max(300).optional(),country:z.string().max(100).optional(),workMode:z.string().max(60).optional(),contractType:z.string().max(80).optional(),salary:z.string().max(200).optional(),currency:z.string().max(12).optional(),jobUrl:z.string().url().max(2048).optional().or(z.literal("")),source:z.string().max(100).optional(),status:z.enum(statuses).default("SAVED"),appliedAt:z.coerce.date().nullable().optional(),notes:z.string().max(12000).optional(),contactPerson:z.string().max(300).optional(),nextAction:z.string().max(1000).optional(),cvId:z.string().uuid().optional(),coverLetterId:z.string().uuid().optional() }).strict();
+const input = z.object({ jobId:z.string().uuid().optional(),company:z.string().trim().min(1).max(300).optional(),jobTitle:z.string().trim().min(1).max(300).optional(),location:z.string().max(300).optional(),country:z.string().max(100).optional(),workMode:z.string().max(60).optional(),contractType:z.string().max(80).optional(),salary:z.string().max(200).optional(),currency:z.string().max(12).optional(),jobUrl:z.string().url().max(2048).optional().or(z.literal("")),source:z.string().max(100).optional(),status:z.enum(statuses).default("SAVED"),appliedAt:z.coerce.date().nullable().optional(),notes:z.string().max(12000).optional(),contactPerson:z.string().max(300).optional(),nextAction:z.string().max(1000).optional(),cvId:z.string().uuid().optional(),coverLetterId:z.string().uuid().optional(),reopenExisting:z.boolean().optional() }).strict();
 export async function GET(req:Request){try{const u=await requireUser(),q=new URL(req.url).searchParams,p=Math.max(1,Number(q.get("page")||1)),size=Math.min(100,Math.max(1,Number(q.get("pageSize")||30))),term=q.get("q")?.slice(0,200),status=q.get("status")||undefined,archived=q.get("archived");const where={userId:u.id,...(archived==="true"?{archivedAt:{not:null}}:archived==="false"?{archivedAt:null}:{}),...(statuses.includes(status as typeof statuses[number])?{status:status as typeof statuses[number]}:{}),...(term?{OR:[{company:{contains:term,mode:"insensitive" as const}},{jobTitle:{contains:term,mode:"insensitive" as const}}]}:{})};const [items,total]=await prisma.$transaction([prisma.jobApplication.findMany({where,include:{cv:{select:{id:true,title:true}},coverLetter:{select:{id:true,conversationId:true}},statusEvents:{orderBy:{createdAt:"desc"}},reminders:{where:{completedAt:null},orderBy:{dueAt:"asc"}},interviews:{orderBy:{scheduledAt:"asc"}}},orderBy:{updatedAt:"desc"},skip:(p-1)*size,take:size}),prisma.jobApplication.count({where})]);return NextResponse.json({items,total,page:p,pageSize:size})}catch(e){return apiError(e)}}
 export async function POST(req: Request) {
   try {
@@ -32,7 +32,10 @@ export async function POST(req: Request) {
         ...(job ? { jobId: job.id } : { company, jobTitle }) },
       select: { id: true },
     });
-    if (existing) throw new ProfileError(409, "DUPLICATE_APPLICATION");
+    if (existing) {
+      if (b.reopenExisting) return NextResponse.json({ id: existing.id, reused: true });
+      throw new ProfileError(409, "DUPLICATE_APPLICATION");
+    }
     return NextResponse.json(await prisma.jobApplication.create({
       data: {
         ...b, company, jobTitle, userId: u.id,

@@ -86,13 +86,14 @@ const copy = {
 
 type IconComponent = typeof FileText;
 function ActionCard({ href, icon: Icon, title, description }: { href: string; icon: IconComponent; title: string; description: string }) {
-  return <Link href={href} className="group flex min-h-24 min-w-0 flex-col justify-between gap-2 rounded-xl border bg-card p-3 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-primary/45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-    <div className="flex items-start justify-between gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-secondary text-primary"><Icon className="size-5" aria-hidden="true" /></span><ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" /></div>
-    <div><h3 className="text-sm font-semibold leading-snug">{title}</h3><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p></div>
+  return <Link href={href} className="group flex min-h-20 min-w-0 items-center gap-3 border bg-card px-3 py-2.5 transition-[border-color,background-color] duration-150 hover:border-primary/45 hover:bg-muted/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-secondary text-primary"><Icon className="size-4" aria-hidden="true" /></span>
+    <div className="min-w-0 flex-1"><h3 className="truncate text-sm font-semibold leading-snug">{title}</h3><p className="sr-only">{description}</p></div>
+    <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
   </Link>;
 }
 function Metric({ label, value, icon: Icon, pending, unavailable }: { label: string; value: number | null; icon: IconComponent; pending: boolean; unavailable: string }) {
-  return <div className="min-w-0 rounded-xl border bg-card px-3 py-3 sm:px-4">
+  return <div className="min-w-0 border-l-2 border-primary bg-card px-3 py-2.5 sm:px-4">
     <div className="flex items-center gap-1.5 text-muted-foreground"><Icon className="size-4" aria-hidden="true"/><span className="text-xs">{label}</span></div>
     <p className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl" aria-label={value === null ? unavailable : `${value} ${label}`}>
       {pending ? <span className="inline-block h-5 w-8 animate-pulse rounded bg-muted" aria-hidden="true"/> : value ?? "—"}
@@ -118,21 +119,21 @@ export function CareerCommandCenter({ signedIn, resumes, resumesPending }: { sig
     { href: "/dashboard/evidence", icon: ShieldCheck, title: c.vault, description: c.vaultDesc },
   ];
   return <div className="space-y-5">
-    <section className="flex flex-wrap items-start justify-between gap-4" aria-labelledby="career-command-title">
-      <div><p className="text-xs text-muted-foreground">{c.eyebrow}</p><h1 id="career-command-title" className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{c.title}</h1></div>
-      <Link href="/dashboard/assistant" className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition-[transform,background-color] hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><Sparkles className="size-4" aria-hidden="true"/>{c.leadAction}<ArrowRight className="size-3.5" aria-hidden="true"/></Link>
+    <section className="flex min-h-10 flex-wrap items-center justify-between gap-4 border-b pb-5" aria-labelledby="career-command-title">
+      <div><p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{c.eyebrow}</p><h1 id="career-command-title" className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{c.title}</h1></div>
+      <Link href="/dashboard/assistant" className="inline-flex h-9 items-center gap-2 rounded-[6px] bg-primary px-3 text-xs font-semibold text-primary-foreground transition-[background-color,transform] duration-150 hover:opacity-90 active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><Sparkles className="size-4" aria-hidden="true"/>{c.leadAction}<ArrowRight className="size-3.5" aria-hidden="true"/></Link>
     </section>
     <section aria-label={c.pulse} className="grid grid-cols-3 gap-2 sm:gap-3">
       <Metric label={c.docs} icon={FileText} value={signedIn ? resumes : null} pending={signedIn && resumesPending} unavailable={c.unavailable}/>
       <Metric label={c.apps} icon={ClipboardList} value={pulse.applications} pending={pending} unavailable={c.unavailable}/>
       <Metric label={c.missions} icon={BrainCircuit} value={pulse.missions} pending={pending} unavailable={c.unavailable}/>
     </section>
-    {next && <aside className="ux-surface flex flex-wrap items-center justify-between gap-3 px-4 py-3" aria-label={c.next}>
-      <div className="flex min-w-0 items-center gap-2"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><CheckCircle2 className="size-4" aria-hidden="true"/></span><p className="text-sm"><span className="font-semibold">{c.next}</span><span className="ml-2 text-muted-foreground">{next.text}</span></p></div>
+    {next && <aside className="flex flex-wrap items-center justify-between gap-3 border-y bg-primary/[0.03] px-4 py-3" aria-label={c.next}>
+      <div className="flex min-w-0 items-center gap-2"><span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><CheckCircle2 className="size-4" aria-hidden="true"/></span><p className="text-sm"><span className="font-semibold">{c.next}</span><span className="ml-2 text-muted-foreground">{next.text}</span></p></div>
       <Link href={next.href} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">{c.nextButton}<ArrowRight className="size-3.5" aria-hidden="true"/></Link>
     </aside>}
     <RecentApplications enabled={signedIn} />
-    <details className="group rounded-xl border bg-card">
+    <details className="group border bg-card">
       <summary className="cursor-pointer list-none px-4 py-3 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">{c.quickTitle} <span className="ml-2 text-primary">+</span></summary>
       <div className="grid gap-2 border-t p-3 sm:grid-cols-2 lg:grid-cols-3">{actions.map(action => <ActionCard key={action.href} {...action}/>)}</div>
     </details>
