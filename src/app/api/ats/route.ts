@@ -29,10 +29,16 @@ const responseRow = (row: { id: string; issues: unknown; [key: string]: unknown 
   return report ? { id: row.id, createdAt: row.createdAt, cvId: row.cvId, ...report } : { id: row.id, createdAt: row.createdAt, cvId: row.cvId, version: 1, legacy: true, overallScore: null };
 };
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const user = await requireUser();
-    const rows = await prisma.atsAnalysis.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 20 });
+    const requestedCv = new URL(req.url).searchParams.get("cvId");
+    const cvId = requestedCv ? z.string().uuid().parse(requestedCv) : null;
+    const rows = await prisma.atsAnalysis.findMany({
+      where: { userId: user.id, ...(cvId ? { cvId } : {}) },
+      orderBy: { createdAt: "desc" },
+      take: cvId ? 5 : 20,
+    });
     return NextResponse.json(rows.map(row => responseRow(row)), { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return apiError(error); }
 }

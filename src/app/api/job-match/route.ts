@@ -10,14 +10,14 @@ import { analyzeJobDescription, matchJob } from "@/lib/career/job-match";
 import { getCareerProfile } from "@/lib/career-profile/service";
 import { reserveProfileAI } from "@/lib/career-profile/ai";
 import { ProfileError, profileJson } from "@/lib/career-profile/http";
-import { jobTextSchema, jobSourceSchema } from "@/lib/career/job-schema";
+import { jobTextSchema, jobSourceSchema, jobAnalysisSchema } from "@/lib/career/job-schema";
 import { normalizeJobText } from "@/lib/career/job-input";
 import { normalizeEditorResume } from "@/lib/resume-editor";
 import { savedJobTitle } from "@/lib/career/job-opportunities";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
-const input = z.object({ text: jobTextSchema, source: jobSourceSchema.default({}), confirmed: z.literal(true), cvId: z.string().uuid().optional(), language: z.enum(["fr", "en"]).default("en") }).strict();
+const input = z.object({ text: jobTextSchema, source: jobSourceSchema.default({}), confirmed: z.literal(true), cvId: z.string().uuid().optional(), applicationId: z.string().uuid().optional(), language: z.enum(["fr", "en"]).default("en") }).strict();
 const inFlight = new Map<string, Promise<Prisma.JobMatchGetPayload<{ include: { job: true } }>>>();
 export async function GET(req: Request) {
   try {
@@ -32,34 +32,153 @@ export async function GET(req: Request) {
     return NextResponse.json(saved.map(({ result, ...item }) => ({ ...item, overallScore: result ? item.overallScore : null })), { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return apiError(error); }
 }
+/** Application-scoped analysis reuses the job already attached to the dossier.
+ * Never trust a caller-supplied description or CV ID over the owned application.
+ */
 export async function POST(req: Request) {
   try {
     const user = await requireUser();
     const body = input.parse(await profileJson(req));
     await requireFeature(user.id, "JOB_MATCH");
-    const cv = body.cvId ? await prisma.cv.findFirst({ where: { id: body.cvId, conversation: { userId: user.id } } }) : null;
+
+    const application = body.applicationId
+      ? await prisma.jobApplication.findFirst({
+          where: { id: body.applicationId, userId: user.id },
+          include: { job: true },
+        })
+      : null;
+    if (body.applicationId && (!application?.job || !application.cvId)) {
+      throw new ProfileError(409, "APPLICATION_CONTEXT_INCOMPLETE");
+    }
+    if (application && application.cvId !== body.cvId) {
+      throw new ProfileError(409, "APPLICATION_RESUME_MISMATCH");
+    }
+
+    const cv = body.cvId
+      ? await prisma.cv.findFirst({
+          where: { id: body.cvId, conversation: { userId: user.id } },
+        })
+      : null;
     if (body.cvId && !cv) throw new ProfileError(404, "RESUME_NOT_FOUND");
+
     const profile = await getCareerProfile(user.id);
-    const resume = cv ? normalizeEditorResume(cv as unknown as Record<string, unknown>) : undefined;
-    const description = normalizeJobText(body.text);
+    const resume = cv
+      ? normalizeEditorResume(cv as unknown as Record<string, unknown>)
+      : undefined;
+
+    // For an existing application its linked job is authoritative.
+    const sourceText = application?.job?.description ?? body.text;
+    const description = normalizeJobText(sourceText);
     jobTextSchema.parse(description);
-    const fingerprint = createHash("sha256").update(JSON.stringify({ version: 1, userId: user.id, description, original: body.source.originalText || body.text, source: body.source, language: body.language, profile, resume, cvId: cv?.id })).digest("hex");
-    const cached = await prisma.jobMatch.findUnique({ where: { fingerprint }, include: { job: true } });
+    const source = application?.job
+      ? {
+          type: application.job.sourceType,
+          url: application.job.sourceUrl ?? undefined,
+          name: application.job.sourceName ?? undefined,
+          originalText: application.job.originalText ?? description,
+        }
+      : body.source;
+    const fingerprint = createHash("sha256")
+      .update(JSON.stringify({
+        version: 2,
+        userId: user.id,
+        applicationJobId: application?.jobId,
+        cvId: cv?.id,
+        description,
+        source,
+        language: body.language,
+        profile,
+        resume,
+      }))
+      .digest("hex");
+
+    const cached = await prisma.jobMatch.findUnique({
+      where: { fingerprint }, include: { job: true },
+    });
     if (cached) return NextResponse.json({ ...cached, reused: true });
     if (inFlight.has(fingerprint)) return NextResponse.json(await inFlight.get(fingerprint));
+
     const operation = (async () => {
-      await reserveProfileAI(user.id, "JOB_ANALYSIS");
-      const analysis = await analyzeJobDescription(description, undefined, body.language);
+      const oldAnalysis = application?.job?.analysis
+        ? jobAnalysisSchema.safeParse(application.job.analysis)
+        : null;
+      if (!oldAnalysis?.success) await reserveProfileAI(user.id, "JOB_ANALYSIS");
+      const analysis = oldAnalysis?.success
+        ? oldAnalysis.data
+        : await analyzeJobDescription(description, undefined, body.language);
       const result = matchJob(profile, analysis, resume);
+
       return prisma.$transaction(async tx => {
-      const job = await tx.jobOpportunity.create({ data: { userId: user.id, title: savedJobTitle({ title: analysis.title, description, sourceName: body.source.name }), company: analysis.company || null, location: analysis.location || null, seniority: analysis.seniority || null,
-        description, originalText: body.source.originalText || body.text, sourceUrl: body.source.url, sourceType: body.source.type, sourceName: body.source.name,
-        analysis: analysis as unknown as Prisma.InputJsonValue, responsibilities: analysis.responsibilities, requiredSkills: analysis.requiredSkills, preferredSkills: analysis.preferredSkills, technologies: analysis.technologies, education: analysis.education, experience: analysis.experience, keywords: analysis.keywords } });
-      return tx.jobMatch.create({ data: { userId: user.id, jobId: job.id, cvId: cv?.id, fingerprint, overallScore: result.overallScore, skillScore: result.skillScore, keywordScore: result.keywordScore, experienceScore: result.experienceScore, educationScore: result.educationScore, matchedSkills: result.matchedSkills, missingSkills: result.missingSkills, unverifiedSkills: result.unverifiedSkills, recommendations: result.recommendations, result: result as unknown as Prisma.InputJsonValue }, include: { job: true } });
+        const job = application?.job ?? await tx.jobOpportunity.create({
+          data: {
+            userId: user.id,
+            title: savedJobTitle({
+              title: analysis.title,
+              description,
+              sourceName: source.name,
+            }),
+            company: analysis.company || null,
+            location: analysis.location || null,
+            seniority: analysis.seniority || null,
+            description,
+            originalText: source.originalText || description,
+            sourceUrl: source.url,
+            sourceType: source.type,
+            sourceName: source.name,
+            analysis: analysis as unknown as Prisma.InputJsonValue,
+            responsibilities: analysis.responsibilities,
+            requiredSkills: analysis.requiredSkills,
+            preferredSkills: analysis.preferredSkills,
+            technologies: analysis.technologies,
+            education: analysis.education,
+            experience: analysis.experience,
+            keywords: analysis.keywords,
+          },
+        });
+
+        // Keep the linked job unchanged but persist its analysis for the
+        // result page; otherwise the new match cannot be rendered on reload.
+        if (application?.job && !oldAnalysis?.success) {
+          await tx.jobOpportunity.update({
+            where: { id: job.id },
+            data: {
+              analysis: analysis as unknown as Prisma.InputJsonValue,
+              responsibilities: analysis.responsibilities,
+              requiredSkills: analysis.requiredSkills,
+              preferredSkills: analysis.preferredSkills,
+              technologies: analysis.technologies,
+              education: analysis.education,
+              experience: analysis.experience,
+              keywords: analysis.keywords,
+            },
+          });
+        }
+        return tx.jobMatch.create({
+          data: {
+            userId: user.id,
+            jobId: job.id,
+            cvId: cv?.id,
+            fingerprint,
+            overallScore: result.overallScore,
+            skillScore: result.skillScore,
+            keywordScore: result.keywordScore,
+            experienceScore: result.experienceScore,
+            educationScore: result.educationScore,
+            matchedSkills: result.matchedSkills,
+            missingSkills: result.missingSkills,
+            unverifiedSkills: result.unverifiedSkills,
+            recommendations: result.recommendations,
+            result: result as unknown as Prisma.InputJsonValue,
+          },
+          include: { job: true },
+        });
       });
     })();
+
     inFlight.set(fingerprint, operation);
     try { return NextResponse.json(await operation, { status: 201 }); }
     finally { inFlight.delete(fingerprint); }
-  } catch (error) { return apiError(error); }
+  } catch (error) {
+    return apiError(error);
+  }
 }

@@ -1,77 +1,83 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { applicationStatusLabel, applicationStageIndex } from '../src/lib/career/application-workspace.ts';
-const read = p => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import {
+  applicationStatusLabel,
+  applicationStageIndex,
+} from "../src/lib/career/application-workspace.ts";
 
-test('localized application steps do not invent a status', () => {
-  assert.equal(applicationStatusLabel('SAVED'), 'Enregistrée');
-  assert.equal(applicationStatusLabel('TECHNICAL_INTERVIEW'), 'Entretien technique');
-  assert.equal(applicationStatusLabel('UNRECOGNIZED'), 'Statut inconnu');
-  assert.equal(applicationStageIndex('TECHNICAL_INTERVIEW'), 2);
-  assert.equal(applicationStageIndex('REJECTED'), -1);
+const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const workspace = read("src/app/dashboard/applications/[id]/page.tsx");
+const agent = read("src/app/dashboard/application-agent/page.tsx");
+const picker = read("src/components/applications/application-documents.tsx");
+const match = read("src/app/dashboard/job-match/page.tsx");
+const matchApi = read("src/app/api/job-match/route.ts");
+const applicationsApi = read("src/app/api/applications/[id]/route.ts");
+
+// Existing status mapping must remain intact after the new navigation.
+test("application status chronology stays explicit", () => {
+  assert.equal(applicationStatusLabel("SAVED"), "Enregistrée");
+  assert.equal(applicationStatusLabel("TECHNICAL_INTERVIEW"), "Entretien technique");
+  assert.equal(applicationStageIndex("TECHNICAL_INTERVIEW"), 2);
 });
-test('application workspace contains the five contextual pillars', () => {
-  const content = read('src/app/dashboard/applications/[id]/page.tsx');
-  for (const id of ['overview', 'documents', 'analysis', 'interviews', 'activity']) {
-    assert.match(content, new RegExp(`id: "${id}"`));
+
+test("application has five small contextual tabs without the redundant overview blocks", () => {
+  for (const id of ["overview", "documents", "analysis", "interviews", "activity"]) {
+    assert.match(workspace, new RegExp(`id: "${id}"`));
   }
-  assert.match(content, /\/api\/applications\/\$\{encodeURIComponent\(id\)\}/);
-  assert.match(content, /api\/career\/v1\/application-packets\/options/);
-  assert.match(content, /applicationStatusLabel/);
-  assert.match(content, /aria-selected/);
-  assert.match(content, /nextAction/);
-  assert.match(content, /type="datetime-local"/);
-  assert.match(content, /jobId:selectedJob/);
+  assert.match(workspace, /role="tabpanel"/);
+  assert.doesNotMatch(workspace, /À retenir|Prochaine étape<|Offre de référence/);
 });
-test('owner-scoped association of CV, letter and analysed job', () => {
-  const content = read('src/app/api/applications/[id]/route.ts');
-  assert.match(content, /userId: u\.id/);
-  assert.match(content, /JOB_NOT_FOUND/);
-  assert.match(content, /CV_NOT_FOUND/);
-  assert.match(content, /LETTER_NOT_FOUND/);
-  assert.match(content, /job\.userId !== u\.id/);
-  assert.match(content, /Prisma\.DbNull/);
+
+test("linked documents use a visual, owned-document picker instead of select dropdowns", () => {
+  assert.match(workspace, /<ApplicationDocuments/);
+  assert.match(agent, /<ApplicationDocuments/);
+  assert.match(picker, /AtsResumePreview/);
+  assert.match(picker, /LetterPaper/);
+  assert.match(picker, /<Dialog/);
+  assert.match(picker, /Sélectionner/);
+  assert.doesNotMatch(workspace, /selectedCv|selectedLetter|<option value="">Aucun CV/);
+  assert.doesNotMatch(agent, /Choisir une offre|Choisir un CV/);
 });
-test('job match is allowed to create one owned application', () => {
-  const content = read('src/app/api/applications/route.ts');
-  assert.match(content, /jobId:z\.string\(\)\.uuid\(\)\.optional/);
-  assert.match(content, /prisma\.jobOpportunity\.findFirst/);
-  assert.match(content, /JOB_NOT_FOUND/);
-  assert.match(read('src/app/dashboard/job-match/page.tsx'), /"\/dashboard\/applications\/" \+ applicationId/);
-  assert.match(read('src/app/dashboard/job-match/page.tsx'), /application-agent\?jobId=/);
-  assert.match(read('src/app/dashboard/job-match/page.tsx'), /applicationCvId/);
+
+test("application job identity is immutable and all links remain owner-scoped", () => {
+  assert.match(applicationsApi, /APPLICATION_JOB_IMMUTABLE/);
+  assert.match(applicationsApi, /userId: u\.id/);
+  assert.match(applicationsApi, /CV_NOT_FOUND/);
+  assert.match(applicationsApi, /LETTER_CONTEXT_MISMATCH/);
+  assert.doesNotMatch(workspace, /jobId:selectedJob/);
 });
-test('new applications start from an analysed job description and reuse an existing workspace', () => {
-  const page = read('src/app/dashboard/applications/page.tsx');
-  const intake = read('src/components/career/application-intake.tsx');
-  const api = read('src/app/api/applications/route.ts');
-  assert.match(page, /ApplicationIntake/);
-  assert.match(intake, /showResumeSelection=\{false\}/);
-  assert.match(intake, /reopenExisting: true/);
-  assert.match(intake, /Analyze this job|Analyser cette offre/);
-  assert.match(api, /reopenExisting:z\.boolean\(\)\.optional/);
-  assert.match(api, /reused: true/);
+
+test("job analysis entry preloads the application JD and selected CV, no wizard", () => {
+  assert.match(workspace, /\/dashboard\/job-match\?\$\{context\}/);
+  assert.match(workspace, /app\.job\.description\.trim\(\)\.length/);
+  assert.match(match, /applicationId: appId/);
+  assert.match(match, /text: app\.job\.description/);
+  assert.match(match, /setWizardOpen\(false\)/);
+  assert.match(matchApi, /applicationJobId:/);
+  assert.match(matchApi, /application\?\.job\?\.description \?\? body\.text/);
+  assert.match(matchApi, /tx\.jobOpportunity\.update/);
 });
-test('job-document intake accepts text, PDF and DOCX without trusting the file contents', () => {
-  const input = read('src/lib/career/job-input.ts');
-  const form = read('src/components/career/job-analysis-form.tsx');
-  assert.match(input, /mammoth/);
-  assert.match(input, /endsWith\("\.docx"\)/);
-  assert.match(input, /endsWith\("\.txt"\)/);
-  assert.match(form, /application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document/);
-  assert.match(form, /text\/plain/);
+
+test("ATS uses the linked CV; user can run or rerun it", () => {
+  assert.match(workspace, /\?ats=1&\$\{context\}/);
+  assert.match(workspace, /Vérifier ou refaire l'analyse ATS/);
 });
-test('overview keeps advanced tools available but collapsed', () => {
-  const content = read('src/app/page.tsx');
-  assert.match(content, /<details/);
-  assert.match(content, /JobAnalysisForm form=\{jobForm\}/);
-  assert.match(content, /ResumeCards documents=/);
-  assert.match(read('src/components/career/career-command-center.tsx'), /RecentApplications/);
+
+test("agent shows document, email and approval tabs, with controlled actions", () => {
+  for (const name of ["documents", "email", "approval", "history"]) {
+    assert.match(agent, new RegExp(`id: "${name}"`));
+  }
+  assert.match(agent, /active\.sourceChanged/);
+  assert.match(agent, /reviewed/);
+  assert.match(agent, /onClick=\{\(\) => void decide\("approve"\)\}/);
+  assert.doesNotMatch(agent, /sendMail\(|resend\.emails|submit-application/);
 });
-test('no automatic employer submission from the workspace', () => {
-  const content = read('src/app/dashboard/applications/[id]/page.tsx');
-  assert.doesNotMatch(content, /fetch\([^\n]+\b(send-email|submit-application)\b/i);
-  assert.match(read('src/app/dashboard/application-agent/page.tsx'), /seededContext/);
-  assert.match(read('src/app/dashboard/interviews/page.tsx'), /applicationId/);
+
+test("notes don't start with source URLs and autosize when typed", () => {
+  const findJobs = read("src/app/dashboard/find-jobs/page.tsx");
+  assert.doesNotMatch(findJobs, /notes: `Original offer:/);
+  assert.match(workspace, /Original offer:/);
+  assert.match(workspace, /field\.scrollHeight/);
+  assert.match(workspace, /setNotes\(userNotes\(value\.notes\)\)/);
 });

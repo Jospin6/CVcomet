@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
 import Link from "next/link";
 import {
   ArrowRight, BriefcaseBusiness, Check, ChevronDown, FileText,
@@ -99,6 +100,39 @@ const BOARD_WIDTH = 1120;
 const BOARD_HEIGHT = 695;
 const ROOT_X = 557;
 const ROOT_Y = 78;
+const CENTER_NODE_ID = "__career_center__";
+type NodePosition = { x: number; y: number };
+type NodeLayout = { mapId: string | null; positions: Record<string, NodePosition> };
+const ROOT_POSITION = { x: ROOT_X - 80, y: ROOT_Y - 30 };
+
+function boundedPosition(position: NodePosition, isCenter: boolean): NodePosition {
+  const width = isCenter ? 160 : 154;
+  return {
+    x: Math.max(0, Math.min(BOARD_WIDTH - width, position.x)),
+    y: Math.max(0, Math.min(BOARD_HEIGHT - 80, position.y)),
+  };
+}
+
+function readNodeLayout(mapId: string): NodeLayout {
+  try {
+    const raw = window.localStorage.getItem(`cvcomet:career-map:layout:${mapId}`);
+    const value: unknown = raw ? JSON.parse(raw) : null;
+    const positions: Record<string, NodePosition> = {};
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      for (const [id, location] of Object.entries(value)) {
+        if (!location || typeof location !== "object") continue;
+        const p = location as { x?: unknown; y?: unknown };
+        if (typeof p.x === "number" && Number.isFinite(p.x) &&
+            typeof p.y === "number" && Number.isFinite(p.y)) {
+          positions[id] = boundedPosition({ x: p.x, y: p.y }, id === CENTER_NODE_ID);
+        }
+      }
+    }
+    return { mapId, positions };
+  } catch {
+    return { mapId, positions: {} };
+  }
+}
 const shortName = (name: string) => name.trim().split(/\s+/).slice(0, 2).join(" ") || "My career";
 const cvTitle = (cv: Resume) => cv.design?.documentName || cv.title || "My Resume";
 
@@ -238,13 +272,22 @@ export function CareerMapPage() {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [resumeOpen, setResumeOpen] = useState(false);
   const [scale, setScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [nodeLayout, setNodeLayout] = useState<NodeLayout>({ mapId: null, positions: {} });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [goalBusy, setGoalBusy] = useState(false);
   const [savedGoals, setSavedGoals] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
-  const dragStart = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
+  const dragStart = useRef<{
+    pointerId: number; x: number; y: number; panX: number; panY: number;
+  } | null>(null);
+  const nodeDragStart = useRef<{
+    pointerId: number; id: string; startX: number; startY: number;
+    original: NodePosition; moved: boolean;
+  } | null>(null);
+  const lastNodeDrag = useRef<{ id: string; at: number } | null>(null);
 
   useEffect(() => {
     if (!role) { setOpenings([]); return; }
@@ -267,6 +310,86 @@ export function CareerMapPage() {
   }, [role]);
 
   const nodes = useMemo(() => selected?.graph.nodes ?? [], [selected]);
+  const positions = nodeLayout.mapId === selected?.id ? nodeLayout.positions : {};
+  const rootPosition = positions[CENTER_NODE_ID] ?? ROOT_POSITION;
+
+  // A user's arrangement is local to the saved map. It never alters AI results.
+  useEffect(() => {
+    if (!selected || nodeLayout.mapId !== selected.id) return;
+    try {
+      window.localStorage.setItem(
+        `cvcomet:career-map:layout:${selected.id}`,
+        JSON.stringify(nodeLayout.positions),
+      );
+    } catch { /* Storage may be disabled; dragging still works this session. */ }
+  }, [selected?.id, nodeLayout]);
+
+  const updateNodePosition = (id: string, position: NodePosition) => {
+    if (!selected) return;
+    const bounded = boundedPosition(position, id === CENTER_NODE_ID);
+    setNodeLayout(current => ({
+      mapId: selected.id,
+      positions: {
+        ...(current.mapId === selected.id ? current.positions : {}),
+        [id]: bounded,
+      },
+    }));
+  };
+
+  const beginNodeDrag = (event: ReactPointerEvent<HTMLElement>, id: string, position: NodePosition) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.stopPropagation();
+    nodeDragStart.current = {
+      pointerId: event.pointerId, id,
+      startX: event.clientX, startY: event.clientY,
+      original: position, moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const moveNode = (event: ReactPointerEvent<HTMLElement>) => {
+    const drag = nodeDragStart.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    if (!drag.moved && Math.hypot(deltaX, deltaY) < 5) return;
+    drag.moved = true;
+    updateNodePosition(drag.id, {
+      x: drag.original.x + deltaX / scale,
+      y: drag.original.y + deltaY / scale,
+    });
+  };
+
+  const endNodeDrag = (event: ReactPointerEvent<HTMLElement>) => {
+    const drag = nodeDragStart.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    if (drag.moved) lastNodeDrag.current = { id: drag.id, at: Date.now() };
+    nodeDragStart.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const moveNodeWithKeys = (
+    event: ReactKeyboardEvent<HTMLElement>, id: string, position: NodePosition,
+  ) => {
+    const offset = event.shiftKey ? 20 : 8;
+    const directions: Record<string, NodePosition> = {
+      ArrowLeft: { x: -offset, y: 0 },
+      ArrowRight: { x: offset, y: 0 },
+      ArrowUp: { x: 0, y: -offset },
+      ArrowDown: { x: 0, y: offset },
+    };
+    const direction = directions[event.key];
+    if (!direction) return;
+    event.preventDefault();
+    event.stopPropagation();
+    updateNodePosition(id, {
+      x: position.x + direction.x, y: position.y + direction.y,
+    });
+  };
   const selectedResume = useMemo(() => cvs.find(cv => cv.id === cvId) ?? null, [cvs, cvId]);
   const hasBackground = Boolean(
     profile?.headline?.trim() || profile?.skills?.trim() ||
@@ -278,6 +401,9 @@ export function CareerMapPage() {
     setPreferences(currentPreferences(map.preferences));
     setCvId(map.cvId ?? null);
     setRole(null);
+    setNodeLayout(readNodeLayout(map.id));
+    setPan({ x: 0, y: 0 });
+    setScale(1);
   }, []);
 
   const generate = useCallback(async (
@@ -427,7 +553,7 @@ export function CareerMapPage() {
           <button type="button" className="border-y p-2.5 hover:bg-muted" aria-label="Zoom out" onClick={() => setScale(s => Math.max(.6, +(s - .15).toFixed(2)))}>
             <Minus className="size-4" />
           </button>
-          <button type="button" className="p-2.5 hover:bg-muted" aria-label="Fit map" onClick={() => setScale(1)}>
+          <button type="button" className="p-2.5 hover:bg-muted" aria-label="Fit map" onClick={() => { setScale(1); setPan({ x: 0, y: 0 }); }}>
             <Maximize2 className="size-4" />
           </button>
         </div>
@@ -479,28 +605,41 @@ export function CareerMapPage() {
           </div>
         ) : (
           <div
-            className="relative h-full w-full cursor-grab overflow-auto active:cursor-grabbing"
+            className="relative h-full w-full cursor-grab overflow-hidden active:cursor-grabbing"
+            style={{ touchAction: "none" }}
             onPointerDown={event => {
-              if (event.pointerType !== "mouse" || event.button !== 0) return;
-              if ((event.target as Element).closest("button, a")) return;
+              if (event.pointerType === "mouse" && event.button !== 0) return;
+              if ((event.target as Element).closest("button, a, [data-career-draggable]")) return;
               dragStart.current = {
-                x: event.clientX, y: event.clientY,
-                left: event.currentTarget.scrollLeft,
-                top: event.currentTarget.scrollTop,
+                pointerId: event.pointerId, x: event.clientX, y: event.clientY,
+                panX: pan.x, panY: pan.y,
               };
               event.currentTarget.setPointerCapture(event.pointerId);
             }}
             onPointerMove={event => {
-              if (!dragStart.current) return;
-              event.currentTarget.scrollLeft = dragStart.current.left - (event.clientX - dragStart.current.x);
-              event.currentTarget.scrollTop = dragStart.current.top - (event.clientY - dragStart.current.y);
+              const drag = dragStart.current;
+              if (!drag || drag.pointerId !== event.pointerId) return;
+              setPan({
+                x: drag.panX + event.clientX - drag.x,
+                y: drag.panY + event.clientY - drag.y,
+              });
             }}
-            onPointerUp={() => { dragStart.current = null; }}
+            onPointerUp={event => {
+              if (dragStart.current?.pointerId !== event.pointerId) return;
+              dragStart.current = null;
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }
+            }}
             onPointerCancel={() => { dragStart.current = null; }}
           >
             <div
               className="relative mx-auto"
-              style={{ width: BOARD_WIDTH * scale, height: BOARD_HEIGHT * scale }}
+              style={{
+                width: BOARD_WIDTH * scale,
+                height: BOARD_HEIGHT * scale,
+                transform: `translate3d(${pan.x}px, ${pan.y}px, 0)`,
+              }}
             >
               <div
                 className="absolute left-0 top-0"
@@ -517,13 +656,13 @@ export function CareerMapPage() {
                   viewBox={`0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}`}
                 >
                   {nodes.slice(0, 12).map((node, index) => {
-                    const position = POSITION_LAYOUT[index];
+                    const position = positions[node.id] ?? POSITION_LAYOUT[index];
                     const cx = position.x + 77;
                     const cy = position.y;
                     return (
                       <path
                         key={node.id}
-                        d={`M ${ROOT_X} ${ROOT_Y + 40} C ${ROOT_X} ${ROOT_Y + 135}, ${cx} ${cy - 130}, ${cx} ${cy}`}
+                        d={`M ${rootPosition.x + 80} ${rootPosition.y + 70} C ${rootPosition.x + 80} ${rootPosition.y + 165}, ${cx} ${cy - 130}, ${cx} ${cy}`}
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="1.5"
@@ -533,18 +672,43 @@ export function CareerMapPage() {
                   })}
                 </svg>
 
-                <div className="absolute z-10 flex min-h-16 w-40 items-center justify-center rounded-xl border bg-card px-4 py-3 text-center text-sm font-semibold shadow-sm" style={{ left: ROOT_X - 80, top: ROOT_Y - 30 }}>
+                <div
+                  data-career-draggable
+                  role="group"
+                  tabIndex={0}
+                  aria-label="Your career node. Drag to move, or use arrow keys."
+                  className="absolute z-10 flex min-h-16 w-40 cursor-grab select-none items-center justify-center rounded-xl border bg-card px-4 py-3 text-center text-sm font-semibold shadow-sm active:cursor-grabbing"
+                  style={{ left: rootPosition.x, top: rootPosition.y, touchAction: "none" }}
+                  onPointerDown={event => beginNodeDrag(event, CENTER_NODE_ID, rootPosition)}
+                  onPointerMove={moveNode}
+                  onPointerUp={endNodeDrag}
+                  onPointerCancel={endNodeDrag}
+                  onKeyDown={event => moveNodeWithKeys(event, CENTER_NODE_ID, rootPosition)}
+                >
                   {shortName(profile?.name || "My profile")}
                 </div>
                 {nodes.slice(0, 12).map((node, index) => {
-                  const position = POSITION_LAYOUT[index];
+                  const position = positions[node.id] ?? POSITION_LAYOUT[index];
                   return (
                     <button
                       type="button"
                       key={node.id}
-                      onClick={() => setRole(node)}
-                      className="absolute z-10 flex min-h-[68px] w-[154px] flex-col items-center justify-center gap-1 rounded-xl border bg-card px-2.5 py-3 text-center shadow-sm transition-[border-color,transform,box-shadow] hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
-                      style={{ left: position.x, top: position.y }}
+                      data-career-draggable
+                      onClick={() => {
+                        const lastDrag = lastNodeDrag.current;
+                        if (lastDrag?.id === node.id && Date.now() - lastDrag.at < 700) {
+                          lastNodeDrag.current = null;
+                          return;
+                        }
+                        setRole(node);
+                      }}
+                      onPointerDown={event => beginNodeDrag(event, node.id, position)}
+                      onPointerMove={moveNode}
+                      onPointerUp={endNodeDrag}
+                      onPointerCancel={endNodeDrag}
+                      onKeyDown={event => moveNodeWithKeys(event, node.id, position)}
+                      className="absolute z-10 flex min-h-[68px] w-[154px] cursor-grab select-none flex-col items-center justify-center gap-1 rounded-xl border bg-card px-2.5 py-3 text-center shadow-sm transition-[border-color,transform,box-shadow] hover:border-primary/60 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring active:cursor-grabbing"
+                      style={{ left: position.x, top: position.y, touchAction: "none" }}
                       aria-label={`View career path: ${node.title}. ${node.compatibility}% catalog skill overlap.`}
                     >
                       <span className="text-[13px] font-medium leading-5">{node.title}</span>

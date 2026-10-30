@@ -19,6 +19,8 @@ export async function GET() {
         senderName: true,
         companyName: true,
         positionTitle: true,
+        cvId: true,
+        jobId: true,
         introduction: true,
         body: true,
         conclusion: true,

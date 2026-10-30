@@ -1,138 +1,340 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ClipboardCheck, Copy, FileCheck2, RefreshCw, ShieldCheck } from "lucide-react";
-import { PageHeader } from "@/components/ui/page-header";
+import { useSearchParams } from "next/navigation";
+import { Check, ClipboardCheck, Copy, FileCheck2, RefreshCw, Sparkles } from "lucide-react";
+import { ApplicationDocuments } from "@/components/applications/application-documents";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 
-type Choice = { id: string; title?: string; company?: string | null; cvId?: string | null; jobId?: string | null; positionTitle?: string | null };
-type Options = { jobs: Choice[]; resumes: Choice[]; letters: Choice[]; missions: Choice[] };
-type Brief = { id: string; status: "DRAFT" | "READY" | "CANCELED"; revision: number; job: { title: string; company?: string | null } };
-type Packet = Brief & { subject: string; body: string; recipientEmail: string | null; jobId: string; cvId: string; coverLetterId: string | null; missionId: string | null; cvRevision: number; letterRevision: number | null; approvedAt: string | null; sourceChanged: boolean; job: { title: string; company: string | null; sourceUrl: string | null }; cv: { title: string; revision: number }; coverLetter?: { revision: number; positionTitle: string | null } | null };
-type Envelope<T> = { data?: T; error?: { code: string } };
+type Application = {
+  id: string;
+  jobId: string | null;
+  cvId: string | null;
+  coverLetterId: string | null;
+  jobTitle: string;
+  company: string;
+  job: { id: string; title: string; description: string } | null;
+};
+type Brief = {
+  id: string;
+  status: "DRAFT" | "READY" | "CANCELED";
+  revision: number;
+  jobId: string;
+  cvId: string;
+  coverLetterId: string | null;
+  job: { title: string; company?: string | null };
+};
+type Packet = Brief & {
+  subject: string;
+  body: string;
+  recipientEmail: string | null;
+  cvRevision: number;
+  letterRevision: number | null;
+  sourceChanged: boolean;
+  cv: { title: string; revision: number };
+};
+type Envelope<T> = { data?: T; error?: { code?: string } };
+type Tab = "documents" | "email" | "approval" | "history";
+const tabs: { id: Tab; label: string }[] = [
+  { id: "documents", label: "Documents" },
+  { id: "email", label: "Email" },
+  { id: "approval", label: "Approbation" },
+  { id: "history", label: "Historique" },
+];
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
-  const r = await fetch(path, { cache: "no-store", ...options });
-  const value = await r.json() as Envelope<T>;
-  if (!r.ok || !value.data) throw new Error(value.error?.code || `HTTP_${r.status}`);
-  return value.data;
+  const response = await fetch(path, { cache: "no-store", ...options });
+  const json = await response.json() as Envelope<T>;
+  if (!response.ok || !json.data) throw new Error(json.error?.code || `HTTP_${response.status}`);
+  return json.data;
 }
-const send = (payload: unknown, method = "POST"): RequestInit => ({ method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+const payload = (value: unknown, method = "POST"): RequestInit => ({
+  method,
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(value),
+});
+
+function AutoTextarea({ value, onChange, disabled }: {
+  value: string;
+  onChange: (value: string) => void;
+  disabled: boolean;
+}) {
+  const fieldRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (!fieldRef.current) return;
+    fieldRef.current.style.height = "68px";
+    fieldRef.current.style.height = `${Math.max(68, Math.min(fieldRef.current.scrollHeight, 340))}px`;
+  }, [value]);
+  return (
+    <textarea
+      ref={fieldRef}
+      value={value}
+      onChange={event => onChange(event.target.value)}
+      disabled={disabled}
+      rows={2}
+      maxLength={12000}
+      className="w-full min-h-[68px] resize-none overflow-y-auto rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    />
+  );
+}
 
 export default function ApplicationAgentPage() {
-  const [options, setOptions] = useState<Options>({ jobs: [], resumes: [], letters: [], missions: [] });
+  return <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-muted" />}><ApplicationAgentContent /></Suspense>;
+}
+
+function ApplicationAgentContent() {
+  const applicationId = useSearchParams().get("applicationId") || "";
+  const [application, setApplication] = useState<Application | null>(null);
   const [packets, setPackets] = useState<Brief[]>([]);
-  const [jobId, setJobId] = useState("");
-  const [cvId, setCvId] = useState("");
-  const [letterId, setLetterId] = useState("");
-  const [missionId, setMissionId] = useState("");
-  const [language, setLanguage] = useState<"fr" | "en">("fr");
   const [active, setActive] = useState<Packet | null>(null);
+  const [tab, setTab] = useState<Tab>("documents");
+  const [language, setLanguage] = useState<"fr" | "en">("fr");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [reviewed, setReviewed] = useState(false);
-  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [applicationId, setApplicationId] = useState("");
-  useEffect(() => { setApplicationId(new URLSearchParams(window.location.search).get("applicationId") || ""); }, []);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const requestKeyRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
-    try {
-      const [choices, saved] = await Promise.all([
-        api<Options>("/api/career/v1/application-packets/options"),
-        api<{ items: Brief[] }>("/api/career/v1/application-packets?limit=50"),
-      ]);
-      setOptions(choices);
-      setPackets(saved.items);
-    } catch (e) { setError(e instanceof Error ? e.message : "LOAD_FAILED"); }
-  }, []);
-  useEffect(() => { void load(); }, [load]);
-  const seededContext = useRef(false);
-  useEffect(() => {
-    if (seededContext.current || !options.jobs.length || !options.resumes.length) return;
-    const params = new URLSearchParams(window.location.search);
-    const requestedJob = params.get("jobId");
-    const requestedCv = params.get("cvId");
-    if (requestedJob && options.jobs.some(item => item.id === requestedJob)) {
-      setJobId(requestedJob);
-      if (requestedCv && options.resumes.some(item => item.id === requestedCv)) setCvId(requestedCv);
-    }
-    seededContext.current = true;
-  }, [options]);
-  const letterOptions = useMemo(() => options.letters.filter(letter => letter.cvId === cvId && (!letter.jobId || letter.jobId === jobId)), [options.letters, cvId, jobId]);
-  const showPacket = (packet: Packet) => { setActive(packet); setSubject(packet.subject); setBody(packet.body); setRecipientEmail(packet.recipientEmail || ""); setReviewed(false); setCopied(false); };
-  const guarded = async (action: () => Promise<void>) => { setBusy(true); setError(""); try { await action(); } catch (e) { setError(e instanceof Error ? e.message : "REQUEST_FAILED"); } finally { setBusy(false); } };
-  const detail = async (id: string) => showPacket(await api<Packet>(`/api/career/v1/application-packets/${id}`));
-  const create = () => guarded(async () => {
-    if (!jobId || !cvId) { setError("Choisissez une offre et un CV."); return; }
-    const created = await api<{ packet: { id: string } }>("/api/career/v1/application-packets", send({ apiVersion: "v1", requestKey: (requestKeyRef.current ??= crypto.randomUUID()), jobId, cvId, ...(letterId ? { coverLetterId: letterId } : {}), ...(missionId ? { missionId } : {}), language }));
-    requestKeyRef.current = null; await load(); await detail(created.packet.id);
-  });
-  const save = () => active && guarded(async () => {
-    const result = await api<Packet>(`/api/career/v1/application-packets/${active.id}`, send({ apiVersion: "v1", revision: active.revision, subject, body, recipientEmail: recipientEmail.trim() || null }, "PATCH"));
-    showPacket(result); await load();
-  });
-  const decide = (action: "approve" | "cancel") => active && guarded(async () => {
-    if (action === "approve" && (subject !== active.subject || body !== active.body || recipientEmail !== (active.recipientEmail || ""))) {
-      setError("Enregistrez les modifications avant d'approuver."); return;
-    }
-    await api(`/api/career/v1/application-packets/${active.id}/decision`, send({ apiVersion: "v1", action, revision: active.revision, reviewed }));
-    await detail(active.id); await load();
-  });
-  const suggest = () => active && guarded(async () => {
-    if (active.status !== "DRAFT") return;
-    const proposal = await api<{ suggestion: { subject: string; body: string } }>(`/api/career/v1/application-packets/${active.id}/suggest-email`, send({ apiVersion: "v1", revision: active.revision }));
-    setSubject(proposal.suggestion.subject); setBody(proposal.suggestion.body); setReviewed(false);
-    setError("Proposition IA non enregistrée : vérifiez tous les faits, puis cliquez sur Enregistrer le brouillon.");
-  });
-  const copy = async () => { try { await navigator.clipboard.writeText(`À / To: ${recipientEmail || "(à compléter)"}
-Objet / Subject: ${subject}
+    const [saved, app] = await Promise.all([
+      api<{ items: Brief[] }>("/api/career/v1/application-packets?limit=50"),
+      applicationId ? fetch(`/api/applications/${encodeURIComponent(applicationId)}`, { cache: "no-store" })
+        .then(async response => {
+          if (!response.ok) throw new Error("Candidature introuvable.");
+          return response.json() as Promise<Application>;
+        }) : Promise.resolve(null),
+    ]);
+    setApplication(app);
+    setPackets(saved.items);
+    return { saved: saved.items, app };
+  }, [applicationId]);
 
-${body}`); setCopied(true); } catch { setError("COPY_FAILED"); } };
-  return <div className="space-y-6">
-    <PageHeader title="Application Agent" description="Préparez, vérifiez et approuvez un dossier de candidature. Aucun envoi ni dépôt sur un site externe n'est effectué." />
-    {applicationId && <Link href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents`} className="text-sm text-primary">← Retour au dossier de candidature</Link>}
-    <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-sm"><ShieldCheck className="mb-2 size-5"/><strong>Votre contrôle, à chaque étape.</strong> Le dossier « Prêt » signifie uniquement « approuvé pour utilisation manuelle ». L'application n'envoie aucun email et ne modifie pas le statut de votre candidature.</div>
-    <section className="app-section space-y-4"><h2 className="type-h2">Nouveau dossier</h2>
-      <div className="grid gap-3 md:grid-cols-2">
-        <label className="space-y-1 text-sm">Offre enregistrée
-          <select className="w-full rounded-lg border bg-background p-2" value={jobId} onChange={e => { setJobId(e.target.value); setLetterId(""); requestKeyRef.current = null; }}><option value="">Choisir une offre</option>{options.jobs.map(item => <option key={item.id} value={item.id}>{item.title}{item.company ? ` — ${item.company}` : ""}</option>)}</select>
-        </label>
-        <label className="space-y-1 text-sm">CV associé
-          <select className="w-full rounded-lg border bg-background p-2" value={cvId} onChange={e => { setCvId(e.target.value); setLetterId(""); requestKeyRef.current = null; }}><option value="">Choisir un CV</option>{options.resumes.map(item => <option key={item.id} value={item.id}>{item.title || "Sans titre"}</option>)}</select>
-        </label>
-        <label className="space-y-1 text-sm">Lettre liée (facultatif)
-          <select className="w-full rounded-lg border bg-background p-2" value={letterId} onChange={e => { setLetterId(e.target.value); requestKeyRef.current = null; }}><option value="">Aucune lettre</option>{letterOptions.map(item => <option key={item.id} value={item.id}>{item.positionTitle || item.company || item.id}</option>)}</select>
-        </label>
-        <label className="space-y-1 text-sm">Mission de carrière (facultatif)
-          <select className="w-full rounded-lg border bg-background p-2" value={missionId} onChange={e => { setMissionId(e.target.value); requestKeyRef.current = null; }}><option value="">Sans mission</option>{options.missions.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
-        </label>
-        <label className="space-y-1 text-sm">Langue de l'email
-          <select className="w-full rounded-lg border bg-background p-2" value={language} onChange={e => { setLanguage(e.target.value as "fr" | "en"); requestKeyRef.current = null; }}><option value="fr">Français</option><option value="en">English</option></select>
-        </label>
+  const openPacket = useCallback(async (id: string) => {
+    const packet = await api<Packet>(`/api/career/v1/application-packets/${id}`);
+    setActive(packet);
+    setSubject(packet.subject);
+    setBody(packet.body);
+    setRecipientEmail(packet.recipientEmail || "");
+    setReviewed(false);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    void load().then(async ({ saved, app }) => {
+      if (!app || cancelled) return;
+      const existing = saved.find(item =>
+        item.jobId === app.jobId && item.cvId === app.cvId && item.coverLetterId === app.coverLetterId
+      );
+      if (existing) await openPacket(existing.id);
+    }).catch(failure => {
+      if (!cancelled) setError(failure instanceof Error ? failure.message : "Chargement impossible.");
+    }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [load, openPacket]);
+
+  const run = async (action: () => Promise<void>) => {
+    setBusy(true); setError(""); setMessage("");
+    try { await action(); }
+    catch (failure) { setError(failure instanceof Error ? failure.message : "Action impossible."); }
+    finally { setBusy(false); }
+  };
+
+  const updateDocument = async (key: "cvId" | "coverLetterId", value: string | null) => {
+    if (!application) throw new Error("Candidature indisponible.");
+    const response = await fetch(`/api/applications/${encodeURIComponent(application.id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [key]: value }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({})) as { error?: string };
+      throw new Error(data.error || "Document non associé.");
+    }
+    const next = await load();
+    setActive(null);
+    setReviewed(false);
+    requestKeyRef.current = null;
+    if (!next.app) throw new Error("Candidature introuvable.");
+  };
+
+  const create = () => run(async () => {
+    if (!application?.jobId || !application.cvId || !application.job?.description.trim()) {
+      throw new Error("Cette candidature doit contenir une offre et un CV.");
+    }
+    const created = await api<{ packet: { id: string } }>(
+      "/api/career/v1/application-packets",
+      payload({
+        apiVersion: "v1",
+        requestKey: (requestKeyRef.current ??= crypto.randomUUID()),
+        jobId: application.jobId,
+        cvId: application.cvId,
+        ...(application.coverLetterId ? { coverLetterId: application.coverLetterId } : {}),
+        language,
+      })
+    );
+    requestKeyRef.current = null;
+    await load();
+    await openPacket(created.packet.id);
+    setTab("email");
+  });
+
+  const save = () => active && run(async () => {
+    const next = await api<Packet>(
+      `/api/career/v1/application-packets/${active.id}`,
+      payload({ apiVersion: "v1", revision: active.revision, subject, body, recipientEmail: recipientEmail.trim() || null }, "PATCH")
+    );
+    await openPacket(next.id);
+    await load();
+    setMessage("Brouillon enregistré.");
+  });
+
+  const suggest = () => active && run(async () => {
+    const next = await api<{ suggestion: { subject: string; body: string } }>(
+      `/api/career/v1/application-packets/${active.id}/suggest-email`,
+      payload({ apiVersion: "v1", revision: active.revision })
+    );
+    setSubject(next.suggestion.subject);
+    setBody(next.suggestion.body);
+    setReviewed(false);
+    setMessage("Proposition IA à relire et enregistrer.");
+  });
+
+  const decide = (action: "approve" | "cancel") => active && run(async () => {
+    if (action === "approve" && (subject !== active.subject || body !== active.body || recipientEmail !== (active.recipientEmail || ""))) {
+      throw new Error("Enregistrez l'email avant de valider le dossier.");
+    }
+    if (action === "approve" && active.sourceChanged) throw new Error("Les documents ont changé : préparez un nouveau dossier.");
+    await api(`/api/career/v1/application-packets/${active.id}/decision`, payload({ apiVersion: "v1", revision: active.revision, action, reviewed }));
+    await openPacket(active.id);
+    await load();
+    setMessage(action === "approve" ? "Dossier approuvé pour utilisation manuelle." : "Dossier annulé.");
+  });
+
+  const copy = () => run(async () => {
+    await navigator.clipboard.writeText(`À / To: ${recipientEmail || "(à compléter)"}\nObjet / Subject: ${subject}\n\n${body}`);
+    setMessage("Email copié.");
+  });
+
+  const related = packets.filter(item => application && item.jobId === application.jobId);
+  const ready = Boolean(application?.cvId && application?.jobId && application.job?.description.trim());
+
+  if (!applicationId) return (
+    <main className="mx-auto max-w-4xl space-y-4 py-6">
+      <h1 className="text-xl font-semibold">Application Agent</h1>
+      <p className="text-sm text-muted-foreground">Ouvrez une candidature pour préparer son dossier sans ressaisir l'offre ou les documents.</p>
+      <Button asChild><Link href="/dashboard/applications">Mes candidatures</Link></Button>
+    </main>
+  );
+
+  return (
+    <main className="mx-auto max-w-5xl space-y-5 pb-10">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents`} className="text-xs text-muted-foreground hover:text-foreground">← Retour à la candidature</Link>
+          <h1 className="mt-2 text-xl font-semibold">Application Agent</h1>
+          {application && <p className="mt-1 text-sm text-muted-foreground">{application.jobTitle} · {application.company}</p>}
+        </div>
+        {active && <span className="rounded-md bg-muted px-2 py-1 text-xs">{active.status === "READY" ? "Prêt" : active.status === "DRAFT" ? "Brouillon" : "Annulé"}</span>}
       </div>
-      <Button disabled={busy || !jobId || !cvId} onClick={create}><FileCheck2 className="size-4"/> Préparer le dossier</Button>
-      {(!options.jobs.length || !options.resumes.length) && <p className="text-sm text-muted-foreground">Créez d'abord une <Link className="underline" href="/dashboard/job-match">analyse d'offre</Link> et un <Link className="underline" href="/dashboard/resumes">CV</Link>.</p>}
-    </section>
-    <section className="app-section space-y-3"><div className="flex items-center justify-between"><h2 className="type-h2">Dossiers sauvegardés</h2><Button variant="outline" onClick={() => void load()} disabled={busy}><RefreshCw className="size-4"/> Actualiser</Button></div>
-      {packets.length ? <div className="grid gap-2 md:grid-cols-2">{packets.map(item => <button type="button" key={item.id} onClick={() => void guarded(() => detail(item.id))} className="rounded-lg border p-3 text-left hover:bg-muted/50 focus-visible:outline focus-visible:outline-2"><span className="block font-medium">{item.job.title}</span><span className="text-xs text-muted-foreground">{item.job.company || "Entreprise non précisée"} · {item.status === "READY" ? "Prêt pour utilisation manuelle" : item.status === "DRAFT" ? "Brouillon" : "Annulé"}</span></button>)}</div> : <p className="text-sm text-muted-foreground">Aucun dossier pour le moment.</p>}
-    </section>
-    {active && <section className="app-section space-y-4" aria-label="Dossier sélectionné">
-      <div className="flex items-start justify-between gap-3"><div><h2 className="type-h2">{active.job.title}</h2><p className="text-sm text-muted-foreground">{active.job.company} · Révision {active.revision} · {active.status}</p></div><Button variant="outline" size="sm" onClick={() => void guarded(() => detail(active.id))}>Recharger</Button></div>
-      <div className="grid gap-2 text-sm sm:grid-cols-2"><Link className="rounded border p-3 underline" href={`/dashboard/resumes/${active.cvId}${applicationId ? `?applicationId=${encodeURIComponent(applicationId)}` : ""}`}>Ouvrir le CV : {active.cv.title || "Sans titre"}</Link>{active.coverLetterId && <Link className="rounded border p-3 underline" href={`/dashboard/cover-letters/${active.coverLetterId}${applicationId ? `?applicationId=${encodeURIComponent(applicationId)}` : ""}`}>Vérifier la lettre de motivation</Link>}</div>
-      <label className="block space-y-1 text-sm">Adresse du destinataire (facultative, jamais devinée)<Input type="email" disabled={busy || active.status !== "DRAFT"} value={recipientEmail} onChange={e => { setRecipientEmail(e.target.value); setReviewed(false); }}/></label>
-      <label className="block space-y-1 text-sm">Objet<Input maxLength={300} disabled={busy || active.status !== "DRAFT"} value={subject} onChange={e => { setSubject(e.target.value); setReviewed(false); }}/></label>
-      <label className="block space-y-1 text-sm">Email de candidature<Textarea maxLength={12000} rows={9} disabled={busy || active.status !== "DRAFT"} value={body} onChange={e => { setBody(e.target.value); setReviewed(false); }}/></label>
-      <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy || active.status !== "DRAFT"} onClick={() => void suggest()}>Améliorer l’email avec l’IA (sur demande)</Button><Button variant="outline" disabled={busy || active.status !== "DRAFT"} onClick={() => void save()}>Enregistrer le brouillon</Button><Button variant="outline" onClick={() => void copy()}><Copy className="size-4"/>{copied ? "Copié" : "Copier l'email"}</Button></div>
-      {active.status === "DRAFT" && <div className="rounded-lg border p-4 space-y-3"><label className="flex gap-2 text-sm"><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)}/><span>J'ai relu l'email, le CV, la lettre éventuelle et les informations du poste. Je comprends que cette approbation n'envoie aucune candidature.</span></label><div className="flex gap-2"><Button disabled={busy || !reviewed} onClick={() => void decide("approve")}><ClipboardCheck className="size-4"/> Approuver le dossier</Button><Button disabled={busy} variant="outline" onClick={() => void decide("cancel")}>Annuler le dossier</Button></div></div>}
-      {active.sourceChanged && <p role="alert" className="rounded-lg border border-destructive/40 p-3 text-sm text-destructive">La version du CV, de la lettre ou de l’offre a changé depuis la préparation. Créez un nouveau dossier pour obtenir une approbation actuelle.</p>}
-      {active.status === "READY" && <p role="status" className="rounded-lg border p-3 text-sm">Dossier approuvé. Vous pouvez copier l'email et exporter vos documents, puis transmettre vous-même votre candidature. Aucun statut « Envoyé » n'a été enregistré.</p>}
-    </section>}
-    {error && <p role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm text-destructive">{error} — Réessayez après actualisation des données.</p>}
-  </div>;
+
+      <nav role="tablist" aria-label="Préparation de candidature" className="flex gap-1 overflow-x-auto border-b">
+        {tabs.map(item => (
+          <button type="button" role="tab" key={item.id} aria-selected={tab === item.id} onClick={() => setTab(item.id)}
+            className={`shrink-0 border-b-2 px-3 py-2 text-sm ${tab === item.id ? "border-primary font-semibold" : "border-transparent text-muted-foreground"}`}>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      {loading && <div role="status" className="h-28 animate-pulse rounded-xl bg-muted" />}
+      {error && <p role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+      {message && <p role="status" className="text-sm text-primary">{message}</p>}
+
+      {!loading && application && tab === "documents" && (
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <ApplicationDocuments kind="resume" selectedId={application.cvId} applicationId={application.id} disabled={busy} onSelect={id => updateDocument("cvId", id)} />
+            <ApplicationDocuments kind="letter" selectedId={application.coverLetterId} applicationId={application.id} cvId={application.cvId} jobId={application.jobId} disabled={busy} onSelect={id => updateDocument("coverLetterId", id)} />
+          </div>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <label className="space-y-1 text-xs">Langue de l'email
+              <select className="block h-9 rounded-md border bg-background px-3 text-sm" value={language} onChange={event => setLanguage(event.target.value as "fr" | "en")}>
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+              </select>
+            </label>
+            <Button disabled={!ready || busy} onClick={() => void create()}><FileCheck2 className="size-4" /> Préparer le dossier</Button>
+          </div>
+          {!ready && <p className="text-sm text-muted-foreground">Associez un CV et vérifiez la description de l'offre dans la candidature.</p>}
+        </div>
+      )}
+
+      {!loading && tab === "email" && (
+        <div className="max-w-3xl space-y-4">
+          {!active ? <div className="rounded-xl border p-5 text-sm text-muted-foreground">Préparez d'abord votre dossier dans l'onglet Documents.</div> : (
+            <>
+              <label className="block space-y-1 text-xs">Destinataire (facultatif)
+                <Input type="email" disabled={busy || active.status !== "DRAFT"} value={recipientEmail} onChange={event => { setRecipientEmail(event.target.value); setReviewed(false); }} />
+              </label>
+              <label className="block space-y-1 text-xs">Objet
+                <Input maxLength={300} disabled={busy || active.status !== "DRAFT"} value={subject} onChange={event => { setSubject(event.target.value); setReviewed(false); }} />
+              </label>
+              <label className="block space-y-1 text-xs">Email
+                <AutoTextarea disabled={busy || active.status !== "DRAFT"} value={body} onChange={value => { setBody(value); setReviewed(false); }} />
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" disabled={busy || active.status !== "DRAFT"} onClick={() => void suggest()}><Sparkles className="size-4" /> Améliorer avec l'IA</Button>
+                <Button size="sm" variant="outline" disabled={busy || active.status !== "DRAFT"} onClick={() => void save()}><Check className="size-4" /> Enregistrer</Button>
+                <Button size="sm" variant="outline" onClick={() => void copy()}><Copy className="size-4" /> Copier</Button>
+                <Button size="sm" onClick={() => setTab("approval")}>Suivant</Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {!loading && tab === "approval" && (
+        <div className="max-w-2xl space-y-4 rounded-xl border p-5">
+          {!active ? <p className="text-sm text-muted-foreground">Aucun dossier à approuver.</p> : (
+            <>
+              <h2 className="text-sm font-semibold">Vérification finale</h2>
+              <p className="text-sm text-muted-foreground">{application?.jobTitle} · {active.cv.title}</p>
+              {active.sourceChanged && <p role="alert" className="text-sm text-destructive">Un document a été modifié. Préparez un nouveau dossier.</p>}
+              {active.status === "DRAFT" ? (
+                <>
+                  <label className="flex items-start gap-2 text-sm">
+                    <input type="checkbox" className="mt-1" checked={reviewed} onChange={event => setReviewed(event.target.checked)} />
+                    <span>J'ai relu les documents et l'email. L'approbation n'envoie aucune candidature.</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <Button disabled={busy || !reviewed || active.sourceChanged} onClick={() => void decide("approve")}><ClipboardCheck className="size-4" /> Approuver</Button>
+                    <Button variant="outline" disabled={busy} onClick={() => void decide("cancel")}>Annuler</Button>
+                  </div>
+                </>
+              ) : <p className="text-sm">{active.status === "READY" ? "Dossier prêt pour utilisation manuelle." : "Dossier annulé."}</p>}
+            </>
+          )}
+        </div>
+      )}
+
+      {!loading && tab === "history" && (
+        <div className="max-w-3xl space-y-2">
+          <div className="flex justify-end"><Button size="sm" variant="ghost" disabled={busy} onClick={() => void run(async () => { await load(); })}><RefreshCw className="size-4" /> Actualiser</Button></div>
+          {!related.length && <p className="text-sm text-muted-foreground">Aucun dossier enregistré pour cette offre.</p>}
+          {related.map(item => (
+            <button key={item.id} type="button" className="flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left text-sm hover:bg-muted/30" onClick={() => void run(async () => { await openPacket(item.id); setTab("email"); })}>
+              <span className="truncate">{item.job.title}</span>
+              <span className="text-xs text-muted-foreground">{item.status === "READY" ? "Prêt" : item.status === "DRAFT" ? "Brouillon" : "Annulé"}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </main>
+  );
 }

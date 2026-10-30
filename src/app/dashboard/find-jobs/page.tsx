@@ -450,7 +450,6 @@ export default function FindJobs() {
           source: job.provider,
           status: "SAVED",
           reopenExisting: true,
-          notes: `Original offer: ${job.sourceUrl}`,
         }),
       });
       if (!response.ok) throw new Error("APPLICATION_FAILED");

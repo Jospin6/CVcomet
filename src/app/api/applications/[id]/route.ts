@@ -23,6 +23,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const own = await prisma.jobApplication.findFirst({ where: { id, userId: u.id } });
     if (!own) return NextResponse.json({ error: "Not found" }, { status: 404 });
     const data = patch.parse(await req.json());
+    // One application = one job. Initial linking remains possible for legacy
+    // applications, but an existing job cannot be replaced or detached.
+    if (data.jobId !== undefined && own.jobId && data.jobId !== own.jobId) {
+      return NextResponse.json({ error: "APPLICATION_JOB_IMMUTABLE" }, { status: 409 });
+    }
     // A document selected for one job can never belong to another user.
     const [job, cv, letter] = await Promise.all([
       data.jobId ? prisma.jobOpportunity.findFirst({ where: { id: data.jobId, userId: u.id }, select: { id: true } }) : null,

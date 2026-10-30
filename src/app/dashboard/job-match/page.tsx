@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ArrowUpRight, BriefcaseBusiness, Copy, FileCheck2, FileText, LoaderCircle, Mail, Save, Sparkles } from "lucide-react";
@@ -35,8 +35,10 @@ export default function JobMatch() {
     onTextChanged: () => setResult(null),
     onExtracted: () => { setResult(null); setProposal(null); setLetter(null); setEmail(null); },
     onAnalyzed: async data => {
-      setResult(data); setWizardOpen(false); setProposal(null); setLetter(null); setEmail(null); setApplicationId(""); setLetterConversation("");
-      window.history.replaceState(null, "", "?analysis=" + data.id); await history.reload();
+      setResult(data); setWizardOpen(false); setProposal(null); setLetter(null); setEmail(null); setLetterConversation("");
+      const appId = new URLSearchParams(window.location.search).get("applicationId") || "";
+      setApplicationId(appId);
+      window.history.replaceState(null, "", `?analysis=${encodeURIComponent(data.id)}${appId ? `&applicationId=${encodeURIComponent(appId)}` : ""}`); await history.reload();
     },
   });
   const { c, resumes, cvId, setCvId, setText, setSource, setConfirmed, busy, setBusy, error, setError, message, setMessage, act, errorText } = form;
@@ -49,16 +51,75 @@ export default function JobMatch() {
       const data = await request<Result>("/api/job-match?id=" + encodeURIComponent(id));
       setWizardOpen(false); setResult(data); setText(data.job.description); setSource({ type: data.job.sourceType || "TEXT", url: data.job.sourceUrl || undefined, name: data.job.sourceName || undefined, originalText: data.job.originalText || data.job.description }); setConfirmed(false); setCvId(data.cvId || "");
       setProposal(data.tailoredCvId ? null : data.tailoring || null); setPaths(data.tailoring?.changes.map(change => change.path) || []);
-      setLetter(data.job.documentDrafts?.letter?.draft || null); setEmail(data.job.documentDrafts?.email?.draft || null); setLetterConversation(data.job.coverLetters?.find(item => item.cvId === (data.tailoredCvId || data.cvId))?.id || ""); setApplicationId(data.job.applications?.[0]?.id || "");
+      setLetter(data.job.documentDrafts?.letter?.draft || null); setEmail(data.job.documentDrafts?.email?.draft || null); setLetterConversation(data.job.coverLetters?.find(item => item.cvId === (data.tailoredCvId || data.cvId))?.id || "");
+      setApplicationId(new URLSearchParams(window.location.search).get("applicationId") || data.job.applications?.[0]?.id || "");
       if (!data.result || !data.job.analysis) setError("JOB_REANALYZE");
-      window.history.replaceState(null, "", "?analysis=" + id);
+      const appId = new URLSearchParams(window.location.search).get("applicationId") || "";
+      window.history.replaceState(null, "", `?analysis=${encodeURIComponent(id)}${appId ? `&applicationId=${encodeURIComponent(appId)}` : ""}`);
     } catch (failure) { setError(failure instanceof Error ? failure.message : "UNAVAILABLE"); }
     finally { setBusy(""); }
   }, [setBusy, setError, setMessage, setText, setSource, setConfirmed, setCvId]);
+  const initialAnalysis = useRef(false);
   useEffect(() => {
-    const id = new URL(window.location.href).searchParams.get("analysis");
-    if (id) void loadMatch(id);
-    else setWizardOpen(true);
+    if (initialAnalysis.current) return;
+    initialAnalysis.current = true;
+    const params = new URLSearchParams(window.location.search);
+    const analysisId = params.get("analysis");
+    const appId = params.get("applicationId");
+    if (!appId) {
+      if (analysisId) void loadMatch(analysisId);
+      else setWizardOpen(true);
+      return;
+    }
+    setApplicationId(appId);
+    // Application entry: never ask for JD or resume again.
+    // Both are read from the owned application on the server.
+    void (async () => {
+      setWizardOpen(false);
+      setBusy("analyze");
+      setError("");
+      try {
+        const response = await fetch(`/api/applications/${encodeURIComponent(appId)}`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Candidature introuvable.");
+        const app = await response.json() as {
+          jobId: string | null;
+          cvId: string | null;
+          job: {
+            description: string;
+            matches: { id: string; cvId: string | null }[];
+          } | null;
+        };
+        if (!app.jobId || !app.job?.description || app.job.description.trim().length < 100) {
+          throw new Error("La description de cette offre est absente ou incomplète.");
+        }
+        if (!app.cvId) throw new Error("Associez d'abord un CV à la candidature.");
+
+        if (analysisId && params.get("reanalyze") !== "1" &&
+            app.job.matches.some(item => item.id === analysisId && item.cvId === app.cvId)) {
+          await loadMatch(analysisId);
+          return;
+        }
+        const existing = app.job.matches.find(item => item.cvId === app.cvId);
+        if (existing && params.get("reanalyze") !== "1") {
+          await loadMatch(existing.id);
+          return;
+        }
+        const data = await request<Result>("/api/job-match", {
+          text: app.job.description,
+          source: { type: "TEXT" },
+          confirmed: true,
+          cvId: app.cvId,
+          applicationId: appId,
+          language,
+        });
+        await loadMatch(data.id);
+        await history.reload();
+      } catch (failure) {
+        setError(failure instanceof Error ? failure.message : "Analyse impossible.");
+      } finally {
+        setBusy("");
+      }
+    })();
   }, [loadMatch]);
   const generateProposal = (mode: "TAILOR" | "IMPROVE") => act("tailor", async () => {
     if (!result) return;
@@ -306,9 +367,17 @@ export default function JobMatch() {
       <PageHeader
         title={c.title}
         action={(
-          <Button type="button" disabled={!!busy} onClick={() => setWizardOpen(true)}>
-            <Sparkles className="size-4" /> {c.analyze}
-          </Button>
+          applicationId ? (
+            <Button type="button" variant="outline" asChild>
+              <Link href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=analysis`}>
+                Retour à la candidature
+              </Link>
+            </Button>
+          ) : (
+            <Button type="button" disabled={!!busy} onClick={() => setWizardOpen(true)}>
+              <Sparkles className="size-4" /> {c.analyze}
+            </Button>
+          )
         )}
       />
       {error && !wizardOpen && (

@@ -35,7 +35,7 @@ export async function createApplicationPacket(actor: Actor, body: CreateInput) {
     prisma.user.findUnique({ where: { id: actor.id }, select: { name: true } }),
   ]);
   if (!job || !cv || (body.coverLetterId && !letter) || (body.missionId && !mission)) throw new CareerContractError(404, "RESOURCE_NOT_FOUND");
-  if (letter && (letter.cvId !== cv.id || (letter.jobId && letter.jobId !== job.id))) throw new CareerContractError(409, "LETTER_JOB_RESUME_MISMATCH");
+  if (letter && ((letter.cvId && letter.cvId !== cv.id) || (letter.jobId && letter.jobId !== job.id))) throw new CareerContractError(409, "LETTER_JOB_RESUME_MISMATCH");
   const draft = draftApplicationEmail({ company: job.company, title: job.title, name: user?.name ?? null, language: body.language });
   try {
     const packet = await prisma.careerApplicationPacket.create({ data: {
@@ -101,7 +101,7 @@ export async function decideApplicationPacket(actor: Actor, id: string, expected
           tx.jobOpportunity.findFirst({ where: { id: packet.jobId, userId: actor.id }, select: { updatedAt: true } }),
         ]);
         if (!cv || !job || (packet.coverLetterId && !letter)) throw new CareerContractError(409, "PACKET_SOURCE_CHANGED");
-        if (letter && (letter.cvId !== packet.cvId || (letter.jobId && letter.jobId !== packet.jobId))) throw new CareerContractError(409, "PACKET_SOURCE_CHANGED");
+        if (letter && ((letter.cvId && letter.cvId !== packet.cvId) || (letter.jobId && letter.jobId !== packet.jobId))) throw new CareerContractError(409, "PACKET_SOURCE_CHANGED");
         assertSourcesCurrent(packet, { cvRevision: cv.revision, letterRevision: letter?.revision ?? null, jobUpdatedAt: job.updatedAt });
       }
       const changed = await tx.careerApplicationPacket.updateMany({ where: { id, userId: actor.id, revision: expectedRevision, status: "DRAFT" },
