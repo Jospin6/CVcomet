@@ -7,7 +7,7 @@ import { runCareerAgent } from "@/lib/career-os/agent-service";
 import { CareerContractError } from "@/lib/career-os/contracts";
 import { assertTrustedWriteOrigin } from "@/lib/security/request-origin";
 
-const input = z.object({ message: z.string().trim().min(2).max(6000) }).strict();
+const input = z.object({ message: z.string().trim().min(2).max(6000), applicationId: z.string().uuid().optional() }).strict();
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -17,8 +17,10 @@ export async function POST(req: Request) {
   try {
     assertTrustedWriteOrigin(req);
     const actor = await requireUser();
-    const { message } = input.parse(await profileJson(req, 8 * 1024));
-    return NextResponse.json(await runCareerAgent(actor, message, req.signal), {
+    const { message, applicationId } = input.parse(await profileJson(req, 8 * 1024));
+    return NextResponse.json(applicationId
+      ? await runCareerAgent(actor, message, req.signal, [], applicationId)
+      : await runCareerAgent(actor, message, req.signal), {
       headers: { "Cache-Control": "private, no-store" },
     });
   } catch (error) {

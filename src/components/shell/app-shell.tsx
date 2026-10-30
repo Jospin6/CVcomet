@@ -79,15 +79,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               {children}
             </main>
-            <footer className="mx-4 flex flex-wrap items-center justify-between gap-2 border-t py-5 text-[11px] text-muted-foreground sm:mx-7 lg:mx-10">
-              <span>
-                CVcomet <span className="px-2">/</span>
-                {t("shell.footer")}
-              </span>
-              <Link href="/help" className="hover:text-primary">
-                {t("shell.help")}
-              </Link>
-            </footer>
           </div>
         </SidebarProvider>
       )}

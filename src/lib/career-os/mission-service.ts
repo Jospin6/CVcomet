@@ -144,13 +144,13 @@ async function claimMissionRun(actor: MissionOwner, missionId: string, requestKe
 }
 
 /** Store only sanitized summaries of read tools; never persist raw private tool results. */
-export async function executeCareerMissionRun(actor: CareerActor, missionId: string, requestKey: string, message: string, signal?: AbortSignal) {
+export async function executeCareerMissionRun(actor: CareerActor, missionId: string, requestKey: string, message: string, signal?: AbortSignal, applicationId?: string) {
   const claim = await claimMissionRun(actor, missionId, requestKey, message);
   if (claim.kind === "cached") return { ...claim.answer, replayed: true };
   try {
     const history = await prisma.careerMissionRun.findMany({ where: { missionId, userId: actor.id, status: "COMPLETED" },
       select: { question: true, answer: true }, orderBy: { createdAt: "desc" }, take: MISSION_HISTORY_LIMIT });
-    const result = await runCareerAgent(actor, message, signal, contextFromCompletedRuns(history.reverse().filter((r): r is { question: string; answer: string } => !!r.answer)));
+    const result = await runCareerAgent(actor, message, signal, contextFromCompletedRuns(history.reverse().filter((r): r is { question: string; answer: string } => !!r.answer)), applicationId);
     const saved = await prisma.$transaction(async tx => {
       const done = await tx.careerMissionRun.updateMany({ where: { id: claim.runId, missionId, userId: actor.id, status: "RUNNING", leaseToken: claim.leaseToken },
         data: { answer: result.message, steps: result.steps, status: "COMPLETED", errorCode: null } });

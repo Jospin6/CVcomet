@@ -2,6 +2,7 @@
 import {useCallback,useEffect,useRef,useState} from "react";
 import {MessagesSquare,Send,Play,Square,Trash2,Volume2,Mic,MicOff,ShieldCheck,ClipboardCheck,AlertCircle} from "lucide-react";
 import {PageHeader} from "@/components/ui/page-header";
+import Link from "next/link";
 import {Button} from "@/components/ui/button";
 import {Textarea} from "@/components/ui/textarea";
 import {Input} from "@/components/ui/input";
@@ -82,6 +83,7 @@ export default function Interviews(){
   const activeQuestion=current?.messages?.filter(m=>m.role==="assistant").at(-1)?.content;
   if(current)return <div className="mx-auto max-w-4xl space-y-5">
     <PageHeader title={current.title} description="Entraînement pédagogique. Les scores ne prédisent ni l'embauche ni la valeur d'un candidat."/>
+    {applicationId&&<Link href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=interviews`} className="text-sm text-primary">← Retour au dossier de candidature</Link>}
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
       <div className="text-sm"><strong>{answers.length} réponse{answers.length>1?"s":""}</strong> / {questions.length||5} questions · <span className="text-muted-foreground">{current.status}</span></div>
       <div className="flex gap-2"><Button variant="outline" onClick={()=>{stopListening();setCurrent(null);}} disabled={busy}>Historique</Button>{current.status!=="COMPLETED"&&<Button variant="outline" disabled={busy} onClick={()=>void finish()}><Square className="size-4"/>Terminer</Button>}</div>
@@ -117,6 +119,7 @@ export default function Interviews(){
   </div>;
   return <div className="space-y-7">
     <PageHeader title="Interview Coach 2.0" description="Simulations contextualisées, retours précis et progression. Évaluation pédagogique, jamais un pronostic de recrutement."/>
+    {applicationId&&<Link href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=interviews`} className="text-sm text-primary">← Retour au dossier de candidature</Link>}
     <form onSubmit={prepare} className="app-section grid gap-3 md:grid-cols-2">
       <Input required value={form.role} onChange={e=>setForm({...form,role:e.target.value})} maxLength={160} placeholder="Métier ciblé" aria-label="Métier ciblé"/>
       <Input value={form.level} onChange={e=>setForm({...form,level:e.target.value})} maxLength={80} placeholder="Niveau d'expérience (facultatif)" aria-label="Niveau d'expérience"/>

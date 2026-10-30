@@ -37,12 +37,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (letter && ((letter.cvId && letter.cvId !== targetCv) || (letter.jobId && letter.jobId !== targetJob))) {
       return NextResponse.json({ error: "LETTER_CONTEXT_MISMATCH" }, { status: 409 });
     }
+    // A previously attached letter must not remain linked after the user selects a different CV or job.
+    const changesContext = data.cvId !== undefined || data.jobId !== undefined;
+    const storedLetter = changesContext && own.coverLetterId && data.coverLetterId === undefined
+      ? await prisma.coverLetter.findFirst({ where: { id: own.coverLetterId, conversation: { userId: u.id } }, select: { cvId: true, jobId: true } }) : null;
+    const clearStaleLetter = Boolean(storedLetter && ((storedLetter.cvId && storedLetter.cvId !== targetCv) || (storedLetter.jobId && storedLetter.jobId !== targetJob)));
     const changed = Boolean(data.status && data.status !== own.status);
     const { archived, ...update } = data;
     return NextResponse.json(await prisma.jobApplication.update({
       where: { id },
       data: {
         ...update,
+        ...(clearStaleLetter ? { coverLetterId: null, coverLetterSnapshot: Prisma.DbNull } : {}),
         ...(archived !== undefined ? { archivedAt: archived ? new Date() : null } : {}),
         ...(data.cvId !== undefined ? { cvSnapshot: cv ? { id: cv.id, title: cv.title, revision: cv.revision } : Prisma.DbNull } : {}),
         ...(data.coverLetterId !== undefined ? { coverLetterSnapshot: letter ? { id: letter.id, updatedAt: letter.updatedAt.toISOString() } : Prisma.DbNull } : {}),

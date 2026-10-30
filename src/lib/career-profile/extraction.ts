@@ -41,7 +41,7 @@ const choice = <T extends readonly [string, ...string[]]>(values: T) => z.prepro
 // Null/omitted optional fields and bare links must not reject an entire CV.
 // Required labels stay empty when unknown; the user completes them in review.
 export const extractionSchema = z.object({
-  name: text(200), phone: text(80), address: text(500),
+  name: text(200), email: text(254), phone: text(80), address: text(500),
   headline: text(300), summary: text(8000), skills: text(8000), languages: text(4000), hobbies: text(4000),
   linkedin: url, github: url, portfolio: url,
   targetMarket: choice(resumeMarkets), referralSource: choice(referralSources),

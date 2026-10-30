@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -24,6 +24,15 @@ export function DocumentsPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [linkedinOpen, setLinkedinOpen] = useState(false);
+  const [applicationId, setApplicationId] = useState("");
+  useEffect(() => { setApplicationId(new URLSearchParams(window.location.search).get("applicationId") || ""); }, []);
+  const attachToWorkspace = async (cvId: string) => {
+    if (applicationId) {
+      const res = await fetch(`/api/applications/${encodeURIComponent(applicationId)}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ cvId, coverLetterId: null }) });
+      if (!res.ok) throw new Error("Le CV a été créé, mais son association à la candidature a échoué. Associez-le manuellement depuis le dossier.");
+    }
+    router.push(`/dashboard/resumes/${encodeURIComponent(cvId)}${applicationId ? `?applicationId=${encodeURIComponent(applicationId)}` : ""}`);
+  };
   const upload = async (files: File[]) => {
     if (uploadLock.current || creating) return;
     setError(""); setMessage("");
@@ -34,7 +43,11 @@ export function DocumentsPage() {
       const form = new FormData(); files.forEach(file => form.append("resumes", file));
       const response = await fetch("/api/resume-documents", { method: "POST", body: form });
       if (!response.ok) { const result = await response.json().catch(() => ({})); throw new Error(result.error || "UPLOAD_FAILED"); }
+      const uploaded = await response.json() as Array<{ id: string }>;
       setMessage(t("documents.uploadSuccess", { count: files.length })); await reload();
+      if (files.length === 1 && uploaded[0]?.id) {
+        router.push(`/dashboard/resumes/import/${encodeURIComponent(uploaded[0].id)}${applicationId ? `?applicationId=${encodeURIComponent(applicationId)}` : ""}`);
+      }
     } catch (cause) {
       const code = cause instanceof Error ? cause.message : "UPLOAD_FAILED";
       setError(t("documents.errors." + code, { defaultValue: t("documents.errors.UPLOAD_FAILED") }));
@@ -46,7 +59,7 @@ export function DocumentsPage() {
     try {
       const response = await fetch("/api/cvs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source }) });
       if (!response.ok) throw new Error();
-      const resume = await response.json(); router.push(`/dashboard/resumes/${resume.id}`);
+      const resume = await response.json(); await attachToWorkspace(resume.id);
     } catch { setError(t("documents.createError")); setCreating(false); }
   };
   return <div className="space-y-5">
@@ -72,6 +85,6 @@ export function DocumentsPage() {
       {loadError ? <div role="alert" className="app-section"><p className="text-sm text-muted-foreground">{t("shell.loadError")}</p><Button variant="outline" className="mt-4" onClick={() => void reload()}>{t("shell.retry")}</Button></div> : <ResumeCards documents={documents} loading={loading} onDeleted={() => void reload()} />}
       {!loading && !loadError && !documents.length && <div className="flex min-h-[350px] flex-col items-center justify-center border bg-muted/30 p-7 text-center sm:col-span-1 xl:col-span-2 2xl:col-span-3"><FolderOpen className="mb-3 size-7 text-primary/60" /><h2 className="type-h2">{t("documents.emptyTitle")}</h2><p className="sr-only">{t("documents.emptyDescription")}</p></div>}
     </div>
-    <LinkedInImportDialog open={linkedinOpen} onOpenChange={setLinkedinOpen} onImported={id => { setLinkedinOpen(false); router.push(`/dashboard/resumes/${id}`); }} />
+    <LinkedInImportDialog open={linkedinOpen} onOpenChange={setLinkedinOpen} onImported={id => { setLinkedinOpen(false); void attachToWorkspace(id).catch(e => setError(e instanceof Error ? e.message : "Association impossible")); }} />
   </div>;
 }

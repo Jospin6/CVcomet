@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { Download, Eye, FileText, LoaderCircle, Trash2 } from "lucide-react";
+import { Download, Eye, FileText, LoaderCircle, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -51,6 +51,9 @@ function ResumePaper({ document }: { document: LibraryResume }) {
 
 export function ResumeCards({ documents, loading, onDeleted }: { documents: LibraryResume[]; loading?: boolean; onDeleted?: () => void }) {
   const { t, i18n } = useTranslation();
+  const [applicationId, setApplicationId] = useState("");
+  useEffect(() => { setApplicationId(new URLSearchParams(window.location.search).get("applicationId") || ""); }, []);
+  const contextual = (href: string) => `${href}${applicationId ? `${href.includes("?") ? "&" : "?"}applicationId=${encodeURIComponent(applicationId)}` : ""}`;
   const [selected, setSelected] = useState<LibraryResume | null>(null);
   const [removing, setRemoving] = useState<LibraryResume | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -72,11 +75,11 @@ export function ResumeCards({ documents, loading, onDeleted }: { documents: Libr
       const format = document.source === "upload" ? document.name.split(".").pop()?.toUpperCase() : t("documents.created");
       const preview = <div className="h-64 overflow-hidden border-b bg-muted p-4"><div className="mx-auto h-full max-w-[210px] overflow-hidden rounded-sm border shadow-sm"><ResumePaper document={document} /></div></div>;
       return <article key={`${document.source}-${document.id}`} className="group min-w-0 overflow-hidden border bg-card transition-[border-color,background-color] duration-150 hover:border-primary hover:bg-muted/[0.12]">
-        {document.source === "created" ? <Link href={`/dashboard/resumes/${document.id}`} aria-label={t("documents.openNamed", { name: title })} className="block">{preview}</Link> : <button className="block w-full text-left" onClick={() => setSelected(document)} aria-label={t("documents.openNamed", { name: title })}>{preview}</button>}
+        {document.source === "created" ? <Link href={contextual(`/dashboard/resumes/${document.id}`)} aria-label={t("documents.openNamed", { name: title })} className="block">{preview}</Link> : <button className="block w-full text-left" onClick={() => setSelected(document)} aria-label={t("documents.openNamed", { name: title })}>{preview}</button>}
         <div className="p-4"><p className="truncate text-sm font-medium" title={title}>{title}</p>
           <div className="mt-1.5 flex items-center gap-2 text-[11px] text-muted-foreground"><span className="rounded border px-1.5 py-0.5">{format}</span><span>{new Date(document.createdAt).toLocaleDateString(i18n.resolvedLanguage)}</span>{document.source === "upload" && <span className="ml-auto">{(document.size / 1024).toFixed(0)} KB</span>}</div>
           <div className="mt-3 flex flex-wrap items-center gap-1 border-t pt-2">
-            {document.source === "upload" ? <><Button variant="ghost" size="sm" onClick={() => setSelected(document)}><Eye className="size-3.5" />{t("documents.view")}</Button><Button variant="ghost" size="icon" className="ml-auto size-8" asChild><a href={`/api/resume-documents/${document.id}?download=1`} aria-label={t("documents.downloadNamed", { name: title })}><Download className="size-4" /></a></Button><Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-destructive" onClick={() => { setRemoving(document); setError(""); }} aria-label={t("documents.deleteNamed", { name: title })}><Trash2 className="size-4" /></Button></> : <Button variant="ghost" size="sm" asChild><Link href={`/dashboard/resumes/${document.id}`}><Eye className="size-3.5" />{t("documents.edit")}</Link></Button>}
+            {document.source === "upload" ? <><Button variant="outline" size="sm" asChild><Link href={contextual(`/dashboard/resumes/import/${document.id}`)}><Pencil className="size-3.5" />Convertir & éditer</Link></Button><Button variant="ghost" size="sm" onClick={() => setSelected(document)}><Eye className="size-3.5" />{t("documents.view")}</Button><Button variant="ghost" size="icon" className="ml-auto size-8" asChild><a href={`/api/resume-documents/${document.id}?download=1`} aria-label={t("documents.downloadNamed", { name: title })}><Download className="size-4" /></a></Button><Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-destructive" onClick={() => { setRemoving(document); setError(""); }} aria-label={t("documents.deleteNamed", { name: title })}><Trash2 className="size-4" /></Button></> : <Button variant="ghost" size="sm" asChild><Link href={contextual(`/dashboard/resumes/${document.id}`)}><Eye className="size-3.5" />{t("documents.edit")}</Link></Button>}
             {document.source === "created" && <LinkedCoverLetters letters={document.coverLetters || []} compact />}
           </div>
         </div>
@@ -87,7 +90,7 @@ export function ResumeCards({ documents, loading, onDeleted }: { documents: Libr
         <DialogHeader><DialogTitle className="break-words pr-6">{selected?.source === "upload" ? selected.name : ""}</DialogTitle><DialogDescription>{t("documents.originalPreview")}</DialogDescription></DialogHeader>
         {selected?.source === "upload" && <>
           {selected.mimeType === "application/pdf" ? <PdfPreview id={selected.id} name={selected.name} /> : <pre className="h-[62dvh] overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-card p-6 font-sans text-sm leading-7">{selected.previewText}</pre>}
-          <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-muted-foreground">{t("documents.previewHint")}</p><Button asChild><a href={`/api/resume-documents/${selected.id}?download=1`}><Download />{t("documents.download")}</a></Button></div>
+          <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-muted-foreground">{t("documents.previewHint")}</p><Button asChild><Link href={contextual(`/dashboard/resumes/import/${selected.id}`)}><Pencil className="size-4"/>Convertir en CV éditable</Link></Button><Button asChild><a href={`/api/resume-documents/${selected.id}?download=1`}><Download />{t("documents.download")}</a></Button></div>
         </>}
       </DialogContent>
     </Dialog>

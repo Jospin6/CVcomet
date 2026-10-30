@@ -107,10 +107,6 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent className="gap-0 px-2">
-        <div className="mx-2 mb-3 rounded-xl border bg-secondary/50 px-3 py-2.5 group-data-[collapsible=icon]:hidden">
-          <p className="text-[10px] font-semibold uppercase tracking-[.11em] text-muted-foreground">{t("shell.workspaceLabel")}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{t("shell.workspaceSubtitle")}</p>
-        </div>
         {navigationGroups.map((group) => (
           <SidebarGroup key={group.key} className="py-1">
             {group.key !== "workspace" && (

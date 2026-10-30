@@ -27,6 +27,16 @@ export default function JobMatch() {
   const { i18n } = useTranslation();
   const history = useApi<History[]>("/api/job-match");
   const [result, setResult] = useState<Result | null>(null);
+  const [workspaceId, setWorkspaceId] = useState("");
+  const [workspaceError, setWorkspaceError] = useState("");
+  useEffect(() => { setWorkspaceId(new URLSearchParams(window.location.search).get("applicationId") || ""); }, []);
+  const attachWorkspace = async (patch: Record<string, unknown>) => {
+    if (!workspaceId) return;
+    const response = await fetch(`/api/applications/${encodeURIComponent(workspaceId)}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(patch) });
+    if (!response.ok) { setWorkspaceError("Analyse ou document enregistré, mais l'association à la candidature a échoué. Retournez au dossier pour vérifier."); return; }
+    setWorkspaceError("");
+  };
+  const analysisHref = (analysisId: string) => `?analysis=${encodeURIComponent(analysisId)}${workspaceId ? `&applicationId=${encodeURIComponent(workspaceId)}` : ""}`;
   const [category, setCategory] = useState(""), [status, setStatus] = useState("");
   const [proposal, setProposal] = useState<TailorProposal | null>(null), [paths, setPaths] = useState<string[]>([]);
   const [language, setLanguage] = useState<"fr" | "en">(i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en"), [notes, setNotes] = useState("");
@@ -37,7 +47,9 @@ export default function JobMatch() {
     onExtracted: () => { setResult(null); setProposal(null); setLetter(null); setEmail(null); },
     onAnalyzed: async data => {
       setResult(data); setProposal(null); setLetter(null); setEmail(null); setApplicationId(""); setLetterConversation("");
-      window.history.replaceState(null, "", "?analysis=" + data.id); await history.reload();
+      window.history.replaceState(null, "", analysisHref(data.id));
+      await attachWorkspace({ jobId: data.job.id });
+      await history.reload();
     },
   });
   const { c, resumes, cvId, setCvId, setText, setSource, setConfirmed, busy, setBusy, error, setError, message, setMessage, act, errorText } = form;
@@ -52,7 +64,7 @@ export default function JobMatch() {
       setProposal(data.tailoredCvId ? null : data.tailoring || null); setPaths(data.tailoring?.changes.map(change => change.path) || []);
       setLetter(data.job.documentDrafts?.letter?.draft || null); setEmail(data.job.documentDrafts?.email?.draft || null); setLetterConversation(data.job.coverLetters?.find(item => item.cvId === (data.tailoredCvId || data.cvId))?.id || ""); setApplicationId(data.job.applications?.[0]?.id || "");
       if (!data.result || !data.job.analysis) setError("JOB_REANALYZE");
-      window.history.replaceState(null, "", "?analysis=" + id);
+      window.history.replaceState(null, "", `?analysis=${encodeURIComponent(id)}${new URLSearchParams(window.location.search).get("applicationId") ? `&applicationId=${encodeURIComponent(new URLSearchParams(window.location.search).get("applicationId")!)}` : ""}`);
     } catch (failure) { setError(failure instanceof Error ? failure.message : "UNAVAILABLE"); }
     finally { setBusy(""); }
   }, [setBusy, setError, setMessage, setText, setSource, setConfirmed, setCvId]);
@@ -69,14 +81,18 @@ export default function JobMatch() {
   const saveProposal = () => act("accept", async () => {
     if (!result || !proposal) return;
     const data = await request<{ cvId: string }>("/api/tailor-resume", { action: "ACCEPT", matchId: result.id, proposalId: proposal.id, paths });
-    setResult({ ...result, tailoredCvId: data.cvId }); setProposal(null); setMessage(c.saved); await resumes.reload();
+    setResult({ ...result, tailoredCvId: data.cvId }); setProposal(null); setMessage(c.saved); await attachWorkspace({ cvId: data.cvId, coverLetterId: null }); await resumes.reload();
   });
   const documentBody = () => ({ jobId: result!.job.id, cvId: result!.tailoredCvId || cvId || undefined, language, notes });
   const generateLetter = () => act("letter", async () => { const data = await request<{ draft: Letter }>("/api/generate-cover-letter", { ...documentBody(), action: "GENERATE" }); setLetter(data.draft); });
   const generateEmail = () => act("email", async () => { setEmail(await request<Email>("/api/application-email", { ...documentBody(), action: "GENERATE" })); });
-  const saveLetter = () => act("save-letter", async () => { const data = await request<{ letterId: string }>("/api/generate-cover-letter", { ...documentBody(), action: "SAVE", draft: letter }); setLetterConversation(data.letterId); setMessage(c.saved); });
+  const saveLetter = () => act("save-letter", async () => { const data = await request<{ letterId: string }>("/api/generate-cover-letter", { ...documentBody(), action: "SAVE", draft: letter }); setLetterConversation(data.letterId); setMessage(c.saved); await attachWorkspace({ jobId: result!.job.id, cvId: result!.tailoredCvId || cvId || null, coverLetterId: data.letterId }); });
   const saveEmail = () => act("save-email", async () => { await request("/api/application-email", { ...documentBody(), action: "SAVE", draft: email }); setMessage(c.saved); });
-  const saveApplication = () => act("application", async () => { const data = await request<{ id: string }>("/api/applications", { jobId: result!.job.id, cvId: result!.tailoredCvId || cvId || undefined }); setApplicationId(data.id); setMessage(c.saved); });
+  const saveApplication = () => act("application", async () => {
+    if (workspaceId) { await attachWorkspace({ jobId: result!.job.id, ...(result!.tailoredCvId || cvId ? { cvId: result!.tailoredCvId || cvId } : {}) }); setApplicationId(workspaceId); }
+    else { const data = await request<{ id: string }>("/api/applications", { jobId: result!.job.id, cvId: result!.tailoredCvId || cvId || undefined }); setApplicationId(data.id); }
+    setMessage(c.saved);
+  });
   const copy = (value: string) => act("copy", async () => { await navigator.clipboard.writeText(value); setMessage(c.copied); });
   const analysis = result?.job.analysis, match = result?.result;
   const applicationCvId = result?.tailoredCvId || cvId;
@@ -85,6 +101,8 @@ export default function JobMatch() {
 
   return <div className="space-y-7">
     <PageHeader title={c.title} description={c.description} />
+    {workspaceId && <Link href={`/dashboard/applications/${encodeURIComponent(workspaceId)}?tab=analysis`} className="text-sm text-primary">← Retour au dossier de candidature</Link>}
+    {workspaceError && <p role="alert" className="text-sm text-destructive">{workspaceError}</p>}
     {error && <div role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 p-4 text-sm text-destructive">{tailoringErrorText}{error === "AI_FACTS_REQUIRED" && cvId && <Link className="ml-2 underline" href={`/dashboard/resumes/${cvId}`}>{c.manual}</Link>}{error === "FEATURE_NOT_AVAILABLE" && <Link className="ml-2 underline" href="/upgrade">{c.upgrade}</Link>}</div>}
     {busy && <p role="status" aria-live="polite" className="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin" />{busy === "extract" ? c.extracting : busy === "analyze" ? c.analyzing : c.working}</p>}
     {message && <p role="status" className="text-sm text-primary">{message}</p>}

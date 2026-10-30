@@ -22,9 +22,12 @@ test('versioned envelope always carries server-issued trace id', () => {
   assert.deepEqual(careerEnvelope('req-123', { success: true }), { apiVersion: 'v1', requestId: 'req-123', data: { success: true } });
 });
 
-test('tool catalog has no duplicate ID and exposes only six enabled reads', () => {
+test('tool catalog has no duplicate ID and enables owner-only reads and reviewed draft preparation', () => {
   assert.equal(new Set(CAREER_TOOL_CATALOG.map(t => t.id)).size, CAREER_TOOL_CATALOG.length);
-  assert.deepEqual(CAREER_TOOL_CATALOG.filter(t => t.available).map(t => t.id), [...CAREER_READ_TOOLS]);
+  assert.deepEqual(CAREER_TOOL_CATALOG.filter(t => t.available).map(t => t.id), [...CAREER_READ_TOOLS, 'draft_resume_changes', 'draft_cover_letter']);
+  assert.ok(CAREER_TOOL_CATALOG.filter(t => t.available && t.effect === 'draft').every(t => !t.requiresApproval));
+  // Draft preparation changes no document; a distinct authenticated endpoint confirms edits.
+  assert.ok(CAREER_TOOL_CATALOG.filter(t => t.available).every(t => t.effect !== 'external' && t.effect !== 'sensitive_write'));
   for (const tool of CAREER_TOOL_CATALOG) {
     assert.equal(tool.requiresApproval, tool.effect === 'external' || tool.effect === 'sensitive_write');
   }

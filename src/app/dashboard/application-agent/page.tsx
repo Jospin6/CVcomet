@@ -37,6 +37,8 @@ export default function ApplicationAgentPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [applicationId, setApplicationId] = useState("");
+  useEffect(() => { setApplicationId(new URLSearchParams(window.location.search).get("applicationId") || ""); }, []);
   const requestKeyRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
@@ -94,6 +96,7 @@ Objet / Subject: ${subject}
 ${body}`); setCopied(true); } catch { setError("COPY_FAILED"); } };
   return <div className="space-y-6">
     <PageHeader title="Application Agent" description="Préparez, vérifiez et approuvez un dossier de candidature. Aucun envoi ni dépôt sur un site externe n'est effectué." />
+    {applicationId && <Link href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents`} className="text-sm text-primary">← Retour au dossier de candidature</Link>}
     <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-sm"><ShieldCheck className="mb-2 size-5"/><strong>Votre contrôle, à chaque étape.</strong> Le dossier « Prêt » signifie uniquement « approuvé pour utilisation manuelle ». L'application n'envoie aucun email et ne modifie pas le statut de votre candidature.</div>
     <section className="app-section space-y-4"><h2 className="type-h2">Nouveau dossier</h2>
       <div className="grid gap-3 md:grid-cols-2">
@@ -121,7 +124,7 @@ ${body}`); setCopied(true); } catch { setError("COPY_FAILED"); } };
     </section>
     {active && <section className="app-section space-y-4" aria-label="Dossier sélectionné">
       <div className="flex items-start justify-between gap-3"><div><h2 className="type-h2">{active.job.title}</h2><p className="text-sm text-muted-foreground">{active.job.company} · Révision {active.revision} · {active.status}</p></div><Button variant="outline" size="sm" onClick={() => void guarded(() => detail(active.id))}>Recharger</Button></div>
-      <div className="grid gap-2 text-sm sm:grid-cols-2"><Link className="rounded border p-3 underline" href={`/dashboard/resumes/${active.cvId}`}>Ouvrir le CV : {active.cv.title || "Sans titre"}</Link>{active.coverLetterId && <Link className="rounded border p-3 underline" href={`/dashboard/cover-letters/${active.coverLetterId}`}>Vérifier la lettre de motivation</Link>}</div>
+      <div className="grid gap-2 text-sm sm:grid-cols-2"><Link className="rounded border p-3 underline" href={`/dashboard/resumes/${active.cvId}${applicationId ? `?applicationId=${encodeURIComponent(applicationId)}` : ""}`}>Ouvrir le CV : {active.cv.title || "Sans titre"}</Link>{active.coverLetterId && <Link className="rounded border p-3 underline" href={`/dashboard/cover-letters/${active.coverLetterId}${applicationId ? `?applicationId=${encodeURIComponent(applicationId)}` : ""}`}>Vérifier la lettre de motivation</Link>}</div>
       <label className="block space-y-1 text-sm">Adresse du destinataire (facultative, jamais devinée)<Input type="email" disabled={busy || active.status !== "DRAFT"} value={recipientEmail} onChange={e => { setRecipientEmail(e.target.value); setReviewed(false); }}/></label>
       <label className="block space-y-1 text-sm">Objet<Input maxLength={300} disabled={busy || active.status !== "DRAFT"} value={subject} onChange={e => { setSubject(e.target.value); setReviewed(false); }}/></label>
       <label className="block space-y-1 text-sm">Email de candidature<Textarea maxLength={12000} rows={9} disabled={busy || active.status !== "DRAFT"} value={body} onChange={e => { setBody(e.target.value); setReviewed(false); }}/></label>

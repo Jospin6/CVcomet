@@ -14,6 +14,7 @@ const empty = z.object({}).strict();
 const limited = z.object({ limit: z.number().int().min(1).max(30).default(15) }).strict();
 const resumeById = z.object({ resumeId: z.string().uuid() }).strict();
 const matchById = z.object({ matchId: z.string().uuid() }).strict();
+const applicationById = z.object({ applicationId: z.string().uuid() }).strict();
 
 /** One input schema per tool. Unrecognized keys, e.g. userId, are rejected. */
 const inputSchemas = {
@@ -21,6 +22,7 @@ const inputSchemas = {
   list_my_resumes: limited,
   get_my_resume: resumeById,
   list_my_applications: limited,
+  get_my_application: applicationById,
   list_my_confirmed_evidence: limited,
   get_my_job_match_insights: matchById,
   list_my_application_packets: limited,
@@ -75,6 +77,22 @@ export async function executeCareerReadTool(actor: CareerActor, name: string, ra
     case "list_my_confirmed_evidence": {
       const { limit } = inputSchemas.list_my_confirmed_evidence.parse(rawInput ?? {});
       return listConfirmedEvidenceForAgent(actor.id, limit);
+    }
+    case "get_my_application": {
+      const { applicationId } = inputSchemas.get_my_application.parse(rawInput ?? {});
+      const app = await prisma.jobApplication.findFirst({ where: { id: applicationId, userId: actor.id },
+        select: { id: true, company: true, jobTitle: true, status: true, notes: true, nextAction: true,
+          cvId: true, coverLetterId: true, interviewAt: true, updatedAt: true,
+          job: { select: { id: true, userId: true, title: true, description: true, requiredSkills: true } },
+          cv: { select: { id: true, title: true, conversation: { select: { userId: true } } } },
+          coverLetter: { select: { id: true, positionTitle: true, conversation: { select: { userId: true } } } },
+        } });
+      if (!app) throw new CareerContractError(404, "RESOURCE_NOT_FOUND");
+      return { id: app.id, company: app.company, jobTitle: app.jobTitle, status: app.status,
+        notes: app.notes, nextAction: app.nextAction, interviewAt: app.interviewAt, updatedAt: app.updatedAt,
+        cv: app.cv?.conversation.userId === actor.id ? { id: app.cv.id, title: app.cv.title } : null,
+        coverLetter: app.coverLetter?.conversation.userId === actor.id ? { id: app.coverLetter.id, positionTitle: app.coverLetter.positionTitle } : null,
+        job: app.job?.userId === actor.id ? { title: app.job.title, description: app.job.description.slice(0, 10000), requiredSkills: app.job.requiredSkills } : null };
     }
     case "get_my_job_match_insights": {
       const { matchId } = inputSchemas.get_my_job_match_insights.parse(rawInput ?? {});

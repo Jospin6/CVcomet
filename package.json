@@ -50,7 +50,8 @@
     "test:phase14": "node --experimental-strip-types --test scripts/release-phase14.test.mjs",
     "release:audit": "node scripts/release-gate.cjs --local",
     "release:gate": "node scripts/release-gate.cjs --staging",
-    "check:syntax": "node scripts/release-syntax-check.cjs"
+    "check:syntax": "node scripts/release-syntax-check.cjs",
+    "test:p0p1": "node --experimental-strip-types --test scripts/cvcomet-p0-p1.test.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",

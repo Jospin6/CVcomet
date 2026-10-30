@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { AlignLeft, AlignCenter, AlignRight, ArrowLeft, ArrowDown, ArrowUp, Bold, Check, ChevronDown, Download, GripVertical, Italic, LayoutTemplate, List, Loader2, Mail, Minus, Plus, Redo2, Save, ScanLine, Send, Sparkles, Underline, Undo2, X } from "lucide-react";
@@ -30,6 +30,7 @@ const accents = ["#173F35", "#1E4B8F", "#6B4F3A", "#6D3A65", "#111827", "#B35435
 export function ResumeEditor() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const applicationId = useSearchParams().get("applicationId");
   const { i18n } = useTranslation();
   const locale = i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en";
   const c = resumeEditorCopy[locale], atsCopy = resumeAtsCopy[locale];
@@ -356,7 +357,8 @@ export function ResumeEditor() {
 
   if (!resume) return <div className="border bg-card p-10 text-center"><p role={error ? "alert" : "status"} className="text-sm text-muted-foreground">{error ? c.loadError : c.loading}</p>{!error && <Loader2 className="mx-auto mt-4 size-5 animate-spin text-primary" />}<Button className="mt-6" variant="outline" asChild><Link href="/dashboard/resumes"><ArrowLeft />{c.back}</Link></Button></div>;
   return <div className="resume-studio">
-    <header className="studio-header"><Button variant="ghost" size="icon" asChild><Link href="/dashboard/resumes" aria-label={c.back}><ArrowLeft className="size-4" /></Link></Button><div><p className="text-[9px] font-semibold uppercase tracking-[.18em] text-primary">CVcomet / {c.title}</p><Input className="studio-document-name" aria-label={c.name} maxLength={160} value={resume.design.documentName} placeholder={c.untitled} onChange={event => design("documentName", event.target.value)} /><p className="studio-save-status" role="status">{status === "saving" ? <Loader2 className="size-3 animate-spin" /> : status === "saved" ? <Check className="size-3 text-primary" /> : <span className="size-1.5 rounded-full bg-amber-500" />}{c[status === "error" ? "saveError" : status]}</p></div>
+    {applicationId && <div className="mb-2 text-xs"><Link className="text-primary underline" href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents`}>← Retour au dossier de candidature</Link></div>}
+    <header className="studio-header"><Button variant="ghost" size="icon" asChild><Link href={applicationId ? `/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents` : "/dashboard/resumes"} aria-label={c.back}><ArrowLeft className="size-4" /></Link></Button><div><p className="text-[9px] font-semibold uppercase tracking-[.18em] text-primary">CVcomet / {c.title}</p><Input className="studio-document-name" aria-label={c.name} maxLength={160} value={resume.design.documentName} placeholder={c.untitled} onChange={event => design("documentName", event.target.value)} /><p className="studio-save-status" role="status">{status === "saving" ? <Loader2 className="size-3 animate-spin" /> : status === "saved" ? <Check className="size-3 text-primary" /> : <span className="size-1.5 rounded-full bg-amber-500" />}{c[status === "error" ? "saveError" : status]}</p></div>
       <div className="studio-header-actions"><LinkedCoverLetters letters={coverLetters} /><Button variant="outline" disabled={creatingLetter || status === "saving"} onClick={() => void createCoverLetter()}>{creatingLetter ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}{locale === "fr" ? "Générer une lettre" : "Generate cover letter"}</Button><Button variant={tab === "ats" ? "secondary" : "outline"} aria-controls="studio-panel-ats" aria-expanded={tab === "ats"} onClick={() => { setTab("ats"); setToolsOpen(true); }}><ScanLine className="size-4" />{atsCopy.title}</Button><Button variant="outline" disabled={status === "saving"} onClick={() => void save()}><Save className="size-4" />{c.save}</Button><Button variant="outline" disabled={exporting || Boolean(pendingAI) || status === "saving"} onClick={() => void exportDOCX()}><Download className="size-4" />DOCX</Button><Button disabled={exporting || !pages.length || Boolean(pendingAI && reviewPreview)} onClick={() => void exportPDF()}>{exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}{exporting ? c.exporting : c.export}</Button></div>
     </header>
     {error && <p role="alert" className="mb-4 rounded-lg border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{error === "CONFLICT" ? c.conflict : error === "EXPORT_FAILED" ? c.exportError : c.saveError}</p>}

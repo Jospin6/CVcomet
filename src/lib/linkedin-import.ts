@@ -103,14 +103,14 @@ export function linkedInFactsToResume(facts: z.infer<typeof extractionSchema>, e
   const title = (facts.headline || (language === "fr" ? "CV LinkedIn" : "LinkedIn resume")).slice(0, 160);
   return resumeContentSchema.parse({
     title,
-    summary: facts.summary ? facts.summary.match(/[\s\S]{1,5000}/g) : [],
-    contact: { name: facts.name, email, phone: facts.phone, city: facts.address, linkedin: facts.linkedin, website: facts.portfolio || facts.github },
+    summary: [facts.summary, facts.hobbies ? `${language === "fr" ? "Centres d’intérêt" : "Interests"} : ${facts.hobbies}` : ""].filter(Boolean).flatMap(value => value.match(/[\s\S]{1,5000}/g) || []).slice(0, 3),
+    contact: { name: facts.name, email: facts.email && z.string().email().safeParse(facts.email).success ? facts.email : email, phone: facts.phone, city: facts.address, linkedin: facts.linkedin, website: facts.portfolio || facts.github || facts.professionalLinks.find(item => item.url)?.url || "" },
     design: { documentName: (facts.name ? `${facts.name} · LinkedIn` : title).slice(0, 160) },
     skills: facts.skills ? [{ hardskills: facts.skills }] : [],
     experiences: facts.experiences.map(item => ({ ...item, description: lines(item.description) })),
     educations: facts.education.map(item => ({ ...item, location: "", description: lines(item.description) })),
     projects: facts.projects.map(item => ({ title: item.title, description: [item.start || item.end ? [item.start, item.end].filter(Boolean).join(" – ") : "", item.description].filter(Boolean).join("\n").slice(0, 8000), technologies: "", link: item.url })),
-    certifications: facts.certifications.map(item => ({ title: item.name, issuer: item.organization, date: item.date, description: item.description })),
+    certifications: [...facts.certifications.map(item => ({ title: item.name, issuer: item.organization, date: item.date, description: item.description })), ...facts.awards.map(item => ({ title: `${language === "fr" ? "Distinction" : "Award"} : ${item.title}`, issuer: item.organization, date: item.date, description: item.description }))].slice(0, 50),
     languages: facts.languages.split(/[,;\n]+/).map(language => language.trim()).filter(Boolean).slice(0, 30).map(language => ({ language: language.slice(0, 200), level: "" })),
   });
 }

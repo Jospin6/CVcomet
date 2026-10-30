@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { AlignCenter, AlignLeft, AlignRight, ArrowLeft, Bold, Briefcase, Check, ChevronDown, Download, Italic, LayoutTemplate, List, Loader2, Minus, Plus, Redo2, Save, Send, Sparkles, Underline, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ function LetterField({ field, value, label, selected, preview, disabled, style, 
 
 export function CoverLetterEditor() {
   const { id } = useParams<{ id: string }>();
+  const applicationId = useSearchParams().get("applicationId");
   const { i18n } = useTranslation();
   const fr = i18n.resolvedLanguage?.startsWith("fr") ?? false;
   const c = resumeEditorCopy[fr ? "fr" : "en"];
@@ -219,10 +220,11 @@ export function CoverLetterEditor() {
   const errorText = error === "PROPOSAL_STALE" ? (fr ? "La proposition est périmée ou les faits confirmés ont changé. Rejetez-la puis demandez une nouvelle version." : "This proposal is stale or evidence has changed. Discard it and request a new draft.") : error === "CONFLICT" ? (fr ? "Cette lettre a été modifiée dans un autre onglet. Exportez votre version avant de recharger." : "This letter was edited in another tab. Export your version before reloading.") : error === "AI" ? c.chatError : error === "EXPORT" ? c.exportError : c.saveError;
 
   return <div className="resume-studio cover-letter-studio">
+    {applicationId && <div className="mb-2 text-xs"><Link className="text-primary underline" href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents`}>← Retour au dossier de candidature</Link></div>}
     <header className="studio-header">
-      <Button variant="ghost" size="icon" asChild><Link href={letter.cv ? `/dashboard/resumes/${letter.cv.id}` : "/dashboard/cover-letters"} aria-label={back}><ArrowLeft className="size-4" /></Link></Button>
+      <Button variant="ghost" size="icon" asChild><Link href={applicationId ? `/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents` : letter.cv ? `/dashboard/resumes/${letter.cv.id}` : "/dashboard/cover-letters"} aria-label={back}><ArrowLeft className="size-4" /></Link></Button>
       <div><p className="text-[9px] font-semibold uppercase tracking-[.18em] text-primary">CVcomet / {title}</p><Input className="studio-document-name" aria-label={fieldLabel("positionTitle")} maxLength={300} value={document.positionTitle} placeholder={fr ? "Ma lettre de motivation" : "My cover letter"} disabled={chatting || Boolean(pendingAI)} onChange={event => onText("positionTitle", event.target.value)} /><p className="studio-save-status" role="status">{status === "saving" ? <Loader2 className="size-3 animate-spin" /> : status === "saved" ? <Check className="size-3 text-primary" /> : <span className="size-1.5 rounded-full bg-amber-500" />}{c[status === "error" ? "saveError" : status]}</p></div>
-      <div className="studio-header-actions"><Button variant="outline" asChild><Link href={letter.cv ? `/dashboard/resumes/${letter.cv.id}` : "/dashboard/cover-letters"}><ArrowLeft className="size-4" />{back}</Link></Button><Button variant="outline" disabled={status === "saving" || chatting || Boolean(pendingAI)} onClick={() => void save()}><Save className="size-4" />{c.save}</Button><Button disabled={exporting} onClick={() => void exportPDF()}>{exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}{exporting ? c.exporting : c.export}</Button></div>
+      <div className="studio-header-actions"><Button variant="outline" asChild><Link href={applicationId ? `/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents` : letter.cv ? `/dashboard/resumes/${letter.cv.id}` : "/dashboard/cover-letters"}><ArrowLeft className="size-4" />{back}</Link></Button><Button variant="outline" disabled={status === "saving" || chatting || Boolean(pendingAI)} onClick={() => void save()}><Save className="size-4" />{c.save}</Button><Button disabled={exporting} onClick={() => void exportPDF()}>{exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}{exporting ? c.exporting : c.export}</Button></div>
     </header>
     {error && <p role="alert" className="mb-4 rounded-lg border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{errorText}</p>}
     <div className="studio-toolbar"><div className="studio-tool-group">
@@ -281,7 +283,7 @@ export function CoverLetterEditor() {
               <form className="space-y-2" onSubmit={ask}><Textarea aria-label={c.chatInput} rows={4} maxLength={4000} value={chat} disabled={chatting || Boolean(pendingAI) || decidingAI} placeholder={fr ? "Ex. : raccourcis le deuxième paragraphe et passe les titres en bleu marine." : "E.g. shorten the second paragraph and use navy headings."} className="text-xs leading-5" onChange={event => setChat(event.target.value)} /><Button type="submit" size="sm" className="w-full text-xs" disabled={!chat.trim() || chatting || Boolean(pendingAI) || decidingAI}>{chatting ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}{chatting ? c.chatWorking : c.chatSend}</Button></form>
             </div><div className="rounded-md border bg-muted/40 p-3"><p className="text-[9px] uppercase tracking-wider text-muted-foreground">{c.selected}</p><p className="mt-1 text-xs font-medium">{fieldLabel(selected)}</p><p className="mt-2 line-clamp-4 whitespace-pre-wrap text-[11px] leading-5 text-muted-foreground">{document[selected]}</p></div>
           </>}
-          {tab === "job" && <><div><Briefcase className="mb-3 size-5 text-primary" /><h2 className="text-sm font-semibold">{jobLabel}</h2></div>{letter.job ? <div className="rounded-md border bg-muted/40 p-3"><p className="text-xs font-medium">{letter.job.title}</p><p className="mt-2 text-[11px] text-muted-foreground">{letter.job.company}</p><p className="mt-4 whitespace-pre-wrap text-[11px] leading-5 text-muted-foreground">{letter.job.description}</p></div> : <p className="text-xs text-muted-foreground">{fr ? "Aucune offre associée." : "No linked job posting."}</p>}<Button variant="outline" asChild><Link href={letter.cv ? `/dashboard/resumes/${letter.cv.id}` : "/dashboard/cover-letters"}>{back}</Link></Button></>}
+          {tab === "job" && <><div><Briefcase className="mb-3 size-5 text-primary" /><h2 className="text-sm font-semibold">{jobLabel}</h2></div>{letter.job ? <div className="rounded-md border bg-muted/40 p-3"><p className="text-xs font-medium">{letter.job.title}</p><p className="mt-2 text-[11px] text-muted-foreground">{letter.job.company}</p><p className="mt-4 whitespace-pre-wrap text-[11px] leading-5 text-muted-foreground">{letter.job.description}</p></div> : <p className="text-xs text-muted-foreground">{fr ? "Aucune offre associée." : "No linked job posting."}</p>}<Button variant="outline" asChild><Link href={applicationId ? `/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents` : letter.cv ? `/dashboard/resumes/${letter.cv.id}` : "/dashboard/cover-letters"}>{back}</Link></Button></>}
         </div>
       </aside>
       <section ref={viewport} className="studio-canvas-viewport" aria-label={title}>

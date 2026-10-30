@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Bookmark, ChevronLeft, ChevronRight, ClipboardList, ExternalLink,
   FileText, Mail, MessagesSquare, Search, X,
@@ -48,13 +49,6 @@ const readableCompany = (company: string) => company.includes(" ") || /[A-Z]/.te
   ? company
   : company.split(/[-_]/).filter(Boolean).map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 
-const descriptionPreview = (value: string) => value
-  .replace(/^#{1,3}\s+/gm, "")
-  .replace(/^[*-]\s+/gm, "")
-  .replace(/[*`]/g, "")
-  .replace(/\s+/g, " ")
-  .trim();
-
 function JobVisual({ job, large = false }: { job: Job; large?: boolean }) {
   const [logoFailed, setLogoFailed] = useState(false);
   const artwork = !logoFailed && job.logoUrl ? job.logoUrl : sourceArtwork[job.provider] || "/job-sources/generic.svg";
@@ -72,6 +66,10 @@ function JobVisual({ job, large = false }: { job: Job; large?: boolean }) {
 }
 
 export default function FindJobs() {
+  const router = useRouter();
+  const [location, setLocation] = useState("");
+  const [workMode, setWorkMode] = useState("all");
+  const [contract, setContract] = useState("all");
   const [q, setQ] = useState("");
   const [term, setTerm] = useState("");
   const [tab, setTab] = useState<"all" | "recommended" | "saved">("all");
@@ -152,13 +150,21 @@ export default function FindJobs() {
       body: JSON.stringify({
         company: job.company || "Non précisée", jobTitle: job.title,
         location: job.location || undefined, jobUrl: job.sourceUrl,
-        source: job.provider, status: "SAVED", notes: `Offre originale : ${job.sourceUrl}`,
+        source: job.provider, status: "SAVED", reopenExisting: true, notes: `Offre originale : ${job.sourceUrl}`,
       }),
     });
-    if (!response.ok) setError("Cette candidature existe peut-être déjà.");
+    if (!response.ok) { setError("Impossible de créer cette candidature."); return; }
+    const result = await response.json();
+    if (result.id) router.push(`/dashboard/applications/${encodeURIComponent(result.id)}?tab=documents`);
   };
 
   const totalPages = Math.max(1, Math.ceil(data.totalAvailable / data.pageSize));
+  const visibleJobs = useMemo(() => data.jobs.filter(job => {
+    const inLocation = !location.trim() || `${job.location || ""} ${job.company}`.toLowerCase().includes(location.toLowerCase().trim());
+    const remote = workMode === "all" || (workMode === "remote" ? job.remote === true : job.remote === false);
+    const contractFit = contract === "all" || (job.contractType || "").toLowerCase().includes(contract);
+    return inLocation && remote && contractFit;
+  }), [data.jobs, location, workMode, contract]);
 
   return (
     <div className="space-y-5">
@@ -208,41 +214,29 @@ export default function FindJobs() {
       </p>}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
-      {loading ? <p role="status" className="text-sm text-muted-foreground">Chargement des offres…</p> : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {data.jobs.map((job) => <article key={job.id} className="overflow-hidden border bg-card p-4">
-            <div className="flex justify-between gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground">{job.attribution}</p>
-                <h2 className="mt-2 type-h2">{job.title}</h2>
-                <p className="text-sm text-muted-foreground">{job.company}{job.location ? ` · ${job.location}` : ""}</p>
-              </div>
-              {job.match && <span className="h-fit rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-                {job.match.score}%
-              </span>}
-            </div>
-            <div className="-mx-4 mt-4 border-y"><JobVisual job={job} /></div>
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-              {job.remote === true && <span className="rounded bg-muted px-2 py-1">Remote</span>}
-              {job.contractType && <span className="rounded bg-muted px-2 py-1">{job.contractType}</span>}
-              {job.salaryMin !== null && job.currency && <span className="rounded bg-muted px-2 py-1">
-                {job.currency} {job.salaryMin}{job.salaryMax ? `–${job.salaryMax}` : ""}
-              </span>}
-            </div>
-            {job.match && <p className="mt-3 text-xs text-muted-foreground">{job.match.explanation}</p>}
-            <p className="mt-4 line-clamp-3 text-sm leading-6 text-muted-foreground">{descriptionPreview(job.description) || "Consultez la description complète de cette offre."}</p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => setSelected(job)}>Détails</Button>
-              <Button variant="outline" onClick={() => void save(job)}>
-                <Bookmark />{saved[job.id] ? "Enregistrée" : "Enregistrer"}
-              </Button>
-              <Button onClick={() => void track(job)}><ClipboardList />Job Tracker</Button>
-            </div>
-          </article>)}
-        </div>
-      )}
+      <div className="grid gap-3 rounded-xl border bg-card p-3 sm:grid-cols-3" aria-label="Filtres des offres">
+        <label className="grid gap-1 text-xs">Ville ou pays<Input value={location} onChange={e => setLocation(e.target.value)} placeholder="Toutes les localisations"/></label>
+        <label className="grid gap-1 text-xs">Mode de travail<select className="h-10 rounded-md border bg-background px-2 text-sm" value={workMode} onChange={e => setWorkMode(e.target.value)}><option value="all">Tous les modes</option><option value="remote">À distance</option><option value="onsite">Sur site (si précisé)</option></select></label>
+        <label className="grid gap-1 text-xs">Contrat<select className="h-10 rounded-md border bg-background px-2 text-sm" value={contract} onChange={e => setContract(e.target.value)}><option value="all">Tous les contrats</option><option value="full">Temps plein</option><option value="part">Temps partiel</option><option value="contract">Contrat / freelance</option><option value="intern">Stage</option></select></label>
+      </div>
+      {tab === "recommended" && <p className="text-xs text-muted-foreground">Recommandations basées sur votre métier, votre domaine, vos compétences déclarées, la séniorité et les restrictions de lieu lorsque disponibles. Les offres hors domaine sont masquées, mais l’éligibilité doit être vérifiée.</p>}
+      {loading ? <p role="status" className="text-sm text-muted-foreground">Chargement des offres…</p> : <div className="divide-y rounded-xl border bg-card" role="list" aria-label="Résultats des offres">
+        {visibleJobs.map(job => <article key={job.id} role="listitem" className="flex flex-wrap items-center gap-3 px-4 py-4 transition-colors hover:bg-muted/30 sm:flex-nowrap">
+          <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-background">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={job.logoUrl || sourceArtwork[job.provider] || "/job-sources/generic.svg"} alt="" className="size-9 object-contain" referrerPolicy="no-referrer" onError={e => { e.currentTarget.src = "/job-sources/generic.svg"; }}/>
+          </div>
+          <button type="button" className="min-w-[180px] flex-1 text-left" onClick={() => setSelected(job)} aria-label={`Consulter ${job.title} chez ${job.company}`}>
+            <h2 className="text-sm font-semibold hover:text-primary">{job.title}</h2><p className="mt-0.5 text-xs text-muted-foreground">{readableCompany(job.company)}{job.location ? ` · ${job.location}` : ""}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">{job.remote ? "Remote · " : ""}{job.contractType ? `${job.contractType} · ` : ""}{sourceName(job.provider)}</p>
+            {job.match && <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">{job.match.explanation}</p>}
+          </button>
+          {job.match && <span className="shrink-0 rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary" title="Correspondance indicative, pas un score ATS">{job.match.score}%</span>}
+          <div className="ml-auto flex shrink-0 gap-1"><Button size="sm" variant="ghost" onClick={() => setSelected(job)}>Détails</Button><Button size="sm" variant="outline" onClick={() => void save(job)}><Bookmark className="size-3.5"/>{saved[job.id] ? "Enregistrée" : "Sauver"}</Button><Button size="sm" onClick={() => void track(job)}><ClipboardList className="size-3.5"/>Préparer</Button></div>
+        </article>)}
+      </div>}
 
-      {!loading && !data.jobs.length && <div className="border bg-card p-4 text-sm text-muted-foreground">
+      {!loading && !visibleJobs.length && <div className="border bg-card p-4 text-sm text-muted-foreground">
         Aucune offre disponible pour cette recherche. Essayez un métier plus large ou retirez un filtre géographique.
       </div>}
 

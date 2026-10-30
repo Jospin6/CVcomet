@@ -6,7 +6,6 @@ declare global {
   var findJobsCache: Map<string, { expires: number; jobs: UnifiedJob[]; warnings: string[]; totalAvailable: number; page: number; pageSize: number }> | undefined;
 }
 const cache = global.findJobsCache ?? new Map(); if (process.env.NODE_ENV !== "production") global.findJobsCache = cache;
-const words = (value: string) => new Set(value.toLowerCase().split(/[^\p{L}\p{N}+#.]+/u).filter(x => x.length > 2));
 export async function searchJobs(q: string, page: number) {
   const key = `${q.toLowerCase()}:${page}`, hit = cache.get(key); if (hit && hit.expires > Date.now()) return hit;
   const settled = await Promise.allSettled(providers.slice(0, 4).map(provider => provider(q, page))), warnings: string[] = [];
@@ -17,4 +16,5 @@ export async function searchJobs(q: string, page: number) {
   const seen = new Set<string>(), jobs = [...persisted, ...live].filter(item => { const fingerprint = `${item.company.toLowerCase()}|${item.title.toLowerCase()}|${item.location?.toLowerCase() || ""}`; if (seen.has(fingerprint)) return false; seen.add(fingerprint); return true; }).slice(0, 30);
   const value = { jobs, warnings, totalAvailable, page, pageSize: 30, expires: Date.now() + 60 * 1000 }; cache.set(key, value); return value;
 }
-export function rankJobs(jobs: UnifiedJob[], profileText: string) { const profile = words(profileText); return jobs.map(job => { const required = [...words(`${job.title} ${job.skills.join(" ")}`)], matched = required.filter(x => profile.has(x)), missing = required.filter(x => !profile.has(x)), score = Math.max(10, Math.min(95, Math.round(20 + 75 * (matched.length / Math.max(1, required.length))))); return { ...job, match: { score, matched: matched.slice(0, 8), missing: missing.slice(0, 8), explanation: matched.length ? `Correspondances observées : ${matched.slice(0, 5).join(", ")}.` : "Éligibilité à vérifier : aucune correspondance explicite détectée." } }; }).sort((a, b) => (b.match?.score || 0) - (a.match?.score || 0)); }
+
+export { rankJobs } from "./ranking";
