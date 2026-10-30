@@ -39,9 +39,10 @@ test("ownership and baseline API preserved; live vocal claims not introduced",()
   assert.match(screen,/speechSynthesis/);
   assert.doesNotMatch(screen,/MediaRecorder|uploadAudio|startLiveKit/);
 });
-test("preparation grounds questions in owner-confirmed career evidence and the job advert as data",()=>{
-  assert.match(service,/prisma\.careerEvidence\.findMany\(\{where:\{userId,status:"CONFIRMED"\}/);
-  assert.match(service,/ownerConfirmedEvidence/);
+test("preparation grounds questions in the career profile and job advert as data",()=>{
+  assert.match(service,/getCareerProfile\(userId\)/);
+  assert.match(service,/profileFacts\(careerProfile/);
+  assert.doesNotMatch(service,/careerEvidence\.findMany/);
   assert.match(service,/jobDescription:input\.jobDescription\?\.slice\(0,10000\)/);
   assert.match(screen,/Description du poste/);
 });

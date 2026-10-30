@@ -11,7 +11,6 @@ export const CAREER_READ_TOOLS = [
   "get_my_resume",
   "list_my_applications",
   "get_my_application",
-  "list_my_confirmed_evidence",
   "get_my_job_match_insights",
   "list_my_application_packets",
 ] as const;
@@ -34,7 +33,6 @@ export const CAREER_TOOL_CATALOG: readonly CareerToolDescriptor[] = [
   { id: "get_my_resume", effect: "read", available: true, description: "Read a resume owned by my account", requiresApproval: false },
   { id: "list_my_applications", effect: "read", available: true, description: "List my application summaries", requiresApproval: false },
   { id: "get_my_application", effect: "read", available: true, description: "Read one application workspace and its owned document references", requiresApproval: false },
-  { id: "list_my_confirmed_evidence", effect: "read", available: true, description: "Read only facts explicitly confirmed by their owner (not independently verified)", requiresApproval: false },
   { id: "get_my_job_match_insights", effect: "read", available: true, description: "Summarize one of my saved job comparisons, with evidence gaps and action suggestions; not a hiring probability", requiresApproval: false },
   { id: "list_my_application_packets", effect: "read", available: true, description: "List my saved application packets; READY means reviewed, not submitted or emailed", requiresApproval: false },
   { id: "analyze_job", effect: "draft", available: false, description: "Analyze a job offer without saving it", requiresApproval: false },

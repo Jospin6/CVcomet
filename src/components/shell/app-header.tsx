@@ -25,7 +25,6 @@ export function AppHeader({ onSearch }: { onSearch: () => void }) {
           "/": "overview",
           "/profil": "careerProfile",
           "/dashboard/profile": "careerProfile",
-          "/dashboard/evidence": "evidenceVault",
           "/dashboard/application-agent": "applicationAgent",
           "/dashboard/resumes": "documents",
           "/dashboard/cover-letters": "coverLetters",

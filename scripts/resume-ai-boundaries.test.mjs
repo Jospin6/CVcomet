@@ -25,9 +25,10 @@ test('chat has explicit approval/discard instead of directly updating from AI pr
   const chatOnly = code.slice(code.indexOf('const sendConversation ='), code.indexOf('const decideConversation ='));
   assert.doesNotMatch(chatOnly, /data\.document/); // only a later explicit decision can persist
 });
-test('single-field generator consults explicitly confirmed evidence, not entire unconfirmed profile',()=>{
+test('single-field generator consults the owner profile rather than the retired vault',()=>{
   const code=read('src/app/api/resume-ai/route.ts');
-  assert.match(code,/status: "CONFIRMED"/);
-  assert.doesNotMatch(code,/getCareerProfile/);
+  assert.match(code,/getCareerProfile\(user\.id\)/);
+  assert.match(code,/profileFacts\(profile\)/);
+  assert.doesNotMatch(code,/careerEvidence\.findMany/);
   assert.match(code,/unsupportedNumericClaims/);
 });

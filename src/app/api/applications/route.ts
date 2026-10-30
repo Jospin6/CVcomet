@@ -11,6 +11,7 @@ export async function POST(req: Request) {
   try {
     const u = await requireUser();
     const b = input.parse(await profileJson(req));
+    const { reopenExisting, ...createInput } = b;
     // A previously analyzed job is always looked up in the actor's own workspace.
     // This also makes the existing Job Match "Save application" action functional.
     const job = b.jobId ? await prisma.jobOpportunity.findFirst({
@@ -33,12 +34,13 @@ export async function POST(req: Request) {
       select: { id: true },
     });
     if (existing) {
-      if (b.reopenExisting) return NextResponse.json({ id: existing.id, reused: true });
+      if (reopenExisting) return NextResponse.json({ id: existing.id, reused: true });
       throw new ProfileError(409, "DUPLICATE_APPLICATION");
     }
+    // `reopenExisting` is an API-only flag, not a Prisma model field.
     return NextResponse.json(await prisma.jobApplication.create({
       data: {
-        ...b, company, jobTitle, userId: u.id,
+        ...createInput, company, jobTitle, userId: u.id,
         location: b.location || job?.location || undefined,
         jobUrl: b.jobUrl || job?.sourceUrl || undefined,
         cvSnapshot: cv ? { id: cv.id, title: cv.title, revision: cv.revision } : undefined,

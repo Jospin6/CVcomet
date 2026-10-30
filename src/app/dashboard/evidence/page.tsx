@@ -1,7 +1,6 @@
-import type { Metadata } from "next";
-import { EvidenceVaultPage } from "@/components/career-evidence/evidence-vault-page";
-export const metadata: Metadata = {
-  title: "Career Evidence Vault | CVComet",
-  robots: { index: false, follow: false },
-};
-export default function Page() { return <EvidenceVaultPage />; }
+import { redirect } from "next/navigation";
+
+// Preserve old bookmarks, but the standalone Evidence Vault is retired.
+export default function Page() {
+  redirect("/dashboard/profile");
+}

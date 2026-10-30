@@ -9,18 +9,16 @@ const navigation=read('src/components/shell/navigation.ts');
 const palette=read('src/components/shell/command-palette.tsx');
 const sidebar=read('src/components/app-sidebar.tsx');
 
-test('command center retains working job analysis and existing document actions',()=>{
-  assert.match(home,/CareerCommandCenter/);
-  assert.match(home,/JobAnalysisForm form=\{jobForm\}/);
-  assert.match(home,/ResumeCards documents=/);
-  assert.match(home,/useResumeLibrary\(Boolean\(session\?\.id\)\)/);
-  assert.match(command,/signedIn \&\& resumesPending/);
+test('overview keeps real resume data, visible tools, and career actions',()=>{
+  assert.match(home,/useResumeLibrary\(signedIn\)/);
+  assert.match(home,/visibleSections/);
+  assert.match(home,/dashboard\/resumes/);
+  assert.match(command,/signedIn && resumesPending/);
   assert.match(command,/Promise\.allSettled/);
   assert.match(command,/AbortController/);
   assert.match(command,/credentials: "same-origin"/);
   assert.match(command,/\/dashboard\/application-agent/);
-  assert.match(command,/\/dashboard\/cover-letters/);
-  assert.doesNotMatch(command,/score\s*:\s*100|readiness\s*:\s*\d+/i);
+  assert.doesNotMatch(command,/dashboard\/evidence/);
 });
 
 test('agent suggestions fill input only, never submit automatically',()=>{

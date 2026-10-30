@@ -16,10 +16,77 @@ export const certificationSchema = z.object({ id, name: text(200).min(1), organi
 export const awardSchema = z.object({ title: text(200).min(1), organization: text(200), date: text(80), description: text(4000) }).strict();
 export const linkSchema = z.object({ label: text(100).min(1), url: webUrl.refine(Boolean, "URL required") }).strict();
 
+// Explicit choices: never inferred or fabricated from a CV import.
+export const jobPreferencesSchema = z.object({
+  industry: text(100),
+  seniority: z.enum(["", "entry", "junior", "mid", "senior", "lead"]),
+  residenceCountry: z.string().regex(/^$|^[A-Z]{2}$/),
+  employmentTypes: z.array(
+    z.enum(["full-time", "part-time", "freelance", "internship"]),
+  ).max(4),
+  salaryRate: z.enum(["hourly", "monthly", "yearly"]),
+  minimumSalary: z.number().int().min(0).max(100_000_000).nullable(),
+}).strict();
+
+export type JobPreferences = z.infer<typeof jobPreferencesSchema>;
+
+export const defaultJobPreferences: JobPreferences = {
+  industry: "",
+  seniority: "",
+  residenceCountry: "",
+  employmentTypes: [],
+  salaryRate: "yearly",
+  minimumSalary: null,
+};
+
+
+/** One canonical Career Direction with legacy job-preference storage retained. */
+const seniorityToExperience = {
+  entry: "ENTRY_LEVEL",
+  junior: "ENTRY_LEVEL",
+  mid: "PROFESSIONAL",
+  senior: "SENIOR",
+  lead: "MANAGER",
+} as const satisfies Record<Exclude<JobPreferences["seniority"], "">, typeof experienceLevels[number]>;
+
+const experienceToSeniority: Record<
+  typeof experienceLevels[number], JobPreferences["seniority"]
+> = {
+  STUDENT: "",
+  ENTRY_LEVEL: "entry",
+  PROFESSIONAL: "mid",
+  SENIOR: "senior",
+  MANAGER: "lead",
+  EXECUTIVE: "lead",
+  FREELANCER: "",
+};
+
+export function harmonizeCareerDirection<T extends ProfileData>(profile: T): T {
+  const industry = profile.targetIndustry || profile.jobPreferences.industry;
+  const experience = profile.experienceLevel || (
+    profile.jobPreferences.seniority
+      ? seniorityToExperience[profile.jobPreferences.seniority]
+      : ""
+  );
+  return {
+    ...profile,
+    targetIndustry: industry,
+    experienceLevel: experience,
+    jobPreferences: {
+      ...profile.jobPreferences,
+      industry: industry.slice(0, 100),
+      seniority: experience
+        ? experienceToSeniority[experience]
+        : "",
+    },
+  };
+}
+
 export const profileDataSchema = z.object({
   name: text(200), email: text(254).email(), phone: text(80), address: text(500),
   headline: text(300), summary: text(8000), skills: text(8000), languages: text(4000), hobbies: text(4000),
   linkedin: webUrl, github: webUrl, portfolio: webUrl,
+  jobPreferences: jobPreferencesSchema,
   careerGoal: z.enum(careerGoals).or(z.literal("")),
   experienceLevel: z.enum(experienceLevels).or(z.literal("")),
   targetJobTitle: text(200), targetIndustry: text(200), targetCountry: text(200),
@@ -43,7 +110,7 @@ export const saveProfileSchema = z.object({
 });
 
 export function emptyProfile(email = ""): ProfileData {
-  return { name: "", email, phone: "", address: "", headline: "", summary: "", skills: "", languages: "", hobbies: "", linkedin: "", github: "", portfolio: "", careerGoal: "", experienceLevel: "", targetJobTitle: "", targetIndustry: "", targetCountry: "", preferredWorkMode: "", targetMarket: "", referralSource: "", resumeSource: "", experiences: [], education: [], projects: [], certifications: [], awards: [], professionalLinks: [] };
+  return { name: "", email, phone: "", address: "", headline: "", summary: "", skills: "", languages: "", hobbies: "", linkedin: "", github: "", portfolio: "", jobPreferences: { ...defaultJobPreferences }, careerGoal: "", experienceLevel: "", targetJobTitle: "", targetIndustry: "", targetCountry: "", preferredWorkMode: "", targetMarket: "", referralSource: "", resumeSource: "", experiences: [], education: [], projects: [], certifications: [], awards: [], professionalLinks: [] };
 }
 
 // Optional achievements do not penalise people at the start of their careers.

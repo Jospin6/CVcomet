@@ -34,7 +34,8 @@ test('server authority remains in existing owner-scoped read tool implementation
   assert.ok(source.includes('where: { conversation: { userId: actor.id } }'));
   assert.ok(source.includes('where: { id: resumeId, conversation: { userId: actor.id } }'));
   assert.ok(source.includes('where: { userId: actor.id }'));
-  assert.ok(source.includes('listConfirmedEvidenceForAgent(actor.id, limit)'));
+  assert.ok(!source.includes('listConfirmedEvidenceForAgent'));
+  assert.ok(source.includes('getCareerProfile(actor.id)'));
   assert.ok(!source.includes('rawInput.userId'));
 });
 

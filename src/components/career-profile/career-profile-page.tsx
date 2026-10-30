@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronLeft, ChevronRight, Save, UploadCloud, Sparkles, FileText, ShieldCheck, BriefcaseBusiness, GraduationCap, WandSparkles, Globe2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Save, UploadCloud, Sparkles, FileText, ShieldCheck, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ProfileFields, TargetFields } from "./profile-fields";
+import { ProfileFields, TargetFields, type ProfileTab } from "./profile-fields";
 import { profileCompleteness, mergeExtractedProfile, saveProfileSchema, type ProfileData, type CareerProfile } from "@/lib/career-profile/schema";
 import { fetchUser } from "@/redux/user/userSlice";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -17,11 +17,17 @@ import type { AppDispatch } from "@/redux/store";
 import { marketProfiles, resumeMarkets, referralSources } from "@/lib/resume-market";
 
 const steps = ["resume", "market", "goal", "level", "job", "review"];
-const sections = ["target", "personal", "headline", "summary", "experiences", "education", "skills", "projects", "certifications", "languages", "awards", "professionalLinks"];
+const profileTabs = [
+  { id: "overview", en: "Overview", fr: "Profil" },
+  { id: "experience", en: "Experience", fr: "Expériences" },
+  { id: "education", en: "Education", fr: "Formations" },
+  { id: "skills", en: "Skills", fr: "Compétences" },
+  { id: "links", en: "Links", fr: "Liens" },
+] as const satisfies ReadonlyArray<{ id: ProfileTab; en: string; fr: string }>;
 function draftOf({ revision: _revision, onboardingCompletedAt: _date, ...data }: CareerProfile): ProfileData { return data; }
 
 export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { user: session } = useCurrentUser();
   const dispatch = useDispatch<AppDispatch>();
@@ -37,6 +43,7 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
   const [message, setMessage] = useState("");
   const [step, setStep] = useState(0);
   const [confirmed, setConfirmed] = useState(false);
+  const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
   const stepHeading = useRef<HTMLHeadingElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -92,6 +99,7 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
       update({ ...mergeExtractedProfile(draft, data.extracted), resumeSource: "UPLOAD" });
       setImported(true); setImportReady(true); setMessage(t("career.imported"));
       if (onboarding) changeStep(1);
+      else setActiveTab("overview");
     } catch (error) { setError(translateError(error instanceof Error ? error.message : "AI_FAILED")); }
     finally { setImporting(false); if (fileInput.current) fileInput.current.value = ""; }
   };
@@ -121,6 +129,182 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
   if (!draft || !saved) return <div className="app-section space-y-4"><h1 className="type-h1">{t("career.title")}</h1><p role="alert">{error}</p><Button onClick={load}>{t("career.retry")}</Button></div>;
   const completeness = profileCompleteness(draft);
   const review = !onboarding || step === 5;
+
+  // The dashboard uses compact tabs. Onboarding retains its own guided wizard.
+  if (!onboarding) {
+    const french = i18n.resolvedLanguage?.startsWith("fr") || false;
+
+    return (
+      <div className="mx-auto max-w-5xl space-y-5 pb-12">
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {t("career.title")}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {draft.name || draft.headline || t("career.subtitle")}
+            </p>
+          </div>
+
+          <input
+            ref={fileInput}
+            type="file"
+            className="sr-only"
+            accept=".pdf,.docx,.txt"
+            aria-label={t("career.uploadLabel")}
+            onChange={(event) => void importResume(event.target.files?.[0])}
+            disabled={busy || importing}
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy || importing}
+            onClick={() => fileInput.current?.click()}
+          >
+            <UploadCloud className="size-4" />
+            {importing ? t("career.importing") : t("career.uploadLabel")}
+          </Button>
+        </header>
+
+        {!saved.onboardingCompletedAt && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
+            <span className="text-sm">{t("career.onboardingPrompt")}</span>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/onboarding">{t("career.startOnboarding")}</Link>
+            </Button>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <ProgressBar
+            value={completeness.percentage}
+            label={t("career.completeness")}
+            className="flex-1"
+          />
+          <span className="shrink-0 font-medium">
+            {completeness.percentage}%
+          </span>
+        </div>
+
+        {error && (
+          <div
+            ref={errorRef}
+            tabIndex={-1}
+            role="alert"
+            className="rounded-lg border border-destructive/30 p-3 text-sm text-destructive"
+          >
+            {error}
+            {issues.length > 0 && (
+              <ul className="mt-2 list-inside list-disc">
+                {issues.map((issue, index) => <li key={index}>{issue}</li>)}
+              </ul>
+            )}
+          </div>
+        )}
+        {message && (
+          <p role="status" className="rounded-lg border p-3 text-sm">
+            {message}
+          </p>
+        )}
+
+        <div
+          role="tablist"
+          aria-label={t("career.sectionNavigation")}
+          className="flex gap-1 overflow-x-auto border-b pb-px"
+        >
+          {profileTabs.map((tab) => (
+            <button
+              key={tab.id}
+              id={`profile-tab-${tab.id}`}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls="profile-active-panel"
+              tabIndex={activeTab === tab.id ? 0 : -1}
+              onClick={() => setActiveTab(tab.id)}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+                event.preventDefault();
+                const index = profileTabs.findIndex((entry) => entry.id === activeTab);
+                const direction = event.key === "ArrowRight" ? 1 : -1;
+                const next = profileTabs[(index + direction + profileTabs.length) % profileTabs.length];
+                setActiveTab(next.id);
+                document.getElementById(`profile-tab-${next.id}`)?.focus();
+              }}
+              className={
+                "shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium transition " +
+                (activeTab === tab.id
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground")
+              }
+            >
+              {french ? tab.fr : tab.en}
+            </button>
+          ))}
+        </div>
+
+        <fieldset disabled={busy || importing} className="min-w-0">
+          <div
+            id="profile-active-panel"
+            role="tabpanel"
+            aria-labelledby={`profile-tab-${activeTab}`}
+            className="min-w-0 rounded-xl border bg-card p-4 sm:p-6"
+          >
+            <ProfileFields
+              profile={draft}
+              update={update}
+              activeTab={activeTab}
+            />
+          </div>
+
+          {imported && (
+            <label className="mt-3 flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(event) => setConfirmed(event.target.checked)}
+                className="size-4 accent-primary"
+              />
+              {t("career.confirm")}
+            </label>
+          )}
+        </fieldset>
+
+        <div className="sticky bottom-3 z-20 flex items-center justify-between gap-3 rounded-lg border bg-card p-3 shadow-sm">
+          <span role="status" className="text-xs text-muted-foreground">
+            {t(dirty ? "career.unsaved" : "career.upToDate")}
+          </span>
+          <div className="flex gap-2">
+            {dirty && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy || importing}
+                onClick={() => {
+                  setDraft(draftOf(saved));
+                  setImported(false);
+                  setConfirmed(false);
+                  setError("");
+                  setIssues([]);
+                  setMessage("");
+                }}
+              >
+                {t("career.cancel")}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              disabled={busy || importing || !dirty || (imported && !confirmed)}
+              onClick={save}
+            >
+              <Save className="size-4" />
+              {t(busy ? "career.saving" : "career.save")}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const upload = <div className="space-y-4">
     <div className="relative overflow-hidden rounded-2xl border border-dashed border-primary/35 bg-gradient-to-br from-primary/[0.07] via-background to-background p-7 transition hover:border-primary/60 sm:p-9">
       <input ref={fileInput} id="resume-file" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" disabled={busy || importing} onChange={e => void importResume(e.target.files?.[0])} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
@@ -139,23 +323,6 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
   </div>;
   return <div className="mx-auto max-w-6xl space-y-6">
     <PageHeader title={t(onboarding ? "career.onboardingTitle" : "career.title")} description={t("career.subtitle")} />
-    {!onboarding && <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-[linear-gradient(135deg,var(--card),color-mix(in_srgb,var(--primary)_6%,var(--card)))] p-6 shadow-xl shadow-primary/5 sm:p-8">
-      <div className="absolute -right-20 -top-24 size-64 rounded-full bg-primary/[0.06] blur-3xl" aria-hidden="true" />
-      <div className="relative grid gap-7 xl:grid-cols-[1fr_auto] xl:items-end">
-        <div className="min-w-0">
-          <div className="mb-5 flex flex-wrap items-center gap-2"><span className="rounded-full border border-primary/20 bg-primary/[0.07] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Career identity</span><span className="text-xs text-muted-foreground">{completeness.percentage}% profile strength</span></div>
-          <h2 className="max-w-3xl text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">{draft.name || "Your professional profile"}</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">{draft.headline || "Import your resume and CVcomet will structure your professional story here — ready for resumes, job matching and applications."}</p>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {draft.targetJobTitle && <span className="rounded-lg border bg-background/80 px-3 py-2 text-xs font-medium"><BriefcaseBusiness className="mr-2 inline size-3.5 text-primary"/>{draft.targetJobTitle}</span>}
-            {draft.experiences.length > 0 && <span className="rounded-lg border bg-background/80 px-3 py-2 text-xs font-medium">{draft.experiences.length} experience{draft.experiences.length > 1 ? "s" : ""}</span>}
-            {draft.education.length > 0 && <span className="rounded-lg border bg-background/80 px-3 py-2 text-xs font-medium"><GraduationCap className="mr-2 inline size-3.5 text-primary"/>{draft.education.length} education</span>}
-          </div>
-        </div>
-        <Button variant="outline" className="h-11 rounded-xl bg-background/80 px-4 shadow-sm" onClick={() => fileInput.current?.click()}><WandSparkles className="size-4 text-primary"/>Import / refresh from CV</Button>
-      </div>
-    </section>}
-    {!onboarding && !saved.onboardingCompletedAt && <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-primary/30 bg-primary/5 p-5"><p className="text-sm">{t("career.onboardingPrompt")}</p><Button asChild variant="outline"><Link href="/onboarding">{t("career.startOnboarding")}</Link></Button></div>}
     {onboarding && <ol className="grid grid-cols-3 gap-2 sm:grid-cols-6" aria-label={t("career.stepsLabel")}>{steps.map((key, index) => <li key={key} aria-current={step === index ? "step" : undefined} className={"min-w-0 rounded-lg border p-2 text-center text-xs sm:p-3 " + (step === index ? "border-primary bg-primary/5 font-semibold" : "text-muted-foreground")}><span className="mb-1 block">{index < step ? <Check className="mx-auto size-4" aria-label={t("career.done")} /> : index + 1}</span><span className="break-words">{t("career.steps." + key)}</span></li>)}</ol>}
     <div className="app-section space-y-3">
       <div className="flex flex-wrap justify-between gap-2 text-sm"><span>{t("career.completeness")}</span><strong>{completeness.percentage}%</strong></div>
@@ -185,10 +352,7 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
       </section>}
       {review && <>
         <div className="app-section space-y-4"><h2 ref={stepHeading} tabIndex={-1} className="type-h2">{t(onboarding || imported ? "career.reviewTitle" : "career.importTitle")}</h2><p className="text-sm text-muted-foreground">{t("career.reviewHint")}</p>{upload}</div>
-        <div className="grid items-start gap-6 xl:grid-cols-[230px_minmax(0,1fr)]">
-          <nav className="flex flex-wrap gap-1 rounded-2xl border bg-card p-2 shadow-sm xl:sticky xl:top-5 xl:flex-col" aria-label={t("career.sectionNavigation")}>{sections.map(key => <a key={key} href={"#section-" + key} className="rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-primary/[0.06] hover:text-foreground">{t("career.sections." + key)}</a>)}</nav>
-          <ProfileFields profile={draft} update={update} />
-        </div>
+        <ProfileFields profile={draft} update={update} />
         {(onboarding || imported) && <label className="flex items-start gap-3 rounded-lg border p-5 text-sm"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} className="mt-1" /><span>{t("career.confirm")}</span></label>}
       </>}
     </fieldset>

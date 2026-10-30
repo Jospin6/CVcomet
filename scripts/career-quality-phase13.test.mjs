@@ -48,7 +48,7 @@ test("exact percentile calculation is deterministic and has explicit empty-data 
 test("prompt injection from a fake tool plan cannot register an external operation", () => {
   assert.throws(() => validateAgentCalls([{ tool: "submit_application", input: { target: "employer" } }]), { code: "AGENT_PLAN_REJECTED" });
   assert.throws(() => validateAgentCalls([{ tool: "list_my_resumes", input: { }, effect: "external" }]), { code: "AGENT_PLAN_REJECTED" });
-  const allowed = validateAgentCalls([{ tool: "list_my_confirmed_evidence", input: { limit: 5 } }]);
+  const allowed = validateAgentCalls([{ tool: "get_my_profile", input: {} }]);
   assert.equal(allowed.length, 1);
 });
 test("oversized tool outputs are truncated before sending to AI provider", () => {

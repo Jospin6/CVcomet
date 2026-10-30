@@ -1,0 +1,26 @@
+/* The canvas fills the main workspace on this route only. */
+.app-content:has(> .cvcomet-career-map-fullscreen) {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* This page uses the entire content viewport, without a footer below the map. */
+.app-content:has(> .cvcomet-career-map-fullscreen) + footer {
+  display: none;
+}
+
+.cvcomet-career-map-fullscreen {
+  height: calc(100dvh - 60px);
+  min-height: 0;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .cvcomet-career-map-fullscreen {
+    height: calc(100dvh - 56px);
+  }
+}

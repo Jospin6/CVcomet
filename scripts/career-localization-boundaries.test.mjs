@@ -39,5 +39,5 @@ test('generation reads locale from owned CV context and does not use job require
   assert.match(read('src/lib/career/job-documents.ts'),/resume\?\.design\.targetMarket/);
   assert.match(read('src/lib/career/job-documents.ts'),/fingerprint, localization/);
   assert.match(read('src/lib/career/job-documents.ts'),/assertDocumentFacts/);
-  assert.match(read('src/app/api/cover-letters/[id]/assistant/route.ts'),/status: "CONFIRMED"/);
+  assert.match(read('src/app/api/cover-letters/[id]/assistant/route.ts'),/getProfileFacts\(user\.id/);
 });

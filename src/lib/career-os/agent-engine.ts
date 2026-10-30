@@ -96,7 +96,7 @@ export async function executeAgentReads(
     const raw = await withAgentDeadline(() => execute(call.tool, call.input), options);
     const { result, truncated } = boundAgentRead(raw);
     reads.push({ tool: call.tool,
-      source: call.tool === "list_my_confirmed_evidence" ? "owner_confirmed" : "self_reported",
+      source: "self_reported",
       result, truncated });
     steps.push({ tool: call.tool, status: "completed" });
   }

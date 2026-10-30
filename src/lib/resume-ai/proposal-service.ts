@@ -14,7 +14,7 @@ export async function proposeResumeAI(input: {
   edited: ReturnType<typeof normalizeEditorResume>;
   edits: z.infer<typeof editsSchema>;
   message: string; summary: string[];
-  evidence: Array<{ id: string; revision: number; statement: string }>;
+  evidence: Array<{ statement: string; id?: string; revision?: number }>;
   instruction: string;
 }) {
   const edits = editsSchema.parse(input.edits);
@@ -24,7 +24,7 @@ export async function proposeResumeAI(input: {
   if (missing.length) throw new ProfileError(422, "UNSUPPORTED_FACTS");
   const diff = reviewChanges(input.current, input.edited, edits);
   if (!diff.length) throw new ProfileError(422, "NO_CHANGES");
-  const evidenceRevisions = input.evidence.map(row => ({ id: row.id, revision: row.revision }));
+  const evidenceRevisions = input.evidence.filter((row): row is { id: string; revision: number; statement: string } => !!row.id && row.revision !== undefined).map(row => ({ id: row.id, revision: row.revision }));
   const expiresAt = new Date(Date.now() + 15 * 60_000);
   const proposal = await prisma.$transaction(async tx => {
     const live = await tx.cv.findFirst({ where: { id: input.cvId, conversation: { userId: input.userId } }, select: { revision: true } });

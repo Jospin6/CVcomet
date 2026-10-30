@@ -8,7 +8,7 @@ import { addedUnsupportedNumbers, letterProposalIsApplicable, letterReviewChange
 const storedDocument = coverLetterContentSchema.extend({ design: coverLetterDesignSchema });
 const evidenceSchema = z.array(z.object({ id: z.string().uuid(), revision: z.number().int().nonnegative() }).strict()).max(30);
 const changesSchema = z.array(z.string().max(500)).max(12);
-export type ConfirmedLetterEvidence = { id: string; revision: number; statement: string };
+export type ConfirmedLetterEvidence = { statement: string; id?: string; revision?: number };
 
 export function reviewLetterDraft(input: { before: CoverLetterDocument; after: CoverLetterDocument;
   evidence: ConfirmedLetterEvidence[]; requirements: string[]; }) {
@@ -23,7 +23,7 @@ export async function proposeCoverLetterAI(input: { userId: string; letterId: st
   evidence: ConfirmedLetterEvidence[]; requirements: string[] }) {
   const { edited, diff } = reviewLetterDraft(input);
   if (!diff.length) return { status: "clarification" as const, message: input.message, changes: input.changes, revision: input.revision };
-  const evidenceRevisions = evidenceSchema.parse(input.evidence.map(row => ({ id: row.id, revision: row.revision })));
+  const evidenceRevisions = evidenceSchema.parse(input.evidence.filter((row): row is { id: string; revision: number; statement: string } => !!row.id && row.revision !== undefined).map(row => ({ id: row.id, revision: row.revision })));
   const now = new Date();
   const result = await prisma.$transaction(async tx => {
     const letter = await tx.coverLetter.findFirst({ where: { id: input.letterId, conversation: { userId: input.userId } }, select: { revision: true } });
@@ -44,7 +44,7 @@ export async function proposeCoverLetterAI(input: { userId: string; letterId: st
   });
   return { status: "proposal" as const, proposalId: result.id, baseRevision: result.baseRevision,
     expiresAt: result.expiresAt.toISOString(), message: result.message, changes: input.changes,
-    preview: edited, diff, evidenceDisclosure: "user-confirmed-not-independently-verified" };
+    preview: edited, diff, evidenceDisclosure: "self-reported-career-profile" };
 }
 
 export async function getPendingCoverLetterAI(userId: string, letterId: string) {
@@ -56,7 +56,7 @@ export async function getPendingCoverLetterAI(userId: string, letterId: string) 
   const preview = storedDocument.parse(proposal.document);
   return { status: "proposal" as const, proposalId: proposal.id, baseRevision: proposal.baseRevision,
     expiresAt: proposal.expiresAt.toISOString(), message: proposal.message, changes: changesSchema.parse(proposal.changes),
-    preview, diff: letterReviewChanges(before, preview), evidenceDisclosure: "user-confirmed-not-independently-verified" };
+    preview, diff: letterReviewChanges(before, preview), evidenceDisclosure: "self-reported-career-profile" };
 }
 
 export async function decideCoverLetterAI(userId: string, letterId: string, proposalId: string, action: "accept" | "discard") {

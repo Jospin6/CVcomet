@@ -22,7 +22,7 @@ export const jobCopy = {
   },
   en: {
     title: "Analyze a job description", description: "Review the posting, compare its requirements with your background and prepare your application.", summary: "Professional summary",
-    text: "Paste text", url: "Import URL", pdf: "Import PDF", urlLabel: "Public job posting URL", extract: "Retrieve text", extracting: "Extracting…",
+    text: "Text", url: "URL", pdf: "PDF", urlLabel: "Public job posting URL", extract: "Retrieve text", extracting: "Extracting…",
     file: "Drop a PDF or choose a file", fileHint: "Text PDF · up to 8 MB · up to 50 pages. Use another source for scanned PDFs.",
     review: "Job description to review", textHint: "100–50,000 characters. Correct the content before analyzing it.", confirm: "I have reviewed this text and want to analyze it.",
     analyze: "Analyze job", analyzing: "Analyzing requirements and your profile…", resume: "Resume to compare", profileOnly: "My career profile only", createResume: "Create a resume from my profile",

@@ -20,7 +20,7 @@ test('each read tool is owner-filtered within the database query', () => {
   assert.match(code, /where: \{ userId: actor\.id \}/);
   assert.match(code, /z\.object\(\{\}\)\.strict\(\)/);
   assert.match(code, /getCareerProfile\(actor\.id\)/);
-  assert.match(code, /listConfirmedEvidenceForAgent\(actor\.id, limit\)/);
+  assert.doesNotMatch(code, /listConfirmedEvidenceForAgent|careerEvidence\.findMany/);
   assert.match(code, /\.max\(30\)/);
   assert.doesNotMatch(code, /prisma\.(?:user|account|session)\.findMany/);
 });

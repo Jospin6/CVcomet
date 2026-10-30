@@ -26,16 +26,19 @@ test('saved match agent tool is explicitly owner-scoped, read-only, and has inpu
   assert.doesNotMatch(registry, /sendMail\(|submitApplication\(/);
 });
 
-test('dashboard keeps existing approval-based editing workflow and renders action evidence', () => {
+test('dashboard preserves approval-based editing and separates overview from evidence', () => {
   const screen = read('src/app/dashboard/job-match/page.tsx');
-  const panel = read('src/components/career/job-intelligence-panel.tsx');
-  assert.match(screen, /JobIntelligencePanel intelligence=/);
-  assert.match(screen, /buildJobIntelligence\(analysis, match/);
+  const report = read('src/components/career/job-match-report.tsx');
+  assert.match(screen, /<JobMatchReport/);
   assert.match(screen, /action: "ACCEPT", matchId: result\.id/);
-  assert.match(panel, /action\.postingQuote/);
-  assert.match(panel, /action\.candidateSources/);
-  assert.match(panel, /role="note"/);
-  assert.doesNotMatch(panel, /dangerouslySetInnerHTML/);
+  assert.match(screen, /action: "REJECT"/);
+  assert.match(report, /buildJobIntelligence\(analysis, match, language\)/);
+  assert.match(report, /intelligence\.actions/);
+  assert.match(report, /item\.evidenceSources/);
+  assert.match(report, /role="tabpanel"/);
+  assert.match(report, /bg-red-500\/10/);
+  assert.match(report, /bg-emerald-500\/10/);
+  assert.doesNotMatch(report, /dangerouslySetInnerHTML/);
 });
 
 test('agent sees only concise recommendations and never full CV or job description', () => {

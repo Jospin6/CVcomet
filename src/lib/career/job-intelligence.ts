@@ -48,8 +48,8 @@ export function buildJobIntelligence(
   const warnings = [
     translate(language, "Les scores évaluent uniquement les éléments présents dans vos données. Ils ne prédisent pas l’embauche ni le résultat d’un ATS.",
       "Scores assess only available candidate data. They do not predict hiring or ATS outcomes."),
-    translate(language, "Les éléments du profil, du CV et du coffre sont déclaratifs, même s’ils sont confirmés par leur propriétaire.",
-      "Profile, resume and vault statements are self-reported, even if confirmed by their owner."),
+    translate(language, "Les éléments du profil et du CV sont déclaratifs et ne sont pas vérifiés indépendamment.",
+      "Profile and resume statements are self-reported, not independently verified."),
   ];
   if (!hasResume) warnings.push(translate(language,
     "Aucun CV sélectionné : la correspondance porte sur le profil, pas sur le document réellement envoyé.",

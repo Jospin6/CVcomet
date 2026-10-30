@@ -135,7 +135,7 @@
     "profile": "Mon profil",
     "soon": "À venir",
     "admin": "Administration",
-    "documents": "Mes documents",
+    "documents": "Documents",
     "appearance": "Apparence",
     "light": "Clair",
     "dark": "Sombre",
@@ -455,7 +455,7 @@
     "description": "Collez une offre, importez son URL ou son PDF, puis comparez les exigences à votre profil et préparez votre candidature."
   },
   "documents": {
-    "title": "Mes documents",
+    "title": "Documents",
     "description": "Importez, organisez et consultez vos CV au même endroit.",
     "tabs": "Types de documents",
     "upload": "Importer des CV",

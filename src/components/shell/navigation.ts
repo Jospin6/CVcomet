@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   ContactRound,
-  ShieldCheck,
   FileText,
   ScanLine,
   BriefcaseBusiness,
@@ -28,7 +27,6 @@ export const navigationGroups: { key: string; items: NavigationItem[] }[] = [
       { key: "assistant", icon: Sparkles, href: "/dashboard/assistant" },
       { key: "findJobs", icon: SearchCheck, href: "/dashboard/find-jobs" },
       { key: "careerProfile", icon: ContactRound, href: "/dashboard/profile" },
-      { key: "evidenceVault", icon: ShieldCheck, href: "/dashboard/evidence" },
       { key: "documents", icon: FileText, href: "/dashboard/resumes" },
       { key: "templates", icon: PanelsTopLeft, href: "/templates" },
     ],
@@ -68,6 +66,5 @@ export const commandActions: NavigationItem[] = [
   { key: "practiceInterview", icon: MessagesSquare, href: "/dashboard/interviews" },
   ...footerNavigation,
   { key: "careerProfile", icon: ContactRound, href: "/dashboard/profile" },
-  { key: "evidenceVault", icon: ShieldCheck, href: "/dashboard/evidence" },
   { key: "templates", icon: PanelsTopLeft, href: "/templates" },
 ];

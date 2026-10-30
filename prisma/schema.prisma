@@ -50,6 +50,7 @@ model User {
   profileRevision      Int             @default(0)
   awards               Json?
   professionalLinks    Json?
+  jobPreferences       Json?
   portfolioSlug        String?         @unique
   portfolioPublic      Boolean         @default(false)
   isSubscribed         Boolean         @default(false)
@@ -76,6 +77,7 @@ model User {
   careerAgentObservations CareerAgentObservation[]
   aiQuotaWindows       AiQuotaWindow[]
   uploadedResumes      UploadedResume[]
+  resignationLetters   ResignationLetter[]
   careerMaps           CareerMap[]
   careerGoals          CareerGoal[]
   careerEvidence       CareerEvidence[]
@@ -83,6 +85,7 @@ model User {
   coverLetterAIProposals CoverLetterAIProposal[]
   careerMissions CareerMission[]
   applicationPackets CareerApplicationPacket[]
+  jobRecommendationPreference JobRecommendationPreference?
   subscription         Subscription?
 
   createdAt DateTime @default(now())
@@ -283,6 +286,26 @@ model UploadedResume {
   createdAt   DateTime @default(now())
 
   @@index([userId, createdAt])
+}
+
+
+/** Independently owned, editable resignation letters. No AI-generated claims. */
+model ResignationLetter {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String   @default("Resignation letter")
+  recipient   String   @default("")
+  company     String   @default("")
+  subject     String   @default("Resignation")
+  body        String   @default("")
+  signature   String   @default("")
+  letterDate  DateTime @default(now())
+  revision    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, updatedAt])
 }
 
 model CoverLetter {
@@ -964,3 +987,11 @@ model CareerApplicationPacket {
   @@index([missionId, createdAt])
 }
 
+
+/// Per-account CV-based recommendations, independent of career-map settings.
+model JobRecommendationPreference {
+  userId     String   @id
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filters    Json
+  updatedAt  DateTime @updatedAt
+}

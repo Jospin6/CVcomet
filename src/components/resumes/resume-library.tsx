@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { Download, Eye, FileText, LoaderCircle, Pencil, Trash2 } from "lucide-react";
+import { Download, Eye, FileText, LoaderCircle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import type { LibraryResume, SavedResume, UploadedResume } from "@/lib/resume-documents";
 import { PdfPreview } from "./pdf-preview";
 import { LinkedCoverLetters } from "./linked-cover-letters";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export function useResumeLibrary(enabled = true) {
   const [documents, setDocuments] = useState<LibraryResume[]>([]);
@@ -49,7 +50,7 @@ function ResumePaper({ document }: { document: LibraryResume }) {
   </div>;
 }
 
-export function ResumeCards({ documents, loading, onDeleted }: { documents: LibraryResume[]; loading?: boolean; onDeleted?: () => void }) {
+export function ResumeCards({ documents, loading, onDeleted, compact = false }: { documents: LibraryResume[]; loading?: boolean; onDeleted?: () => void; compact?: boolean }) {
   const { t, i18n } = useTranslation();
   const [applicationId, setApplicationId] = useState("");
   useEffect(() => { setApplicationId(new URLSearchParams(window.location.search).get("applicationId") || ""); }, []);
@@ -70,10 +71,65 @@ export function ResumeCards({ documents, loading, onDeleted }: { documents: Libr
     finally { setDeleting(false); }
   };
   return <>
-    {loading ? [0, 1, 2].map(index => <Skeleton key={index} className="h-[350px] rounded-[6px]" />) : documents.map(document => {
+    {loading ? [0, 1, 2].map(index => <Skeleton key={index} className={compact ? "h-[258px] rounded-xl" : "h-[350px] rounded-[6px]"} />) : documents.map(document => {
       const title = document.source === "upload" ? document.name : document.design?.documentName || document.title || t("documents.fromScratch");
       const format = document.source === "upload" ? document.name.split(".").pop()?.toUpperCase() : t("documents.created");
-      const preview = <div className="h-64 overflow-hidden border-b bg-muted p-4"><div className="mx-auto h-full max-w-[210px] overflow-hidden rounded-sm border shadow-sm"><ResumePaper document={document} /></div></div>;
+      const preview = compact
+        ? <div className="h-[210px] overflow-hidden border-b bg-muted/40 p-3">
+            <div className="mx-auto h-full max-w-[155px] overflow-hidden rounded-t-sm border border-slate-200 shadow-sm">
+              <ResumePaper document={document} />
+            </div>
+          </div>
+        : <div className="h-64 overflow-hidden border-b bg-muted p-4"><div className="mx-auto h-full max-w-[210px] overflow-hidden rounded-sm border shadow-sm"><ResumePaper document={document} /></div></div>;
+      if (compact) return (
+        <article
+          key={`${document.source}-${document.id}`}
+          className="group min-w-0 overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-sm"
+        >
+          {document.source === "created" ? (
+            <Link href={contextual(`/dashboard/resumes/${document.id}`)} className="block" aria-label={t("documents.openNamed", { name: title })}>
+              {preview}
+            </Link>
+          ) : (
+            <button type="button" className="block w-full text-left" onClick={() => setSelected(document)} aria-label={t("documents.openNamed", { name: title })}>
+              {preview}
+            </button>
+          )}
+          <div className="flex min-h-12 items-center justify-between gap-2 px-3 py-2">
+            <p title={title} className="min-w-0 truncate text-xs font-medium">{title}</p>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-7 shrink-0" aria-label={`Actions: ${title}`}>
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {document.source === "created" ? (
+                  <DropdownMenuItem asChild>
+                    <Link href={contextual(`/dashboard/resumes/${document.id}`)}>{t("documents.edit")}</Link>
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    <DropdownMenuItem onSelect={() => setSelected(document)}>{t("documents.view")}</DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href={contextual(`/dashboard/resumes/import/${document.id}`)}>Convert & edit</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a href={`/api/resume-documents/${document.id}?download=1`}>{t("documents.download")}</a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onSelect={() => { setRemoving(document); setError(""); }}
+                    >
+                      {t("documents.delete")}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </article>
+      );
       return <article key={`${document.source}-${document.id}`} className="group min-w-0 overflow-hidden border bg-card transition-[border-color,background-color] duration-150 hover:border-primary hover:bg-muted/[0.12]">
         {document.source === "created" ? <Link href={contextual(`/dashboard/resumes/${document.id}`)} aria-label={t("documents.openNamed", { name: title })} className="block">{preview}</Link> : <button className="block w-full text-left" onClick={() => setSelected(document)} aria-label={t("documents.openNamed", { name: title })}>{preview}</button>}
         <div className="p-4"><p className="truncate text-sm font-medium" title={title}>{title}</p>

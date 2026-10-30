@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import prisma from "../../../prisma/prisma";
-import { emptyProfile, awardSchema, linkSchema, type CareerProfile, type ProfileData } from "./schema";
+import { emptyProfile, awardSchema, linkSchema, jobPreferencesSchema, defaultJobPreferences, type CareerProfile, type ProfileData, harmonizeCareerDirection } from "./schema";
 import { ProfileError } from "./http";
 import { accountEmailChanged } from "@/lib/security/account-email";
 
@@ -9,7 +9,7 @@ export const careerProfileSelect = {
   skills: true, languages: true, hobbies: true, linkedin: true, github: true, portfolio: true,
   careerGoal: true, experienceLevel: true, targetJobTitle: true, targetIndustry: true,
   targetCountry: true, preferredWorkMode: true, targetMarket: true, referralSource: true, resumeSource: true,
-  profileRevision: true, onboardingCompletedAt: true, awards: true, professionalLinks: true,
+  profileRevision: true, onboardingCompletedAt: true, awards: true, professionalLinks: true, jobPreferences: true,
   Experience: { select: { id: true, title: true, company: true, location: true, start: true, end: true, description: true }, orderBy: { id: "asc" } },
   Education: { select: { id: true, degree: true, school: true, start: true, end: true, description: true }, orderBy: { id: "asc" } },
   Project: { select: { id: true, title: true, start: true, end: true, url: true, description: true }, orderBy: { id: "asc" } },
@@ -20,9 +20,10 @@ type ProfileRow = Prisma.UserGetPayload<{ select: typeof careerProfileSelect }>;
 const strings = <T extends object>(item: T) => Object.fromEntries(Object.entries(item).map(([key, value]) => [key, value ?? ""])) as { [K in keyof T]: NonNullable<T[K]> };
 
 export function toCareerProfile(row: ProfileRow): CareerProfile {
-  const { Experience, Education, Project, certifications, profileRevision, onboardingCompletedAt, awards, professionalLinks, ...fields } = row;
-  return {
+  const { Experience, Education, Project, certifications, profileRevision, onboardingCompletedAt, awards, professionalLinks, jobPreferences, ...fields } = row;
+  return harmonizeCareerDirection({
     ...emptyProfile(), ...strings(fields),
+    jobPreferences: jobPreferencesSchema.catch(defaultJobPreferences).parse(jobPreferences),
     careerGoal: (row.careerGoal || "") as ProfileData["careerGoal"],
     experienceLevel: (row.experienceLevel || "") as ProfileData["experienceLevel"],
     preferredWorkMode: (row.preferredWorkMode || "") as ProfileData["preferredWorkMode"],
@@ -34,7 +35,7 @@ export function toCareerProfile(row: ProfileRow): CareerProfile {
     awards: awardSchema.array().parse(awards ?? []),
     professionalLinks: linkSchema.array().parse(professionalLinks ?? []),
     revision: profileRevision, onboardingCompletedAt: onboardingCompletedAt?.toISOString() ?? null,
-  };
+  });
 }
 
 export async function getCareerProfile(userId: string): Promise<CareerProfile> {
@@ -76,7 +77,8 @@ export async function saveCareerProfile(userId: string, profile: ProfileData, re
     if (accountEmailChanged(current.email, profile.email)) {
       throw new ProfileError(409, "EMAIL_CHANGE_REQUIRES_VERIFICATION");
     }
-    const { experiences, education, projects, certifications, email: _email, ...fields } = profile;
+    const normalized = harmonizeCareerDirection(profile);
+    const { experiences, education, projects, certifications, email: _email, ...fields } = normalized;
     void _email;
     assertOwnedIds(experiences, current.Experience);
     assertOwnedIds(education, current.Education);

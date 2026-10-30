@@ -12,6 +12,7 @@ import { proposeCoverLetterAI, decideCoverLetterAI } from "@/lib/cover-letter-ai
 import { lockLetterIdentity, isVisualChangeRequest } from "@/lib/cover-letter-ai/review";
 import { marketPrompt } from "@/lib/career-localization/markets";
 import { jobAnalysisSchema } from "@/lib/career/job-schema";
+import { getProfileFacts } from "@/lib/career-profile/ai-facts";
 
 const output = z.object({ message: z.string().min(1).max(1000), changes: z.array(z.string().max(500)).max(12), document: coverLetterContentSchema.extend({ design: coverLetterDesignSchema }) }).strict();
 export type DraftKind = "resume" | "letter";
@@ -26,7 +27,7 @@ async function ownedApplication(userId: string, id: string) {
 }
 export async function proposeApplicationDraft(userId: string, applicationId: string, kind: DraftKind, instruction: string, language: "fr" | "en") {
   const app = await ownedApplication(userId, applicationId);
-  const evidence = await prisma.careerEvidence.findMany({ where: { userId, status: "CONFIRMED" }, orderBy: { updatedAt: "desc" }, take: 30, select: { id: true, revision: true, kind: true, statement: true, sourceLabel: true } });
+  const evidence = await getProfileFacts(userId, 50);
   if (kind === "resume") {
     if (!app.cvId) throw new ProfileError(409, "RESUME_REQUIRED");
     const cv = await prisma.cv.findFirst({ where: { id: app.cvId, conversation: { userId } } });
@@ -34,7 +35,7 @@ export async function proposeApplicationDraft(userId: string, applicationId: str
     const document = normalizeEditorResume(cv as unknown as Record<string, unknown>);
     await reserveProfileAI(userId, "RESUME_EDIT");
     const { object, document: suggested } = await generateResumeConversation({ document, instruction, language,
-      confirmedEvidence: evidence.map(row => ({ kind: row.kind, statement: row.statement, sourceLabel: row.sourceLabel })),
+      profileFacts: evidence,
       linkedJobAdvert: app.job ? { title: app.job.title, description: app.job.description, requiredSkills: app.job.requiredSkills, preferredSkills: app.job.preferredSkills } : null });
     if (object.status !== "applied" || !suggested) return { status: "clarification" as const, kind, message: object.message, changes: [] };
     const proposal = await proposeResumeAI({ userId, cvId: cv.id, revision: cv.revision,
@@ -53,8 +54,8 @@ export async function proposeApplicationDraft(userId: string, applicationId: str
   try {
     result = await generateObject({ model: await getAIModel(), schema: output, temperature: 0, maxTokens: 4500, maxRetries: 1, abortSignal: AbortSignal.timeout(45000),
       system: factualRules + "\n" + marketPrompt(document.design.targetMarket, document.design.documentLanguage, language) + `
-You are editing a candidate's cover letter. Propose the full updated document but do not invent any degree, experience, company information, results, metrics, technologies, motivation or skill. The posting lists requirements, NOT candidate qualifications. Use only candidate evidence explicitly confirmed by its owner to add new claims. Old document content may be reworded without changing factual scope. Never change sender, recruiter, employer, position or document identity fields. Keep document language, target market and paper unchanged; only make visual changes on explicit request. If evidence is missing, make no unsupported claims and ask for clarification. The proposal is for review, not yet applied.`,
-      prompt: JSON.stringify({ instruction, document, job: letter.job ? { title: letter.job.title, company: letter.job.company, description: letter.job.description } : app.job ? { title: app.job.title, company: app.job.company, description: app.job.description } : null, confirmedEvidence: evidence.map(row => ({ statement: row.statement, kind: row.kind, sourceLabel: row.sourceLabel })) }),
+You are editing a candidate's cover letter. Propose the full updated document but do not invent any degree, experience, company information, results, metrics, technologies, motivation or skill. The posting lists requirements, NOT candidate qualifications. Use only candidate career profile facts and the existing letter to support new claims. Old document content may be reworded without changing factual scope. Never change sender, recruiter, employer, position or document identity fields. Keep document language, target market and paper unchanged; only make visual changes on explicit request. If the profile lacks facts, make no unsupported claims and ask for clarification. The proposal is for review, not yet applied.`,
+      prompt: JSON.stringify({ instruction, document, job: letter.job ? { title: letter.job.title, company: letter.job.company, description: letter.job.description } : app.job ? { title: app.job.title, company: app.job.company, description: app.job.description } : null, profileFacts: evidence }),
     });
   } catch (error) { throw profileAIError(error); }
   const proposed = normalizeCoverLetter(result.object.document);

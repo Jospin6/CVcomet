@@ -43,6 +43,10 @@ async function main() {
     await page.goto("http://template-preview.local");
     await page.addStyleTag({ content: css.css + "\n" + documentCss });
     await page.addScriptTag({ content: bundle.outputFiles[0].text });
+    await page.getByRole("tab", { name: "Resumes" }).waitFor();
+    assert.equal(await page.getByRole("tab").count(), 2);
+    assert.equal(await page.getByText("CVComet studio").count(), 0);
+    assert.equal(await page.getByText("All destination countries").count(), 0);
     await page.locator('[data-field="contact.name"]').first().filter({ hasText: "John Doe" }).waitFor();
     await page.getByRole("button", { name: /Executive Classic 1/ }).click();
     const modal = page.getByRole("dialog");
@@ -56,7 +60,7 @@ async function main() {
     fs.mkdirSync(output, { recursive: true });
     await page.screenshot({ path: path.join(output, "cv-modal.png") });
     await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: /Cover letters 30/ }).click();
+    await page.getByRole("tab", { name: "Cover Letters" }).click();
     await page.getByRole("button", { name: /Executive Classic Letter/ }).click();
     assert.equal(await modal.locator(".template-letter-body i, .template-letter-document i").count(), 0);
     assert.ok((await modal.innerText()).includes("Thank you for considering my application"));

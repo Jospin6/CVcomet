@@ -36,8 +36,9 @@ test("packet CAS, serialization, revisions and deterministic request replay", ()
   assert.match(service, /assertSourcesCurrent/);
   assert.match(service, /PACKET_SOURCE_CHANGED/);
 });
-test("AI request returns preview only, uses confirmed evidence, budget & factual guard", () => {
-  assert.match(suggestRoute, /listConfirmedEvidenceForAgent/);
+test("AI request returns preview only, uses career profile facts, budget & factual guard", () => {
+  assert.match(suggestRoute, /getProfileFacts\(actor\.id/);
+  assert.doesNotMatch(suggestRoute, /listConfirmedEvidenceForAgent/);
   assert.match(suggestRoute, /reserveProfileAI/);
   assert.match(suggestRoute, /assertDocumentFacts/);
   assert.match(suggestRoute, /saved: false, sent: false, reviewed: false/);

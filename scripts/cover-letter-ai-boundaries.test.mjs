@@ -15,10 +15,10 @@ test('approval is atomic, verifies ownership, revision and evidence still confir
   const s=read('src/lib/cover-letter-ai/proposal-service.ts');
   for (const p of [/\$transaction\(/,/conversation: \{ userId \}/,/letterProposalIsApplicable\(/,/evidenceRevisions/,/status: "CONFIRMED"/,/revision: proposal\.baseRevision/,/coverLetter\.updateMany\(/]) assert.match(s,p);
 });
-test('generation uses confirmed evidence and model context as data, not profile that may be unconfirmed',()=>{
+test('generation uses the account profile and existing letter, without querying the old vault',()=>{
   const s=read('src/app/api/cover-letters/[id]/assistant/route.ts');
-  assert.match(s,/status: "CONFIRMED"/);
-  assert.doesNotMatch(s,/getCareerProfile|careerProfileContext|careerEvidence\(/);
+  assert.match(s,/getProfileFacts\(user\.id/);
+  assert.doesNotMatch(s,/careerEvidence\.findMany/);
   assert.match(s,/lockLetterIdentity\(/);
 });
 test('studio compares and approves a proposal rather than committing model output',()=>{

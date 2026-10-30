@@ -1,7 +1,6 @@
 import { z } from "zod";
 import prisma from "../../../prisma/prisma";
 import { getCareerProfile, careerProfileContext } from "@/lib/career-profile/service";
-import { listConfirmedEvidenceForAgent } from "@/lib/career-evidence/service";
 import { buildJobIntelligence, isReadableMatchSnapshot } from "@/lib/career/job-intelligence";
 import { jobAnalysisSchema } from "@/lib/career/job-schema";
 import {
@@ -23,7 +22,6 @@ const inputSchemas = {
   get_my_resume: resumeById,
   list_my_applications: limited,
   get_my_application: applicationById,
-  list_my_confirmed_evidence: limited,
   get_my_job_match_insights: matchById,
   list_my_application_packets: limited,
 } as const satisfies Record<CareerReadTool, z.ZodTypeAny>;
@@ -73,10 +71,6 @@ export async function executeCareerReadTool(actor: CareerActor, name: string, ra
       });
       if (!resume) throw new CareerContractError(404, "RESOURCE_NOT_FOUND");
       return resume;
-    }
-    case "list_my_confirmed_evidence": {
-      const { limit } = inputSchemas.list_my_confirmed_evidence.parse(rawInput ?? {});
-      return listConfirmedEvidenceForAgent(actor.id, limit);
     }
     case "get_my_application": {
       const { applicationId } = inputSchemas.get_my_application.parse(rawInput ?? {});

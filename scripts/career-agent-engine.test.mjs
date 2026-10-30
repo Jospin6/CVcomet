@@ -5,7 +5,7 @@ import {
 } from '../src/lib/career-os/agent-engine.ts';
 
 const calls = [
-  { tool: 'list_my_confirmed_evidence', input: { limit: 10 } },
+  { tool: 'get_my_profile', input: {} },
   { tool: 'list_my_resumes', input: { limit: 2 } },
 ];
 
@@ -16,7 +16,7 @@ test('agent permits at most three DISTINCT owner-scoped READ tools', () => {
 });
 
 test('rejects dangerous tool calls even when proposed as approved', () => {
-  for (const tool of ['send_application_email', 'submit_application', 'draft_resume_changes', 'delete_account', 'get_other_user_data', '__proto__']) {
+  for (const tool of ['list_my_confirmed_evidence', 'send_application_email', 'submit_application', 'draft_resume_changes', 'delete_account', 'get_other_user_data', '__proto__']) {
     assert.throws(() => validateAgentCalls([{ tool, input: { approved: true } }]), e => e.code === 'AGENT_PLAN_REJECTED');
   }
 });
@@ -37,7 +37,7 @@ test('validated read execution preserves order and never includes actor identifi
   });
   assert.deepEqual(seen, calls);
   assert.deepEqual(steps.map(s => s.tool), calls.map(c => c.tool));
-  assert.equal(reads[0].source, 'owner_confirmed');
+  assert.equal(reads[0].source, 'self_reported');
   assert.equal(reads[1].source, 'self_reported');
   assert.equal(JSON.stringify(steps).includes('hello'), false);
 });

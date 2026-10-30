@@ -7,7 +7,7 @@ import { applicationCount, chooseCareerNextStep, missionCount } from "@/lib/care
 import {
   ArrowRight, ArrowUpRight, BrainCircuit, BriefcaseBusiness, CheckCircle2,
   ClipboardList, FileCheck2, FileText, MessageSquareText, ScanSearch,
-  ShieldCheck, Sparkles,
+  Sparkles,
 } from "lucide-react";
 
 /** Only render numbers returned by authenticated endpoints; unavailable data is never displayed as zero. */
@@ -55,7 +55,6 @@ const copy = {
     match: "Analyser une offre", matchDesc: "Comprendre les exigences et les écarts",
     packet: "Préparer une candidature", packetDesc: "Assembler mon dossier et le valider",
     interview: "Préparer un entretien", interviewDesc: "Questions et feedback personnalisés",
-    vault: "Mes faits professionnels", vaultDesc: "Contrôler les informations utilisées par l’IA",
     pulse: "Mon activité", docs: "Documents CV", apps: "Candidatures actives", missions: "Missions affichées",
     unavailable: "Indisponible", guest: "Connectez-vous pour voir votre activité.",
     next: "Prochaine action conseillée", start: "Préparer un premier CV", nextCv: "Vous avez déjà un CV. Analysez sa pertinence pour une offre.",
@@ -74,7 +73,6 @@ const copy = {
     match: "Analyze a job", matchDesc: "Understand requirements and gaps",
     packet: "Prepare an application", packetDesc: "Assemble and approve a packet",
     interview: "Practice an interview", interviewDesc: "Tailored questions and feedback",
-    vault: "My career evidence", vaultDesc: "Control what AI can use",
     pulse: "My activity", docs: "Resumes", apps: "Active applications", missions: "Missions shown",
     unavailable: "Unavailable", guest: "Sign in to view your activity.",
     next: "Suggested next step", start: "Prepare your first resume", nextCv: "You already have a resume. Check it against a job description.",
@@ -116,7 +114,6 @@ export function CareerCommandCenter({ signedIn, resumes, resumesPending }: { sig
     { href: "/dashboard/job-match", icon: ScanSearch, title: c.match, description: c.matchDesc },
     { href: "/dashboard/application-agent", icon: FileCheck2, title: c.packet, description: c.packetDesc },
     { href: "/dashboard/interviews", icon: BriefcaseBusiness, title: c.interview, description: c.interviewDesc },
-    { href: "/dashboard/evidence", icon: ShieldCheck, title: c.vault, description: c.vaultDesc },
   ];
   return <div className="space-y-5">
     <section className="flex min-h-10 flex-wrap items-center justify-between gap-4 border-b pb-5" aria-labelledby="career-command-title">

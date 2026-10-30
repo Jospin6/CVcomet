@@ -217,7 +217,7 @@ export function CoverLetterEditor() {
     const styles = document.design.fieldStyles[field];
     return <LetterField field={field} value={document[field]} label={fieldLabel(field)} selected={selected === field} preview={preview} disabled={chatting || Boolean(pendingAI)} style={{ fontWeight: styles?.bold ? 700 : undefined, fontStyle: styles?.italic ? "italic" : undefined, textDecoration: styles?.underline ? "underline" : undefined, textAlign: styles?.align }} onSelect={setSelected} onChange={onText} />;
   };
-  const errorText = error === "PROPOSAL_STALE" ? (fr ? "La proposition est périmée ou les faits confirmés ont changé. Rejetez-la puis demandez une nouvelle version." : "This proposal is stale or evidence has changed. Discard it and request a new draft.") : error === "CONFLICT" ? (fr ? "Cette lettre a été modifiée dans un autre onglet. Exportez votre version avant de recharger." : "This letter was edited in another tab. Export your version before reloading.") : error === "AI" ? c.chatError : error === "EXPORT" ? c.exportError : c.saveError;
+  const errorText = error === "PROPOSAL_STALE" ? (fr ? "La proposition est périmée ou le contexte de votre candidature a changé. Rejetez-la puis demandez une nouvelle version." : "This proposal is stale or career context has changed. Discard it and request a new draft.") : error === "CONFLICT" ? (fr ? "Cette lettre a été modifiée dans un autre onglet. Exportez votre version avant de recharger." : "This letter was edited in another tab. Export your version before reloading.") : error === "AI" ? c.chatError : error === "EXPORT" ? c.exportError : c.saveError;
 
   return <div className="resume-studio cover-letter-studio">
     {applicationId && <div className="mb-2 text-xs"><Link className="text-primary underline" href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents`}>← Retour au dossier de candidature</Link></div>}
@@ -264,7 +264,7 @@ export function CoverLetterEditor() {
               ] : [
                 ["More human", "Make this letter sound natural and professional without adding facts."],
                 ["More concise", "Shorten the letter without losing relevant evidence or inventing facts."],
-                ["Job-focused", "Tailor the argument to the job requirements using only confirmed evidence."]
+                ["Job-focused", "Tailor the argument to the job requirements using only facts in my career profile and resume."]
               ]).map(([label, instruction]) => <Button key={label} size="sm" variant="outline" className="text-[10px]" disabled={chatting || Boolean(pendingAI)} onClick={() => setChat(instruction)}>{label}</Button>)}</div>
               {pendingAI && <div className="space-y-3 rounded-lg border border-primary/30 bg-background p-3" role="region" aria-label={fr ? "Proposition IA à approuver" : "AI proposal awaiting approval"}>
                 <div><p className="text-xs font-semibold">{fr ? "Modifications proposées — non enregistrées" : "Suggested edits — not yet saved"}</p>

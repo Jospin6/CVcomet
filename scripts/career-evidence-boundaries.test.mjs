@@ -13,37 +13,33 @@ test('data has explicit provenance, owner cascade, unique profile origin, indexe
   assert.match(sql, /ON DELETE CASCADE/);
   assert.match(sql, /CREATE UNIQUE INDEX/);
 });
-test('every evidence route gets current actor from trusted session and blocks cross-origin mutations', () => {
-  for (const p of ['src/app/api/career/v1/evidence/route.ts','src/app/api/career/v1/evidence/[id]/route.ts',
-    'src/app/api/career/v1/evidence/import-profile/route.ts']) {
-    const code = read(p);
-    assert.match(code, /getSessionUser\(\)/);
-    assert.match(code, /withCareerHttp\(/);
-    assert.match(code, /assertTrustedWriteOrigin\(req\)/);
-    assert.match(code, /profileJson\(req, (?:4 \* 1024|1024)\)/);
-    assert.doesNotMatch(code, /(?:body|query|input)\.(?:userId|ownerId)/);
+test('legacy vault routes are authenticated but retired and cannot accept new writes', () => {
+  for (const path of [
+    'src/app/api/career/v1/evidence/route.ts',
+    'src/app/api/career/v1/evidence/[id]/route.ts',
+    'src/app/api/career/v1/evidence/import-profile/route.ts',
+  ]) {
+    const route = read(path);
+    assert.match(route, /getSessionUser\(\)/);
+    assert.match(route, /assertTrustedWriteOrigin\(req\)/);
+    assert.match(route, /FEATURE_RETIRED_USE_CAREER_PROFILE/);
+    assert.match(route, /410/);
+    assert.doesNotMatch(route, /createEvidence|importProfileEvidence|transitionEvidence|deleteEvidence/);
   }
 });
-test('all reads and writes enforce userId in DB predicates with CAS updates', () => {
-  const s = read('src/lib/career-evidence/service.ts');
-  assert.match(s, /where: \{ userId, status: "CONFIRMED" \}/);
-  assert.match(s, /where: \{ id, userId, revision: input\.revision, status: current\.status \}/);
-  assert.match(s, /deleteMany\(\{ where: \{ userId, id, revision \} \}\)/);
-  assert.match(s, /where: \{ id, userId \}/);
-  assert.match(s, /source: "MANUAL", sourceKey: null/);
-  assert.match(s, /source: "PROFILE_IMPORT"/);
-  assert.match(s, /status: "DRAFT"/);
-  assert.doesNotMatch(s, /\$executeRawUnsafe|\$queryRawUnsafe/);
-});
-test('agent tool exposes confirmed-only facts, while previous tools stay available', () => {
-  const contract = read('src/lib/career-os/contracts.ts');
+test('historical vault data and proposal safety checks remain intact, but the agent reads the profile', () => {
   const registry = read('src/lib/career-os/tool-registry.ts');
-  assert.match(contract, /"list_my_confirmed_evidence"/);
-  assert.match(registry, /listConfirmedEvidenceForAgent\(actor\.id, limit\)/);
-  assert.match(registry, /get_my_profile/);
-  assert.match(registry, /list_my_applications/);
-  assert.doesNotMatch(registry, /prisma\.careerEvidence\.findMany/);
+  const contract = read('src/lib/career-os/contracts.ts');
+  assert.match(registry, /getCareerProfile\(actor\.id\)/);
+  assert.doesNotMatch(registry, /listConfirmedEvidenceForAgent|prisma\.careerEvidence/);
+  assert.doesNotMatch(contract, /list_my_confirmed_evidence/);
+  for (const file of ['src/lib/cover-letter-ai/proposal-service.ts','src/lib/resume-ai/proposal-service.ts']) {
+    const service = read(file);
+    assert.match(service,/evidenceRevisions/);
+    assert.match(service,/EVIDENCE_CHANGED/);
+  }
 });
+
 test('strict schemas forbid user-provided source or status and bound string lengths', () => {
   const s = read('src/lib/career-evidence/schema.ts');
   assert.match(s, /newEvidenceSchema = z\.object/);
@@ -54,14 +50,11 @@ test('strict schemas forbid user-provided source or status and bound string leng
   const create = s.slice(s.indexOf('newEvidenceSchema'),s.indexOf('evidenceEditSchema'));
   assert.doesNotMatch(create, /status:|source:|userId:/);
 });
-test('UI is reachable through navigation, supports explicit approvals and translations', () => {
-  const nav = read('src/components/shell/navigation.ts');
-  const ui = read('src/components/career-evidence/evidence-vault-page.tsx');
-  assert.match(nav, /dashboard\/evidence/);
-  for (const action of ['confirm', 'reject', 'revoke', 'DELETE', 'import-profile']) assert.ok(ui.includes(action));
-  for (const language of ['en','fr']) {
-    const t = JSON.parse(read(`public/locales/${language}/common.json`));
-    assert.ok(t.shell.evidenceVault);
-    assert.ok(t.evidence.privacy);
-  }
+test('vault is absent from navigation and old bookmarks redirect to the profile', () => {
+  const navigation = read('src/components/shell/navigation.ts');
+  const redirect = read('src/app/dashboard/evidence/page.tsx');
+  const agent = read('src/app/dashboard/assistant/page.tsx');
+  assert.doesNotMatch(navigation, /dashboard\/evidence/);
+  assert.match(redirect, /redirect\("\/dashboard\/profile"\)/);
+  assert.doesNotMatch(agent, /dashboard\/evidence/);
 });

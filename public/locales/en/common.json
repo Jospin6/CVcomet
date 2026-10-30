@@ -134,7 +134,7 @@
     "profile": "My profile",
     "soon": "Coming soon",
     "admin": "Administration",
-    "documents": "My documents",
+    "documents": "Documents",
     "appearance": "Appearance",
     "light": "Light",
     "dark": "Dark",
@@ -454,7 +454,7 @@
     "description": "Paste a job, import its URL or PDF, then compare requirements with your profile and prepare your application."
   },
   "documents": {
-    "title": "My documents",
+    "title": "Documents",
     "description": "Upload, organize and view your resumes in one place.",
     "tabs": "Document types",
     "upload": "Upload resumes",

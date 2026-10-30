@@ -59,6 +59,6 @@ export function JobIntelligencePanel({ intelligence, language }: Props) {
     {highlights.length > 0 && <details className="text-sm"><summary className="flex cursor-pointer items-center gap-2 font-medium"><CheckCircle2 className="size-4" />{fr ? "Forces documentées à mettre en avant" : "Evidenced strengths to highlight"} ({highlights.length})</summary>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">{highlights.map(action => <li key={action.requirementId}>{action.title}</li>)}</ul>
     </details>}
-    <Link href="/dashboard/evidence" className="inline-flex items-center gap-2 text-sm text-primary underline">{fr ? "Vérifier mes faits professionnels" : "Review my professional facts"}<ArrowUpRight className="size-4" /></Link>
+    <Link href="/dashboard/profile" className="inline-flex items-center gap-2 text-sm text-primary underline">{fr ? "Compléter mon profil" : "Review my career profile"}<ArrowUpRight className="size-4" /></Link>
   </section>;
 }
