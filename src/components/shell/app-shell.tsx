@@ -10,7 +10,6 @@ import { Toaster } from "@/components/ui/sonner";
 import LanguageSwitcher from "@/components/ui/languageSwitcher";
 import { AppHeader } from "./app-header";
 import { CommandPalette } from "./command-palette";
-import { ThemeSwitcher } from "./theme-switcher";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation();
@@ -49,7 +48,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
-              <ThemeSwitcher />
             </div>
           </header>
           <main
@@ -71,7 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           <AppSidebar />
           <div className="flex min-w-0 flex-1 flex-col">
-            <AppHeader onSearch={() => setCommandsOpen(true)} />
+            <AppHeader />
             <main
               id="main-content"
               tabIndex={-1}
@@ -79,6 +77,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               {children}
             </main>
+            <footer className="mx-4 flex flex-wrap items-center justify-between gap-2 border-t py-5 text-[11px] text-muted-foreground sm:mx-7 lg:mx-10">
+              <span>
+                CVcomet <span className="px-2">/</span>
+                {t("shell.footer")}
+              </span>
+              <Link href="/help" className="hover:text-primary">
+                {t("shell.help")}
+              </Link>
+            </footer>
           </div>
         </SidebarProvider>
       )}

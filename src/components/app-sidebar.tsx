@@ -5,7 +5,7 @@ import {
   Orbit,
   Shield,
   Cpu,
-  UserRound,
+  Gem,
   X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -25,9 +25,9 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   navigationGroups,
-  footerNavigation,
   type NavigationItem,
 } from "@/components/shell/navigation";
+import Image from "next/image";
 
 export function AppSidebar() {
   const { t } = useTranslation();
@@ -79,18 +79,49 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-border">
       <SidebarHeader className="gap-5 px-4 pt-6 pb-3 group-data-[collapsible=icon]:px-2">
         <div className="flex items-center justify-between">
+
           <Link
             href="/"
-            className="flex items-center gap-2.5"
-            aria-label="CVcomet"
+            aria-label="CVComet — Accueil"
             onClick={() => setOpenMobile(false)}
+            className="
+              flex h-12 items-center
+              gap-2.5 rounded-lg
+              transition-opacity duration-200
+              hover:opacity-90
+            "
           >
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-primary text-primary-foreground">
-              <Orbit className="size-6" />
+            {/* Logo */}
+            <span
+              className="
+                relative flex size-10
+                shrink-0 items-center
+                justify-center
+              "
+            >
+              <Image
+                src="/images/cvcomet.png"
+                alt="CVComet"
+                width={40}
+                height={40}
+                className="
+                  size-full object-contain
+                "
+                priority
+              />
             </span>
+
+            {/* Nom de l'application */}
             {!compact && (
-              <span className="text-2xl font-bold tracking-[-1px]">
-                cvcomet<span className="text-primary">.</span>
+              <span
+                className="
+                  whitespace-nowrap
+                  text-[22px] font-bold
+                  leading-none tracking-tight
+                "
+              >
+                CVcomet
+                <span className="text-primary">.</span>
               </span>
             )}
           </Link>
@@ -126,14 +157,20 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
       </SidebarContent>
-      <SidebarFooter className="gap-2 border-t p-3 group-data-[collapsible=icon]:p-2">
+      <SidebarFooter className="px-3 pb-4 pt-2 group-data-[collapsible=icon]:px-2">
         <SidebarMenu>
-          {footerNavigation.map(renderItem)}
-          {renderItem({
-            key: "profile",
-            icon: UserRound,
-            href: user ? "/dashboard/profile" : "/login",
-          })}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Upgrade"
+              className="h-11 justify-center gap-2 rounded-lg bg-primary font-semibold text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary/90 hover:text-primary-foreground"
+            >
+              <Link href="/upgrade" onClick={() => setOpenMobile(false)}>
+                <Gem className="size-4 shrink-0" aria-hidden="true" />
+                <span>Upgrade</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
