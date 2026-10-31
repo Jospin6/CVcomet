@@ -32,22 +32,24 @@ test("answer route has strict validation and every write has optimistic concurre
   assert.match(service,/tx\.interviewMessage\.create/);
   assert.match(service,/READY_TO_FINISH/);
 });
-test("ownership and baseline API preserved; live vocal claims not introduced",()=>{
+test("ownership preserved, and LiveKit voice is isolated behind a worker",()=>{
   assert.match(list,/where:\{userId:user\.id\}/);
   assert.match(service,/where:\{id,userId\}/);
-  assert.match(screen,/SpeechRecognition/);
+  assert.match(screen,/ScreeningCall/);
+  assert.match(read("src/app/api/interviews/screening/start/route.ts"),/requireUser/);
   assert.match(screen,/speechSynthesis/);
-  assert.doesNotMatch(screen,/MediaRecorder|uploadAudio|startLiveKit/);
+  assert.doesNotMatch(screen,/MediaRecorder|uploadAudio/);
 });
 test("preparation grounds questions in the career profile and job advert as data",()=>{
   assert.match(service,/getCareerProfile\(userId\)/);
   assert.match(service,/profileFacts\(careerProfile/);
   assert.doesNotMatch(service,/careerEvidence\.findMany/);
-  assert.match(service,/jobDescription:input\.jobDescription\?\.slice\(0,10000\)/);
-  assert.match(screen,/Description du poste/);
+  assert.match(service,/application\?\.job\?\.description/);
+  assert.match(service,/resumeContext/);
+  assert.match(screen,/Job description \(optional\)/);
 });
 test("a saved session can be resumed and the interface clearly labels unavailable grades",()=>{
-  assert.match(screen,/setCurrent\(s\)/);
+  assert.match(screen,/setCurrent\(await jsonRequest/);
   assert.match(screen,/Évaluation indisponible/);
-  assert.match(screen,/Progression indicative/);
+  assert.match(screen,/screeningDimensions/);
 });
