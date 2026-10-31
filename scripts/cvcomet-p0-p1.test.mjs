@@ -70,8 +70,8 @@ test('draft actions are server-owned, require distinct approval, and cannot send
   assert.ok(decide.includes('assertTrustedWriteOrigin(req)'));
   assert.ok(decide.includes('action: z.enum(["accept", "discard"])'));
   assert.ok(ui.includes('draftReviewed'));
-  assert.ok(ui.includes('draftTargetFromText(question)'));
+  assert.ok(ui.includes('requestedDocument(question)'));
   assert.ok(ui.includes('setDraftInstruction(question)'));
-  assert.ok(ui.includes('Préparer une proposition'));
+  assert.ok(ui.includes('Voir la proposition'));
   assert.ok(!propose.includes('sendApplication('));
 });

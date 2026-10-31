@@ -37,12 +37,13 @@ test("admin endpoint checks session/role and publishes aggregates only", () => {
   assert.ok(overview.includes("careerAgentObservation.groupBy"));
   assert.ok(!overview.includes("select: { question:"));
 });
-test("candidate feedback is presented only for a persisted completed answer", () => {
+test("feedback endpoint remains available but is not displayed in the minimal chat", () => {
   const view = read("src/app/dashboard/assistant/page.tsx");
-  assert.ok(view.includes('run.status === "COMPLETED" ? run.id : undefined'));
-  assert.ok(view.includes("/feedback"));
-  assert.ok(view.includes("aria-pressed"));
-  assert.ok(view.includes('rating: choice'));
+  const route = read("src/app/api/career/v1/missions/[id]/runs/[runId]/feedback/route.ts");
+  assert.ok(route.includes('getSessionUser()'));
+  assert.ok(!view.includes('Cette réponse était-elle utile'));
+  assert.ok(!view.includes('ThumbsDown'));
+  assert.ok(!view.includes('ThumbsUp'));
 });
 test("retention defaults to preview and requires explicit --execute flag", () => {
   const code = read("scripts/cleanup-career-observations.cjs");

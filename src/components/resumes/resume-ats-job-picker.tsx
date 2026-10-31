@@ -62,7 +62,7 @@ export function ResumeAtsJobPicker({ active, language, selected, onSelect }: Pro
 
   return <section className="studio-ats-job-picker space-y-3 rounded-lg border p-3" aria-label={c.jobInput}>
     <h3 className="flex items-center gap-2 text-xs font-semibold"><BriefcaseBusiness className="size-4 shrink-0 text-primary" />{c.jobInput}</h3>
-    <p className="text-[10px] leading-5 text-muted-foreground">{c.savedJobHint}</p>
+    {/* <p className="text-[10px] leading-5 text-muted-foreground">{c.savedJobHint}</p> */}
     <label className="block text-[11px]" htmlFor={id + "-search"}>{c.searchJobs}<Input id={id + "-search"} type="search" maxLength={200} value={query} onChange={event => setQuery(event.target.value)} placeholder={c.searchJobsPlaceholder} className="mt-1 h-8 text-xs" /></label>
     <label className="block text-[11px]" htmlFor={id + "-job"}>{c.savedJobs}<select id={id + "-job"} value={selected?.id ?? ""} onChange={event => { onSelect(options.find(job => job.id === event.target.value) ?? null); setMessage(""); }} className="mt-1 h-9 w-full min-w-0 rounded-md border bg-background px-2 text-xs">
       <option value="">{c.generalCheck}</option>

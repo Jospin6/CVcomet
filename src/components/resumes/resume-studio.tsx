@@ -3,25 +3,31 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { AlignLeft, AlignCenter, AlignRight, ArrowLeft, ArrowDown, ArrowUp, Bold, Check, ChevronDown, Download, GripVertical, Italic, LayoutTemplate, List, Loader2, Mail, Minus, Plus, Redo2, Save, ScanLine, Send, Sparkles, Underline, Undo2, X } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignRight, ArrowLeft, ArrowDown, ArrowUp, Bold, Check, ChevronDown, Download, GripVertical, Italic, LayoutTemplate, List, Loader2, Mail, Minus, Plus, Redo2, Save, ScanLine, Sparkles, Underline, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { A4_HEIGHT, resumePaperDimensions, addResumeEntry, fieldValue, moveResumeSection, normalizeEditorResume, orderedSections, resumeContentSchema, resumeFieldHasBullets, resumeFieldSupportsBullets, resumeSections, setResumeField, type EditorResume, type ResumeDesign, type ResumePage, type ResumeSection } from "@/lib/resume-editor";
 import { resumeEditorCopy } from "@/lib/resume-editor-copy";
 import { resumeAtsCopy } from "@/lib/resume-ats-copy";
-import { templateCatalog } from "@/lib/template-catalog";
 import type { AtsIssue } from "@/lib/career/ats";
 import { EditableResumeCanvas } from "./editable-resume-canvas";
 import { ResumeAtsPanel } from "./resume-ats-panel";
 import { LinkedCoverLetters, type LinkedCoverLetter } from "./linked-cover-letters";
 import { recommendedPaper, type TargetMarket } from "@/lib/career-localization/markets";
 import { CareerMarketPanel } from "./career-market-panel";
+import { StudioTemplatePicker } from "./studio-template-picker";
+import { StudioConversation } from "./studio-conversation";
+import {
+  StudioAIModes,
+  StudioSelectedEdit,
+  scopedEditInstruction,
+  useDocumentTextSelection,
+  type StudioAIMode,
+} from "./studio-ai-modes";
 import "./resume-editor.css";
 
 type History = { current: EditorResume | null; past: EditorResume[]; future: EditorResume[] };
-type Action = "GENERATE" | "IMPROVE" | "SHORTEN" | "PROFESSIONAL" | "GRAMMAR" | "ATS";
 type ChatMessage = { role: "user" | "assistant"; content: string; changes?: string[] };
 type PendingResumeAI = { proposalId: string; baseRevision: number; expiresAt: string; preview: EditorResume;
   diff: { field: string; before: string; after: string }[]; changes: string[] };
@@ -48,12 +54,15 @@ export function ResumeEditor() {
   const [selected, setSelected] = useState("summary.0"), [pages, setPages] = useState<ResumePage[]>([]);
   const [zoom, setZoom] = useState(.85), [fit, setFit] = useState(true), [canvasHeight, setCanvasHeight] = useState(A4_HEIGHT);
   const viewport = useRef<HTMLDivElement>(null), canvas = useRef<HTMLDivElement>(null);
-  const [notes, setNotes] = useState(""), [action, setAction] = useState<Action>("GENERATE");
-  const [language, setLanguage] = useState<"fr" | "en">(i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en");
-  const [generating, setGenerating] = useState(false), [exporting, setExporting] = useState(false), [aiError, setAIError] = useState("");
+  const { selection: highlightedText, clearSelection } = useDocumentTextSelection(canvas, Boolean(resume));
+  const language = locale;
+  const [exporting, setExporting] = useState(false), [aiError, setAIError] = useState("");
   const [proposal, setProposal] = useState<{ path: string; text: string; original: string } | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]), [chatInput, setChatInput] = useState("");
   const [chatting, setChatting] = useState(false), [chatError, setChatError] = useState("");
+  const [aiMode, setAiMode] = useState<StudioAIMode>("chat");
+  const [selectionInstruction, setSelectionInstruction] = useState("");
+  const [selectionFeedback, setSelectionFeedback] = useState("");
   const [pendingAI, setPendingAI] = useState<PendingResumeAI | null>(null);
   const [reviewPreview, setReviewPreview] = useState(false);
   const [deciding, setDeciding] = useState(false);
@@ -73,7 +82,7 @@ export function ResumeEditor() {
     if (!session?.id) return;
     let active = true;
     setCoverLetters([]);
-    setHistory({ current: null, past: [], future: [] }); setError(""); setProposal(null); setPendingAI(null); setReviewPreview(false); setChatMessages([]); setChatInput(""); setChatError(""); setChatting(false);
+    setHistory({ current: null, past: [], future: [] }); setError(""); setProposal(null); setPendingAI(null); setReviewPreview(false); setChatMessages([]); setChatInput(""); setChatError(""); setChatting(false); setAiMode("chat"); setSelectionInstruction(""); setSelectionFeedback(""); clearSelection();
     fetch(`/api/cvs/${id}`, { cache: "no-store" }).then(async response => { if (!response.ok) throw Error("LOAD_FAILED"); return response.json(); }).then(data => {
       if (!active) return;
       setCoverLetters(data.coverLetters || []);
@@ -171,11 +180,15 @@ export function ResumeEditor() {
   }, [save]);
 
   const aiPath = selected.startsWith("contact.") ? "summary.0" : selected;
+  const exactSelectedText = highlightedText?.field === selected && resume && fieldValue(resume, selected).includes(highlightedText.text)
+    ? highlightedText.text
+    : null;
+  const focusedText = exactSelectedText ?? (resume ? fieldValue(resume, selected) : "");
   const selectedLabel = selected.startsWith("summary") ? c.fields.summary : c.fields[selected.split(".").at(-1)! as keyof typeof c.fields] || c.sections[selected.split(".")[0] as ResumeSection] || c.fields.summary;
   const openAI = (path: string) => {
     const section = path.split(".")[0] as ResumeSection;
     if (resume && resumeSections.includes(section) && !resume[section].length) add(section);
-    setSelected(path); setAction(resume && fieldValue(resume, path).trim() ? "IMPROVE" : "GENERATE"); setTab("ai"); setToolsOpen(true); setAIError("");
+    setSelected(path); setTab("ai"); setAiMode("selection"); setToolsOpen(true); setAIError("");
   };
   const navigateAtsIssue = (issue: AtsIssue) => {
     if (issue.design) {
@@ -200,22 +213,13 @@ export function ResumeEditor() {
       target?.scrollIntoView({ block: "center", behavior: "smooth" }); target?.focus({ preventScroll: true });
     }));
   };
-  const generate = async () => {
-    if (!resume || generating || chatLock.current !== "idle") return;
-    setGenerating(true); setAIError(""); setProposal(null);
-    const original = fieldValue(resume, aiPath);
-    try {
-      const response = await fetch("/api/resume-ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cvId: id, text: original, field: aiPath, action, notes, language, draft: resume }) });
-      const data = await response.json();
-      if (!response.ok) throw Error(data.error || "AI_FAILED");
-      setProposal({ path: aiPath, text: data.proposal, original });
-    } catch (cause) { setAIError(cause instanceof Error ? cause.message : "AI_FAILED"); }
-    finally { setGenerating(false); }
-  };
-  const sendConversation = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const instruction = chatInput.trim();
-    if (!instruction || !resume || generating || pendingAI || chatLock.current !== "idle") return;
+  const runConversation = async (
+    instruction: string,
+    origin: StudioAIMode,
+    field: string,
+    displayInstruction: string,
+  ) => {
+    if (!instruction || !resume || pendingAI || chatLock.current !== "idle") return;
     chatLock.current = "saving";
     setChatting(true); setChatError("");
     let appended = false;
@@ -227,13 +231,17 @@ export function ResumeEditor() {
       if (controller.signal.aborted || documentId.current !== id) return;
       const requestSignature = savedSignature.current;
       chatLock.current = "request";
-      setChatInput(""); setChatMessages(previous => [...previous, { role: "user", content: instruction }]); appended = true;
-      const response = await fetch(`/api/cvs/${id}/assistant`, { method: "POST", headers: { "Content-Type": "application/json" }, signal: AbortSignal.any([controller.signal, AbortSignal.timeout(60000)]), body: JSON.stringify({ instruction, language, revision: revision.current, selectedField: selected, history: chatMessages.slice(-8).map(({ role, content }) => ({ role, content })) }) });
+      if (origin === "chat") setChatInput("");
+      else { setSelectionInstruction(""); setSelectionFeedback(""); }
+      setChatMessages(previous => [...previous, { role: "user", content: displayInstruction }]);
+      appended = true;
+      const response = await fetch(`/api/cvs/${id}/assistant`, { method: "POST", headers: { "Content-Type": "application/json" }, signal: AbortSignal.any([controller.signal, AbortSignal.timeout(60000)]), body: JSON.stringify({ instruction, language, revision: revision.current, selectedField: field, ...(origin === "selection" ? { targetField: field } : {}), history: chatMessages.slice(-8).map(({ role, content }) => ({ role, content })) }) });
       const data = await response.json();
       if (controller.signal.aborted || documentId.current !== id) return;
       if (!response.ok) throw Error(data.error || "AI_FAILED");
       if (data.status === "clarification") {
         setChatMessages(previous => [...previous, { role: "assistant", content: data.message }]);
+        if (origin === "selection") setSelectionFeedback(data.message);
         return;
       }
       if (JSON.stringify(current.current) !== requestSignature) throw Error("CONFLICT");
@@ -243,17 +251,37 @@ export function ResumeEditor() {
       setPendingAI({ proposalId: data.proposalId, baseRevision: data.baseRevision, preview: suggested,
         diff: data.diff || [], expiresAt: data.expiresAt, changes: data.changes || [] });
       setReviewPreview(true);
+      if (origin === "selection") setSelectionFeedback(data.message);
       setChatMessages(previous => [...previous, { role: "assistant", content: data.message,
         changes: data.changes }]);
     } catch (cause) {
       if (controller.signal.aborted || documentId.current !== id) return;
       const code = cause instanceof Error ? cause.name === "TimeoutError" ? "AI_TIMEOUT" : cause.message : "AI_FAILED";
-      setChatError(code); if (appended) setChatMessages(previous => previous.slice(0, -1)); setChatInput(instruction);
+      setChatError(code);
+      if (appended) setChatMessages(previous => previous.slice(0, -1));
+      if (origin === "chat") setChatInput(displayInstruction);
+      else setSelectionInstruction(displayInstruction);
       if (code === "CONFLICT") { setError("CONFLICT"); setStatus("error"); }
     } finally {
       if (chatRequest.current === controller) { chatLock.current = "idle"; setChatting(false); chatRequest.current = null; }
     }
   };
+  const sendConversation = (event: React.FormEvent) => {
+    event.preventDefault();
+    void runConversation(chatInput.trim(), "chat", selected, chatInput.trim());
+  };
+  const sendSelectedEdit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const request = selectionInstruction.trim();
+    if (!request || !focusedText) return;
+    void runConversation(
+      scopedEditInstruction(selected, focusedText, request, locale === "fr"),
+      "selection",
+      selected,
+      request,
+    );
+  };
+
   const decideConversation = async (action: "accept" | "discard") => {
     const proposal = pendingAI;
     if (!proposal || deciding || chatLock.current !== "idle") return;
@@ -281,6 +309,9 @@ export function ResumeEditor() {
         ? locale === "fr" ? "Modifications acceptées et enregistrées." : "Changes approved and saved."
         : locale === "fr" ? "Proposition rejetée. Le CV reste inchangé." : "Proposal discarded. The resume was not changed." }]);
       setPendingAI(null); setReviewPreview(false);
+      setSelectionFeedback(action === "accept"
+        ? (locale === "fr" ? "Modification appliquée au CV." : "Edit applied to your resume.")
+        : (locale === "fr" ? "Proposition refusée." : "Suggestion discarded."));
     } catch (cause) {
       if (documentId.current !== id) return;
       setChatError(cause instanceof Error ? cause.message : "AI_FAILED");
@@ -355,6 +386,45 @@ export function ResumeEditor() {
   const aiMessage = aiError === "CHANGED" ? c.proposalChanged : aiError === "AI_FACTS_REQUIRED" ? c.aiFacts : ["AI_LIMIT", "AI_RATE_LIMIT"].includes(aiError) ? c.aiLimit : aiError === "AI_AUTH_ERROR" ? c.aiAuth : aiError === "AI_MODEL_UNAVAILABLE" ? c.aiModel : aiError === "AI_TIMEOUT" ? c.aiTimeout : ["AI_UNAVAILABLE", "AI_PROVIDER_UNAVAILABLE"].includes(aiError) ? c.aiUnavailable : c.aiFailed;
   const chatMessage = ["PROPOSAL_EXPIRED_OR_STALE", "PROPOSAL_DECIDED", "EVIDENCE_CHANGED"].includes(chatError) ? (locale === "fr" ? "La proposition a expiré ou son contexte a changé. Rechargez le CV et demandez une nouvelle proposition." : "The proposal expired or its context changed. Reload the resume and request a new proposal.") : chatError === "UNSUPPORTED_FACTS" ? (locale === "fr" ? "L’IA a proposé un chiffre sans source fournie. Ajoutez une preuve avant de réessayer." : "AI suggested a number without a user-provided source. Add evidence and retry.") : chatError === "CONFLICT" ? c.conflict : chatError === "SAVE_FAILED" ? c.saveError : ["AI_LIMIT", "AI_RATE_LIMIT"].includes(chatError) ? c.aiLimit : chatError === "AI_AUTH_ERROR" ? c.aiAuth : chatError === "AI_MODEL_UNAVAILABLE" ? c.aiModel : chatError === "AI_TIMEOUT" ? c.aiTimeout : ["AI_UNAVAILABLE", "AI_PROVIDER_UNAVAILABLE"].includes(chatError) ? c.aiUnavailable : chatError === "AI_INVALID_EDIT" || chatError === "AI_INVALID_RESPONSE" ? c.chatInvalid : chatError === "AI_FAILED" ? c.aiFailed : c.chatError;
 
+  const aiReview = (
+                <>
+                  {pendingAI && (
+                    <section className="studio-chat-review" aria-label={locale === "fr" ? "Proposition IA" : "AI proposal"}>
+                      <h3 className="text-xs font-semibold">{locale === "fr" ? "Modifications proposées" : "Proposed changes"}</h3>
+                      <div className="mt-3 max-h-60 space-y-2 overflow-y-auto">
+                        {pendingAI.diff.map((item, index) => (
+                          <div key={`${item.field}-${index}`} className="text-[11px]">
+                            <p className="mb-2 font-medium break-all">{item.field}</p>
+                            <div className="studio-chat-before">{item.before || "—"}</div>
+                            <div className="studio-chat-after">{item.after || "—"}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <Button type="button" size="sm" variant="outline" className="mt-3 w-full" onClick={() => setReviewPreview(value => !value)}>
+                        {reviewPreview ? (locale === "fr" ? "CV actuel" : "Current resume") : (locale === "fr" ? "Aperçu proposé" : "Suggested preview")}
+                      </Button>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <Button type="button" size="sm" disabled={deciding} onClick={() => void decideConversation("accept")}><Check className="size-3" />{locale === "fr" ? "Accepter" : "Approve"}</Button>
+                        <Button type="button" variant="outline" size="sm" disabled={deciding} onClick={() => void decideConversation("discard")}><X className="size-3" />{locale === "fr" ? "Refuser" : "Discard"}</Button>
+                      </div>
+                    </section>
+                  )}
+                  {proposal && !pendingAI && (
+                    <section className="studio-chat-review" aria-label={locale === "fr" ? "Correction ATS" : "ATS suggestion"}>
+                      <h3 className="text-xs font-semibold">{c.proposal}</h3>
+                      <p className="mt-2 text-[11px] text-muted-foreground">{proposal.path}</p>
+                      <div className="studio-chat-before mt-2">{proposal.original || "—"}</div>
+                      <div className="studio-chat-after">{proposal.text}</div>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <Button type="button" size="sm" onClick={applyProposal}><Check className="size-3" />{c.apply}</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => setProposal(null)}>{c.discard}</Button>
+                      </div>
+                    </section>
+                  )}
+                </>
+
+  );
+
   if (!resume) return <div className="border bg-card p-10 text-center"><p role={error ? "alert" : "status"} className="text-sm text-muted-foreground">{error ? c.loadError : c.loading}</p>{!error && <Loader2 className="mx-auto mt-4 size-5 animate-spin text-primary" />}<Button className="mt-6" variant="outline" asChild><Link href="/dashboard/resumes"><ArrowLeft />{c.back}</Link></Button></div>;
   return <div className="resume-studio">
     {applicationId && <div className="mb-2 text-xs"><Link className="text-primary underline" href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents`}>← Retour au dossier de candidature</Link></div>}
@@ -374,50 +444,104 @@ export function ResumeEditor() {
       <Button variant="ghost" size="sm" className="studio-mobile-tools" onClick={() => setToolsOpen(value => !value)}><LayoutTemplate className="size-4" />{c.openTools}</Button></div>
       <div className="studio-tool-group"><Button variant="ghost" size="sm" onClick={() => setPreview(value => !value)}>{preview ? c.edit : c.preview}</Button><Button variant="ghost" size="icon" aria-label={c.zoomOut} onClick={() => { setFit(false); setZoom(value => Math.max(.25, value - .1)); }}><Minus className="size-3" /></Button><button className="min-w-12 text-xs" onClick={() => setFit(true)} title={c.fit}>{Math.round(zoom * 100)}% <ChevronDown className="inline size-3" /></button><Button variant="ghost" size="icon" aria-label={c.zoomIn} onClick={() => { setFit(false); setZoom(value => Math.min(1.5, value + .1)); }}><Plus className="size-3" /></Button></div>
     </div>
-    <div className={`studio-workspace ${tab === "ats" ? "is-ats" : ""}`}>
+    <div className={`studio-workspace ${tab === "ats" ? "is-ats" : tab === "ai" ? "is-ai" : ""}`}>
       <aside className={`studio-inspector ${toolsOpen ? "is-open" : ""}`} aria-label={c.openTools}>
         <div className="studio-inspector-tabs" role="tablist">{([{ key: "design", icon: LayoutTemplate, label: c.design }, { key: "sections", icon: List, label: c.sectionsTab }, { key: "ai", icon: Sparkles, label: c.ai }, { key: "ats", icon: ScanLine, label: atsCopy.tab }] as const).map(({ key, icon: Icon, label }) => <button type="button" key={key} id={`studio-tab-${key}`} className="studio-inspector-tab" role="tab" aria-controls={`studio-panel-${key}`} aria-selected={tab === key} onClick={() => setTab(key)}><Icon className="size-4" />{label}</button>)}</div>
         <Button variant="ghost" size="icon" className="studio-mobile-tools ml-auto mr-2 mt-2" aria-label={c.close} onClick={() => setToolsOpen(false)}><X className="size-4" /></Button>
-        <div className="studio-panel" role="tabpanel" id={`studio-panel-${tab}`} aria-labelledby={`studio-tab-${tab}`}>
+        <div className={tab === "ai" ? "studio-panel studio-panel-ai" : "studio-panel"} role="tabpanel" id={`studio-panel-${tab}`} aria-labelledby={`studio-tab-${tab}`}>
           {tab === "design" && <>
-            <CareerMarketPanel country={resume.design.targetMarket} language={resume.design.documentLanguage} fr={locale === "fr"}
+            <StudioTemplatePicker
+              kind="CV"
+              fr={locale === "fr"}
+              selectedId={resume.design.templateId}
               disabled={Boolean(pendingAI)}
-              onCountry={(targetMarket: TargetMarket) => change(doc => ({ ...doc, design: { ...doc.design, targetMarket, paper: recommendedPaper(targetMarket) } }), "market")}
-              onLanguage={value => design("documentLanguage", value)} />
-            <div><span className="studio-panel-label">{c.templates}</span><div className="studio-template-grid">{(["modern", "classic", "minimal"] as const).map(layout => <button type="button" key={layout} className="studio-template" aria-pressed={resume.design.layout === layout} onClick={() => design("layout", layout)}><div className="studio-template-paper" style={{ borderTop: layout === "modern" ? `3px solid ${resume.design.accent}` : undefined }}><div style={{ height: 5, width: layout === "classic" ? "65%" : "80%", background: resume.design.accent, margin: layout === "classic" ? "0 auto 6px" : "0 0 6px" }} /><div style={{ display: "flex", gap: 4 }}>{layout === "modern" && <div style={{ width: "28%", background: "#EEF3F0", height: 53 }} />}<div style={{ flex: 1 }}>{Array.from({ length: 8 }, (_, index) => <div className="studio-template-lines" key={index} style={{ width: index % 3 === 2 ? "65%" : "100%" }} />)}</div></div></div>{c[layout]}</button>)}</div><label className="mt-4 block"><span className="studio-panel-label">Studio catalogue</span><select aria-label="Change template" className="h-9 w-full rounded-md border bg-background px-3 text-xs" value={resume.design.templateId || ""} onChange={event => { const template = templateCatalog.find(item => item.id === event.target.value); if (!template || template.type !== "CV") return; change(doc => ({ ...doc, design: { ...doc.design, templateId: template.id, templateVersion: template.version, composition: template.composition, functionalType: template.functionalType, layout: template.layout, accent: template.accent, font: template.font, paper: template.paper } }), "template"); }}><option value="">Custom layout</option>{templateCatalog.filter(item => item.type === "CV").map(template => <option key={template.id} value={template.id}>{template.name} · {template.functionalType.replaceAll("_", " ")}</option>)}</select></label><p className="mt-3 text-[10px] leading-5 text-muted-foreground">{c.templateHint}</p></div>
+              onSelect={(template) => change(doc => ({
+                ...doc,
+                design: {
+                  ...doc.design,
+                  templateId: template.id,
+                  templateVersion: template.version,
+                  composition: template.composition,
+                  functionalType: template.functionalType,
+                  sectionOrder: (
+                    template.functionalType === "STUDENT" || template.functionalType === "ACADEMIC"
+                      ? ["summary", "educations", "projects", "experiences", "skills", "certifications", "languages"]
+                      : template.functionalType === "SKILLS_BASED" || template.functionalType === "HYBRID"
+                        ? ["summary", "skills", "projects", "experiences", "educations", "certifications", "languages"]
+                        : template.functionalType === "PORTFOLIO"
+                          ? ["summary", "projects", "experiences", "skills", "educations", "certifications", "languages"]
+                          : [...resumeSections]
+                  ) as ResumeSection[],
+                  layout: template.layout,
+                  accent: template.accent,
+                  font: template.font,
+                  padding: template.layout === "modern" ? 40 : 44,
+                  paper: template.paper,
+                },
+              }), "template")}
+            />
             <div><span className="studio-panel-label">{c.accent}</span><div className="flex flex-wrap items-center gap-3">{accents.map(color => <button key={color} type="button" className="studio-swatch" style={{ background: color }} aria-label={c.accent + " " + color} aria-pressed={resume.design.accent === color} onClick={() => design("accent", color)} />)}<input type="color" value={resume.design.accent} aria-label={c.accent} className="size-7 cursor-pointer rounded border-0 bg-transparent" onChange={event => design("accent", event.target.value)} /></div></div>
             <label className="block"><span className="studio-panel-label">{c.font}</span><select className="h-9 w-full rounded-md border bg-background px-3 text-xs" value={resume.design.font} onChange={event => design("font", event.target.value as ResumeDesign["font"])}>{(["sans", "serif", "mono"] as const).map(font => <option key={font} value={font}>{c[font]}</option>)}</select></label>
             {[{ key: "fontSize", label: c.fontSize, min: 11, max: 16, step: .5 }, { key: "lineHeight", label: c.spacing, min: 1.2, max: 1.8, step: .05 }, { key: "padding", label: c.margins, min: 28, max: 64, step: 2 }].map(({ key, label, min, max, step }) => <label key={key}><span className="studio-panel-label flex justify-between">{label}<span className="font-normal text-muted-foreground">{Number(resume.design[key as "fontSize" | "lineHeight" | "padding"]).toFixed(key === "lineHeight" ? 2 : 0)}</span></span><input className="w-full accent-primary" type="range" min={min} max={max} step={step} aria-label={label} value={resume.design[key as "fontSize" | "lineHeight" | "padding"]} onChange={event => design(key as "fontSize" | "lineHeight" | "padding", Number(event.target.value))} /></label>)}
-            <div className="studio-ai-banner"><Sparkles className="mb-2 size-5 text-primary" /><p className="text-xs font-semibold">{c.aiTitle}</p><p className="mt-2 text-[11px] leading-5 text-muted-foreground">{c.aiHint}</p><Button size="sm" className="mt-4 w-full text-xs" onClick={() => openAI("summary.0")}><Sparkles className="size-3" />{c.addSummary}</Button></div>
+            <CareerMarketPanel
+              country={resume.design.targetMarket}
+              language={resume.design.documentLanguage}
+              fr={locale === "fr"}
+              disabled={Boolean(pendingAI)}
+              onCountry={(targetMarket: TargetMarket) => change(doc => ({
+                ...doc,
+                design: {
+                  ...doc.design,
+                  targetMarket,
+                  paper: recommendedPaper(targetMarket),
+                },
+              }), "market")}
+              onLanguage={value => design("documentLanguage", value)}
+            />
+            <Button type="button" size="sm" className="w-full" onClick={() => openAI("summary.0")}>
+              <Sparkles className="size-3.5" />{c.ai}
+            </Button>
           </>}
           {tab === "sections" && <><div><h2 className="text-sm font-semibold">{c.structure}</h2><p className="mt-2 text-[11px] leading-5 text-muted-foreground">{c.structureHint}</p></div><div>{[...new Set([...resume.design.sectionOrder, ...resumeSections])].map((section, index) => <div key={section} className="studio-section-row"><GripVertical className="size-3 shrink-0 text-muted-foreground" /><input type="checkbox" className="size-3 accent-primary" aria-label={c.visible + " " + c.sections[section]} checked={!resume.design.hiddenSections.includes(section)} onChange={event => design("hiddenSections", event.target.checked ? resume.design.hiddenSections.filter(key => key !== section) : [...resume.design.hiddenSections, section])} /><span className="flex-1 text-xs">{c.sections[section]}</span><button type="button" className="p-1" title={c.add} aria-label={c.add + " " + c.sections[section]} onClick={() => add(section)}><Plus className="size-3" /></button><button type="button" className="p-1 disabled:opacity-30" disabled={index === 0} aria-label={c.moveUp + " " + c.sections[section]} onClick={() => change(doc => ({ ...doc, design: moveResumeSection(doc.design, section, index - 1) }))}><ArrowUp className="size-3" /></button><button type="button" className="p-1 disabled:opacity-30" disabled={index === 6} aria-label={c.moveDown + " " + c.sections[section]} onClick={() => change(doc => ({ ...doc, design: moveResumeSection(doc.design, section, index + 1) }))}><ArrowDown className="size-3" /></button></div>)}</div></>}
-          {tab === "ai" && <>
-            <div><Sparkles className="mb-3 size-5 text-primary" /><h2 className="text-sm font-semibold">{c.aiTitle}</h2><p className="mt-2 text-[11px] leading-5 text-muted-foreground">{c.aiHint}</p></div>
-            <div className="space-y-3 rounded-md border bg-muted/30 p-3" aria-busy={chatting}>
-              <div><p className="text-xs font-semibold">{c.chatTitle}</p><p className="mt-1 text-[11px] leading-5 text-muted-foreground">{c.chatHint}</p></div>
-              {chatMessages.length > 0 && <div className="max-h-64 space-y-2 overflow-y-auto pr-1" aria-live="polite">{chatMessages.map((message, index) => <div key={index} className={message.role === "user" ? "rounded-md bg-primary p-2 text-[11px] leading-5 text-primary-foreground" : "rounded-md border bg-background p-2 text-[11px] leading-5"}><p className="whitespace-pre-wrap">{message.content}</p>{message.changes?.length ? <ul className="mt-2 list-disc space-y-1 pl-4 text-[10px] text-muted-foreground">{message.changes.map(change => <li key={change}>{change}</li>)}</ul> : null}</div>)}</div>}
-              {!chatMessages.length && <div className="flex flex-wrap gap-1.5">{c.chatSuggestions.map(suggestion => <Button key={suggestion} type="button" variant="outline" size="sm" className="h-auto whitespace-normal px-2 py-1 text-left text-[10px]" onClick={() => setChatInput(suggestion)}>{suggestion}</Button>)}</div>}
-              {pendingAI && <section className="space-y-3 rounded-lg border border-primary/30 bg-background p-3" aria-label={locale === "fr" ? "Révision de la proposition IA" : "AI proposal review"}>
-                <div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold">{locale === "fr" ? "Modifications proposées — aucune modification enregistrée" : "Proposed changes — nothing saved yet"}</p><span className="text-[10px] text-muted-foreground">{locale === "fr" ? "Valable 15 min" : "Valid 15 min"}</span></div>
-                <p className="text-[11px] leading-5 text-muted-foreground">{locale === "fr" ? "Vérifiez les faits et les chiffres. Les données du profil sont déclaratives et ne sont pas vérifiées indépendamment." : "Review facts and numbers. Career profile facts are self-reported, not independently verified."}</p>
-                <div className="max-h-72 space-y-2 overflow-y-auto">{pendingAI.diff.map((item, index) => <div key={item.field + index} className="rounded border p-2 text-[11px]">
-                  <p className="mb-2 font-semibold break-all">{item.field}</p>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2"><div><p className="text-[10px] font-semibold text-muted-foreground">{locale === "fr" ? "Avant" : "Before"}</p><p className="max-h-32 overflow-y-auto whitespace-pre-wrap break-words">{item.before || "—"}</p></div><div><p className="text-[10px] font-semibold text-muted-foreground">{locale === "fr" ? "Après" : "After"}</p><p className="max-h-32 overflow-y-auto whitespace-pre-wrap break-words">{item.after || "—"}</p></div></div>
-                </div>)}</div>
-                <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setReviewPreview(value => !value)}>{reviewPreview ? locale === "fr" ? "Voir mon CV actuel" : "Show current resume" : locale === "fr" ? "Aperçu visuel proposé" : "Preview suggested resume"}</Button>
-                <div className="grid grid-cols-2 gap-2"><Button type="button" size="sm" disabled={deciding} onClick={() => void decideConversation("accept")}><Check className="size-3" />{locale === "fr" ? "Accepter" : "Approve"}</Button><Button type="button" variant="outline" size="sm" disabled={deciding} onClick={() => void decideConversation("discard")}><X className="size-3" />{locale === "fr" ? "Rejeter" : "Discard"}</Button></div>
-              </section>}
-              <form className="space-y-2" onSubmit={sendConversation}><Textarea aria-label={c.chatInput} rows={4} maxLength={4000} value={chatInput} disabled={chatting || Boolean(pendingAI)} onChange={event => setChatInput(event.target.value)} placeholder={c.chatPlaceholder} className="text-xs leading-5" /><Button type="submit" size="sm" className="w-full text-xs" disabled={chatting || Boolean(pendingAI) || !chatInput.trim()}>{chatting ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}{chatting ? c.chatWorking : c.chatSend}</Button></form>
-              {chatError && <p role="alert" className="text-[11px] leading-5 text-destructive">{chatMessage}</p>}
-            </div>
-            <div className="rounded-md border bg-muted/40 p-3"><p className="text-[9px] uppercase tracking-wider text-muted-foreground">{c.selected}</p><p className="mt-1 text-xs font-medium">{selectedLabel}</p><p className="mt-2 line-clamp-4 whitespace-pre-wrap text-[11px] leading-5 text-muted-foreground">{fieldValue(resume, aiPath) || c.selectionHelp}</p></div>
-            <label><span className="studio-panel-label">{c.notes}</span><Textarea rows={5} maxLength={8000} value={notes} onChange={event => setNotes(event.target.value)} placeholder={c.notesPlaceholder} className="text-xs leading-6" /><p className="mt-2 text-[10px] leading-5 text-muted-foreground">{c.notesHint}</p></label>
-            <label><span className="studio-panel-label">{c.action}</span><select className="h-9 w-full rounded-md border bg-background px-3 text-xs" value={action} onChange={event => setAction(event.target.value as Action)}>{(["GENERATE", "IMPROVE", "SHORTEN", "PROFESSIONAL", "GRAMMAR", "ATS"] as const).map(value => <option key={value} value={value}>{c[value]}</option>)}</select></label>
-            <label><span className="studio-panel-label">{c.language}</span><select className="h-9 w-full rounded-md border bg-background px-3 text-xs" value={language} onChange={event => setLanguage(event.target.value as "fr" | "en")}><option value="fr">Français</option><option value="en">English</option></select></label>
-            <Button disabled={generating} onClick={() => void generate()}>{generating ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}{generating ? c.generating : c.generate}</Button>
-            {aiError && <p role="alert" className="text-xs leading-5 text-destructive">{aiMessage}</p>}
-            {proposal && <div className="space-y-3"><p className="text-xs font-semibold">{c.proposal}</p><Textarea aria-label={c.proposal} rows={8} value={proposal.text} onChange={event => setProposal({ ...proposal, text: event.target.value })} className="studio-ai-proposal" /><p className="text-[10px] leading-5 text-muted-foreground">{c.reviewHint}</p><Button className="w-full text-xs" onClick={applyProposal}><Check className="size-3" />{c.apply}</Button><Button variant="ghost" className="w-full text-xs" onClick={() => setProposal(null)}>{c.discard}</Button></div>}
-          </>}
+          {tab === "ai" && (
+            <StudioAIModes
+              mode={aiMode}
+              onModeChange={setAiMode}
+              fr={locale === "fr"}
+              chat={
+                <StudioConversation
+              messages={chatMessages}
+              value={chatInput}
+              onChange={setChatInput}
+              onSubmit={sendConversation}
+              busy={chatting}
+              disabled={Boolean(pendingAI || proposal) || deciding}
+              fr={locale === "fr"}
+              error={chatError ? chatMessage : aiError ? aiMessage : undefined}
+              suggestions={c.chatSuggestions.slice(0, 3).map(suggestion => ({
+                label: suggestion,
+                prompt: suggestion,
+              }))}
+              review={aiReview}
+            />
+              }
+              selection={
+                <StudioSelectedEdit
+                  fr={locale === "fr"}
+                  fieldLabel={selectedLabel}
+                  text={focusedText}
+                  exactSelection={Boolean(exactSelectedText)}
+                  value={selectionInstruction}
+                  onChange={setSelectionInstruction}
+                  onSubmit={sendSelectedEdit}
+                  busy={chatting}
+                  disabled={Boolean(pendingAI || proposal) || deciding}
+                  feedback={selectionFeedback || (chatError ? chatMessage : undefined)}
+                  review={aiReview}
+                />
+              }
+            />
+          )}
           <div hidden={tab !== "ats"}><ResumeAtsPanel key={id} cvId={id} resume={resume} pages={pages} language={locale} active={tab === "ats"} onNavigate={navigateAtsIssue} onProposal={reviewAtsProposal} /></div>
         </div>
       </aside>

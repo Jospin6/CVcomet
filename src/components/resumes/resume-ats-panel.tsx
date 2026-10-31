@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertCircle, ArrowUpRight, Check, FileSearch, Loader2, RefreshCw, ScanLine } from "lucide-react";
+import { ArrowUpRight, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { AtsAnalysis, AtsCheck, AtsIssue } from "@/lib/career/ats-types";
@@ -92,41 +92,197 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
   const issues = analysis ? [...analysis.issues].sort((a, b) => priority[a.severity] - priority[b.severity]) : [];
   const reviewMessage = analysis?.review.error === "AI_LIMIT" || analysis?.review.error === "AI_RATE_LIMIT" ? c.aiLimit : analysis?.review.error === "AI_UNAVAILABLE" || analysis?.review.error === "AI_PROVIDER_UNAVAILABLE" ? c.aiUnavailable : c.reviewUnavailable;
   const errorMessage = error === "AUTH" ? c.authError : error === "JOB_NOT_FOUND" ? c.jobNotFound : error === "TOO_LARGE" ? c.fileTooLarge : ["ATS_PDF_UNREADABLE", "INVALID_FILE", "PDF_FAILED"].includes(error) ? c.pdfError : c.error;
-  const label = (key: string) => c[key as keyof typeof c] ?? key;
 
-  return <div className="studio-ats-panel" aria-busy={busy}>
-    <div><ScanLine className="mb-3 size-5 text-primary" /><h2 className="text-sm font-semibold">{c.heading}</h2><p className="mt-2 text-xs leading-5 text-muted-foreground">{c.intro}</p></div>
-    <ResumeAtsJobPicker active={active} language={language} selected={targetJob} onSelect={chooseJob} />
-    {sourceStatus === "PENDING" && <p role="status" className="text-[11px] text-muted-foreground">{c.loadingSourceJob}</p>}
-    {sourceStatus === "FAILED" && <div className="text-[11px] leading-5 text-muted-foreground"><p role="status">{c.sourceJobError}</p><Button variant="ghost" size="sm" className="mt-1 text-[11px]" onClick={() => void loadSourceJob()}>{c.retrySourceJob}</Button></div>}
-    {sourceJob && targetJob?.id === sourceJob.id && <p className="text-[11px] leading-5 text-primary">{c.sourceJobSelected}</p>}
-    {analysis && <>
-      <p role="status" className={`studio-ats-freshness ${stale ? "is-stale" : ""}`}>{stale ? <AlertCircle className="size-4 shrink-0" /> : <Check className="size-4 shrink-0" />}{stale ? c.stale : c.current}</p>
-      {analysis.targetJob && <p className="studio-ats-target break-words text-[11px] leading-5"><span className="text-muted-foreground">{c.assessedJob} : </span><strong>{savedJobLabel(analysis.targetJob, language)}</strong></p>}
-      <div className="studio-ats-scores">{[{ key: "content", title: c.content, score: analysis.content.score, status: analysis.content.score === null ? c.partial : "" }, { key: "technical", title: c.technical, score: analysis.technical.score, status: analysis.technical.status === "NOT_PROVIDED" ? c.pending : c.verifiedPdf }, { key: "job", title: c.job, score: analysis.jobMatch.score, status: analysis.jobMatch.status === "NOT_PROVIDED" ? c.jobMissing : analysis.jobMatch.score === null ? c.pending : "" }].map(item => <div key={item.key} className="studio-ats-score" data-ats-score={item.key}><span className="text-[11px] font-medium">{item.title}</span><p className="mt-2 text-2xl font-semibold tracking-tight">{item.score ?? "—"}<span className="ml-1 text-xs font-normal text-muted-foreground">{item.score === null ? "" : "/100"}</span></p>{item.status && <p className="mt-1 text-[10px] text-muted-foreground">{item.status}</p>}</div>)}</div>
-      <p className="text-[10px] leading-5 text-muted-foreground">{c.noOverall}</p>
-      {analysis.review.status !== "COMPLETE" && <p role="status" className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-[11px] leading-5">{reviewMessage}<span className="mt-1 block">{c.coverage} : {analysis.content.assessedWeight}/{analysis.content.totalWeight}</span></p>}
-      {analysis.jobMatch.status === "UNAVAILABLE" && <p role="status" className="text-[11px] leading-5 text-muted-foreground">{c.jobUnavailable}</p>}
-      {analysis.jobMatch.status === "COMPLETE" && analysis.jobMatch.score === null && <p className="text-[11px] leading-5 text-muted-foreground">{c.unknownJob}{analysis.jobMatch.range && <span className="mt-1 block">{c.jobRange} : {analysis.jobMatch.range.min}–{analysis.jobMatch.range.max}/100 · {c.jobCoverage} : {analysis.jobMatch.coverage}%</span>}</p>}
-    </>}
-    <Button className="w-full text-xs" onClick={() => void run()} disabled={busy || invalidKeywords || sourceStatus === "PENDING" && !selectionChanged.current}>{busy ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}{busy ? c[phase] : result ? c.refresh : c.run}</Button>
-    {error && <p role="alert" className="text-xs leading-5 text-destructive">{errorMessage}</p>}
-    {busy && <p role="status" className="text-xs text-muted-foreground">{c[phase]}</p>}
-    <details className="studio-ats-source"><summary className="cursor-pointer text-xs font-medium">{c.source}</summary><p className="mt-3 text-[11px] font-medium">{file?.name ?? c.sourceCurrent}</p><p className="mt-2 text-[10px] leading-5 text-muted-foreground">{c.sourceHint}</p><label className="mt-3 block text-[11px]">{c.upload}<input type="file" accept=".pdf,application/pdf" className="mt-2 block w-full text-[10px]" onChange={event => { const selected = event.target.files?.[0]; if (!selected) return; if (selected.size > 5 * 1024 * 1024) { setError("TOO_LARGE"); return; } setFile(selected); setError(""); pdfCache.current = null; }} /></label>{file && <Button size="sm" variant="outline" className="mt-2 w-full text-[11px]" onClick={() => { setFile(null); pdfCache.current = null; }}>{c.resetSource}</Button>}</details>
-    <details className="studio-ats-keywords"><summary className="cursor-pointer text-xs font-medium">{c.keywords}{terms.length > 0 ? ` (${terms.length})` : ""}</summary><label className="mt-3 block"><span className="sr-only">{c.keywords}</span><Textarea rows={3} maxLength={6500} value={keywords} placeholder={c.placeholder} aria-invalid={invalidKeywords} onChange={event => setKeywords(event.target.value)} className="text-xs" /><span className="mt-2 block text-[10px] leading-5 text-muted-foreground">{c.keywordHint}</span></label>{analysis?.keywords.status === "CHECKED" && <p className="mt-2 text-[11px] leading-5">{c.matched} : {analysis.keywords.matched.join(", ") || "—"}<br />{c.missing} : {analysis.keywords.missing.join(", ") || "—"}</p>}</details>
-    {invalidKeywords && <p role="alert" className="text-xs text-destructive">{c.keywordError}</p>}
-    {analysis && <>
-      <section aria-label={c.recommendations}><h3 className="studio-panel-label">{c.recommendations} <span className="text-muted-foreground">({issues.length})</span></h3><div className="space-y-3">{issues.map(issue => <article className="studio-ats-issue" key={issue.id}>
-        <div className="flex flex-wrap gap-2"><span className={`studio-ats-severity is-${issue.severity}`}>{c[issue.severity]}</span><span className="text-[9px] text-muted-foreground">{c[issue.category]}</span></div><h4 className="mt-2 text-xs font-semibold">{issue.title}</h4><p className="mt-2 text-[11px] leading-5 text-muted-foreground">{issue.reason}</p><p className="mt-2 text-[11px] leading-5">{issue.suggestion}</p>
-        {issue.evidence.length > 0 && <details className="mt-3"><summary className="cursor-pointer text-[10px] text-primary">{c.evidence}</summary>{issue.evidence.map((source, index) => <blockquote className="studio-ats-evidence" key={index}>{source.quote}</blockquote>)}</details>}
-        {(issue.field || issue.design) && <Button variant="outline" size="sm" className="mt-3 w-full text-[11px]" disabled={stale || busy} onClick={() => onNavigate(issue)}>{issue.design ? c.design : c.edit}<ArrowUpRight className="size-3" /></Button>}
-        {issue.proposedText && <Button size="sm" variant="secondary" className="mt-2 w-full text-[11px]" disabled={stale || busy} onClick={() => onProposal(issue)}>{c.reviewProposal}<ArrowUpRight className="size-3" /></Button>}
-      </article>)}{!issues.length && <p className="text-xs leading-5 text-primary">{c.empty}</p>}</div></section>
-      <details><summary className="cursor-pointer text-xs font-medium">{c.rubric}</summary><p className="mt-3 text-[10px] leading-5 text-muted-foreground">{c.scoreMeaning}</p>{analysis.content.limits.map((limit, index) => <p className="mt-2 text-[11px] leading-5" key={index}>{c.scoreLimit} : {limit.max}/100. {limit.reason}</p>)}<CheckList checks={analysis.content.checks} /></details>
-      <details><summary className="cursor-pointer text-xs font-medium">{c.pdfChecks}</summary>{analysis.technical.status === "VERIFIED" ? <><p className="mt-3 text-[11px]">{analysis.technical.pages} {c.pages} · {Math.ceil(analysis.technical.bytes / 1024)} Ko<br />{c.recovery} : {analysis.technical.recovery ?? "—"}%</p><CheckList checks={analysis.technical.checks} /></> : <p className="mt-3 text-[11px] leading-5 text-muted-foreground">{c.noPdf}</p>}</details>
-      {analysis.technical.status === "VERIFIED" && <details><summary className="cursor-pointer text-xs font-medium"><FileSearch className="mr-1 inline size-3" />{c.extracted}</summary><pre className="studio-ats-extracted">{analysis.technical.text}</pre></details>}
-      {analysis.jobMatch.requirements.length > 0 && <details><summary className="cursor-pointer text-xs font-medium">{c.jobCriteria} ({analysis.jobMatch.requirements.length})</summary><div className="mt-3 space-y-4">{analysis.jobMatch.requirements.map((requirement, index) => <div key={index}><p className="text-xs font-medium">{requirement.title}</p><p className="mt-1 text-[10px] text-muted-foreground">{label(requirement.priority)} · {label(requirement.status)}</p><blockquote className="studio-ats-evidence">{requirement.evidence}</blockquote></div>)}</div></details>}
-      {analysis.strengths.length > 0 && <details><summary className="cursor-pointer text-xs font-medium">{c.strengths}</summary><ul className="mt-3 space-y-3">{analysis.strengths.map(strength => <li className="flex gap-2 text-[11px] leading-5" key={strength}><Check className="mt-0.5 size-3 shrink-0 text-primary" />{strength}</li>)}</ul></details>}
-    </>}
-  </div>;
+  return (
+    <div className="studio-ats-panel" aria-busy={busy}>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold">{c.heading}</h2>
+        {analysis && (
+          <span
+            role="status"
+            className={`text-[10px] ${stale ? "text-amber-600" : "text-primary"}`}
+          >
+            {stale ? c.stale : c.current}
+          </span>
+        )}
+      </div>
+
+      <ResumeAtsJobPicker
+        active={active}
+        language={language}
+        selected={targetJob}
+        onSelect={chooseJob}
+      />
+      {sourceStatus === "PENDING" && (
+        <p role="status" className="text-xs text-muted-foreground">{c.loadingSourceJob}</p>
+      )}
+      {sourceStatus === "FAILED" && (
+        <Button size="sm" variant="ghost" onClick={() => void loadSourceJob()}>
+          {c.retrySourceJob}
+        </Button>
+      )}
+
+      {analysis && (
+        <section className="space-y-4" aria-label={c.content}>
+          <div className="studio-ats-visual-scores">
+            {[
+              { key: "content", title: c.content, score: analysis.content.score },
+              { key: "technical", title: c.technical, score: analysis.technical.score },
+              { key: "job", title: c.job, score: analysis.jobMatch.score },
+            ].map((item) => (
+              <div className="studio-ats-metric" key={item.key} data-ats-score={item.key}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-medium">{item.title}</span>
+                  <strong className="text-xs tabular-nums">
+                    {item.score === null ? "—" : `${item.score}/100`}
+                  </strong>
+                </div>
+                <div
+                  className="studio-ats-meter"
+                  role="progressbar"
+                  aria-label={item.title}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={item.score === null ? undefined : item.score}
+                  aria-valuetext={item.score === null ? c.pending : undefined}
+                >
+                  <div style={{ width: `${Math.max(0, Math.min(100, item.score ?? 0))}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-md bg-muted/40 p-2">
+              <strong className="block text-lg tabular-nums">{issues.filter((i) => i.severity === "critical").length}</strong>
+              <span className="text-[10px] text-muted-foreground">{c.critical}</span>
+            </div>
+            <div className="rounded-md bg-muted/40 p-2">
+              <strong className="block text-lg tabular-nums">{issues.filter((i) => i.severity === "warning").length}</strong>
+              <span className="text-[10px] text-muted-foreground">{c.warning}</span>
+            </div>
+            <div className="rounded-md bg-muted/40 p-2">
+              <strong className="block text-lg tabular-nums">{issues.filter((i) => i.severity === "info").length}</strong>
+              <span className="text-[10px] text-muted-foreground">{c.info}</span>
+            </div>
+          </div>
+          {analysis.review.status !== "COMPLETE" && (
+            <p className="text-[11px] leading-5 text-muted-foreground" role="status">
+              {reviewMessage}
+            </p>
+          )}
+          {analysis.jobMatch.status === "UNAVAILABLE" && (
+            <p className="text-[11px] text-muted-foreground">{c.jobUnavailable}</p>
+          )}
+        </section>
+      )}
+
+      <Button
+        className="w-full text-xs"
+        onClick={() => void run()}
+        disabled={busy || invalidKeywords || (sourceStatus === "PENDING" && !selectionChanged.current)}
+      >
+        {busy ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+        {busy ? c[phase] : result ? c.refresh : c.run}
+      </Button>
+      {error && <p role="alert" className="text-xs text-destructive">{errorMessage}</p>}
+
+      {analysis && (
+        <section aria-label={c.recommendations} className="space-y-2">
+          <h3 className="text-xs font-semibold">{c.recommendations}</h3>
+          {issues.length === 0 && <p className="text-xs text-primary">{c.empty}</p>}
+          {issues.slice(0, 3).map((issue) => (
+            <article className="studio-ats-priority" key={issue.id}>
+              <span className={`studio-ats-severity is-${issue.severity}`}>{c[issue.severity]}</span>
+              <p className="mt-1 text-xs font-medium">{issue.title}</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{issue.suggestion}</p>
+              {(issue.reason || issue.evidence.length > 0) && (
+                <details className="mt-2 text-[11px]">
+                  <summary className="cursor-pointer text-primary">{language === "fr" ? "Pourquoi ?" : "Why?"}</summary>
+                  <p className="mt-2 text-muted-foreground">{issue.reason}</p>
+                  {issue.evidence.slice(0, 2).map((source, index) => (
+                    <blockquote key={`${index}-${source.field}`} className="studio-ats-evidence">
+                      {source.quote}
+                    </blockquote>
+                  ))}
+                </details>
+              )}
+              {(issue.field || issue.design) && (
+                <Button size="sm" variant="ghost" className="mt-1 h-7 px-1 text-[11px]" disabled={stale || busy} onClick={() => onNavigate(issue)}>
+                  {issue.design ? c.design : c.edit} <ArrowUpRight className="size-3" />
+                </Button>
+              )}
+              {issue.proposedText && (
+                <Button size="sm" variant="ghost" className="mt-1 h-7 px-1 text-[11px]" disabled={stale || busy} onClick={() => onProposal(issue)}>
+                  {c.reviewProposal} <ArrowUpRight className="size-3" />
+                </Button>
+              )}
+            </article>
+          ))}
+          {issues.length > 3 && (
+            <details className="studio-ats-details">
+              <summary>{language === "fr" ? "Toutes les recommandations" : "All recommendations"} ({issues.length})</summary>
+              <div className="mt-3 space-y-3">
+                {issues.slice(3).map((issue) => (
+                  <article className="space-y-2" key={issue.id}>
+                    <span className={`studio-ats-severity is-${issue.severity}`}>{c[issue.severity]}</span>
+                    <p className="text-xs font-medium">{issue.title}</p>
+                    <p className="text-[11px] text-muted-foreground">{issue.suggestion}</p>
+                    {(issue.field || issue.design) && (
+                      <Button size="sm" variant="outline" disabled={stale || busy} onClick={() => onNavigate(issue)}>{c.edit}</Button>
+                    )}
+                    {issue.proposedText && (
+                      <Button size="sm" variant="ghost" disabled={stale || busy} onClick={() => onProposal(issue)}>{c.reviewProposal}</Button>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </details>
+          )}
+        </section>
+      )}
+
+      <details className="studio-ats-details">
+        <summary>{language === "fr" ? "Options d'analyse" : "Analysis options"}</summary>
+        <div className="mt-3 space-y-4">
+          <label className="block text-[11px]">
+            {c.upload}
+            <input
+              type="file"
+              accept=".pdf,application/pdf"
+              className="mt-2 block w-full text-[10px]"
+              onChange={(event) => {
+                const selected = event.target.files?.[0];
+                if (!selected) return;
+                if (selected.size > 5 * 1024 * 1024) { setError("TOO_LARGE"); return; }
+                setFile(selected); setError(""); pdfCache.current = null;
+              }}
+            />
+          </label>
+          <p className="text-[10px] text-muted-foreground">{file?.name ?? c.sourceCurrent}</p>
+          {file && <Button size="sm" variant="ghost" onClick={() => { setFile(null); pdfCache.current = null; }}>{c.resetSource}</Button>}
+          <label className="block text-[11px]">
+            {c.keywords}
+            <Textarea rows={2} maxLength={6500} value={keywords} placeholder={c.placeholder} aria-invalid={invalidKeywords} onChange={(event) => setKeywords(event.target.value)} className="mt-2 text-xs" />
+          </label>
+          {invalidKeywords && <p role="alert" className="text-xs text-destructive">{c.keywordError}</p>}
+        </div>
+      </details>
+      {analysis && (
+        <details className="studio-ats-details">
+          <summary>{language === "fr" ? "Détails de l'évaluation" : "Assessment details"}</summary>
+          <div className="mt-3 space-y-4">
+            <p className="text-[10px] text-muted-foreground">{c.noOverall}</p>
+            <CheckList checks={analysis.content.checks} />
+            {analysis.technical.status === "VERIFIED" && <CheckList checks={analysis.technical.checks} />}
+            {analysis.jobMatch.requirements.map((requirement, index) => (
+              <div key={index} className="text-[11px]">
+                <p className="font-medium">{requirement.title}</p>
+                <p className="text-muted-foreground">{requirement.status}</p>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+    </div>
+  );
 }

@@ -5,6 +5,11 @@ import { getSessionUser } from "@/lib/auth";
 import { reserveProfileAI } from "@/lib/career-profile/ai";
 import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
 import { normalizeEditorResume } from "@/lib/resume-editor";
+import {
+  applyResumeConversationEdits,
+  resumeConversationChanges,
+  resumeConversationFields,
+} from "@/lib/resume-conversation";
 import { generateResumeConversation } from "@/lib/resume-conversation-ai";
 import { proposeResumeAI } from "@/lib/resume-ai/proposal-service";
 import { assertTrustedWriteOrigin } from "@/lib/security/request-origin";
@@ -15,6 +20,7 @@ const inputSchema = z.object({
   language: z.enum(["fr", "en"]),
   revision: z.number().int().nonnegative(),
   selectedField: z.string().max(100).optional(),
+  targetField: z.string().min(1).max(100).optional(),
   history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) }).strict()).max(8).optional(),
 }).strict();
 
@@ -39,6 +45,9 @@ export async function POST(req: Request, { params }: Context) {
         include: { job: { select: { title: true, description: true, requiredSkills: true, preferredSkills: true } } } }),
     ]);
     const document = normalizeEditorResume(cv);
+    if (input.targetField && !resumeConversationFields(document).includes(input.targetField)) {
+      throw new ProfileError(400, "INVALID_FIELD");
+    }
     await reserveProfileAI(user.id, "RESUME_EDIT");
     const { object, document: edited } = await generateResumeConversation({
       ...input, document, profileFacts: profileEvidence,
@@ -46,9 +55,45 @@ export async function POST(req: Request, { params }: Context) {
     });
     if (object.status === "clarification") return NextResponse.json({ ...object, preview: null, revision: cv.revision }, { headers: { "Cache-Control": "no-store" } });
     if (!edited) throw new ProfileError(502, "AI_INVALID_RESPONSE");
-    const proposal = await proposeResumeAI({ userId: user.id, cvId: id, revision: input.revision, current: document, edited,
-      edits: object.edits, message: object.message, summary: object.summary, evidence: profileEvidence, instruction: input.instruction });
-    return NextResponse.json({ status: "proposal", message: object.message, changes: object.summary, ...proposal,
-      evidenceDisclosure: "self-reported-career-profile" }, { headers: { "Cache-Control": "no-store" } });
+
+    // Apply only the user's selected field in focused mode, never unrelated edits.
+    const focusedEdits = input.targetField
+      ? object.edits.filter(edit => edit.type === "setField" && edit.path === input.targetField)
+      : object.edits;
+    if (input.targetField && !focusedEdits.length) {
+      return NextResponse.json({
+        status: "clarification",
+        message: input.language === "fr"
+          ? "Impossible de proposer une modification ciblée sûre. Précisez votre demande."
+          : "No safe targeted edit could be proposed. Please clarify your request.",
+        preview: null,
+        revision: cv.revision,
+      }, { headers: { "Cache-Control": "no-store" } });
+    }
+    const finalDocument = input.targetField
+      ? applyResumeConversationEdits(document, focusedEdits)
+      : edited;
+    const changes = input.targetField
+      ? resumeConversationChanges(focusedEdits)
+      : object.summary;
+    const proposal = await proposeResumeAI({
+      userId: user.id,
+      cvId: id,
+      revision: input.revision,
+      current: document,
+      edited: finalDocument,
+      edits: focusedEdits,
+      message: object.message,
+      summary: changes,
+      evidence: profileEvidence,
+      instruction: input.instruction,
+    });
+    return NextResponse.json({
+      status: "proposal",
+      message: object.message,
+      changes,
+      ...proposal,
+      evidenceDisclosure: "self-reported-career-profile",
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return profileErrorResponse(error); }
 }

@@ -16,6 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [commandsOpen, setCommandsOpen] = useState(false);
   const authPage = pathname === "/login" || pathname === "/signup";
+  const assistantPage = pathname === "/dashboard/assistant";
   useEffect(() => {
     document.documentElement.lang = i18n.resolvedLanguage?.startsWith("fr")
       ? "fr"
@@ -68,16 +69,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           }
         >
           <AppSidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <AppHeader />
+          <div className={assistantPage
+            ? "flex h-svh min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+            : "flex min-w-0 flex-1 flex-col"
+          }>
+            <div className={assistantPage ? "[&_.app-header]:!border-b-0" : ""}>
+              <AppHeader />
+            </div>
             <main
               id="main-content"
               tabIndex={-1}
-              className="app-content flex-1"
+              className={assistantPage
+                ? "flex min-h-0 min-w-0 flex-1 overflow-hidden"
+                : "app-content flex-1"
+              }
             >
               {children}
             </main>
-            <footer className="mx-4 flex flex-wrap items-center justify-between gap-2 border-t py-5 text-[11px] text-muted-foreground sm:mx-7 lg:mx-10">
+            {!assistantPage && <footer className="mx-4 flex flex-wrap items-center justify-between gap-2 border-t py-5 text-[11px] text-muted-foreground sm:mx-7 lg:mx-10">
               <span>
                 CVcomet <span className="px-2">/</span>
                 {t("shell.footer")}
@@ -85,7 +94,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link href="/help" className="hover:text-primary">
                 {t("shell.help")}
               </Link>
-            </footer>
+            </footer>}
           </div>
         </SidebarProvider>
       )}

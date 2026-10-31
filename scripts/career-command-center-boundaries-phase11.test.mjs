@@ -21,13 +21,15 @@ test('overview keeps real resume data, visible tools, and career actions',()=>{
   assert.doesNotMatch(command,/dashboard\/evidence/);
 });
 
-test('agent suggestions fill input only, never submit automatically',()=>{
-  assert.match(agent,/setMessage\(prompt\); questionRef\.current\?\.focus\(\)/);
-  assert.doesNotMatch(agent,/setMessage\(prompt\);\s*send\(/);
-  assert.match(agent,/read-only|Lecture seule/);
-  assert.match(agent,/messages\.length === 0/);
+test('agent has one unobstructed conversation and a persistent composer', () => {
+  assert.match(agent,/newChat\(\)/);
+  assert.match(agent,/setMessages\(\[\]\)/);
+  assert.match(agent,/scrollRef/);
+  assert.match(agent,/max-w-\[780px\]/);
+  assert.match(agent,/ref=\{promptRef\}/);
   assert.match(agent,/aria-busy=\{loading \|\| pending\}/);
-  assert.match(agent,/list_my_application_packets/);
+  assert.doesNotMatch(agent,/Conversation temporaire|Missions sauvegardées/);
+  assert.doesNotMatch(agent,/ThumbsDown|ThumbsUp/);
 });
 
 test('navigation exposes agent and keyboard command list honors focused item',()=>{

@@ -10,6 +10,7 @@ export const coverLetterContentSchema = z.object({
 }).strict();
 
 export const coverLetterDesignSchema = z.object({
+  templateId: z.string().max(160).optional(),
   accent: z.string().regex(/^#[0-9a-f]{6}$/i).default("#173F35"),
   paper: z.enum(["A4", "LETTER"]).default("A4"),
   targetMarket: z.enum(targetMarkets).default("GLOBAL"),

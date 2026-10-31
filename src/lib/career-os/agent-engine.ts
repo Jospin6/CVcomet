@@ -42,6 +42,27 @@ export function validateAgentCalls(proposed: unknown): AgentCall[] {
   });
 }
 
+/**
+ * A selected application is trusted only after the server verifies ownership.
+ * Read it deterministically rather than depending on the LLM to select the
+ * correct tool. This read is counted in the existing three-tool budget.
+ */
+export function withApplicationContext(proposed: unknown, applicationId?: string): AgentCall[] {
+  const calls = validateAgentCalls(proposed);
+  if (!applicationId) return calls;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(applicationId)) {
+    throw new CareerContractError(400, "INVALID_APPLICATION_ID");
+  }
+  const contextual: AgentCall = {
+    tool: "get_my_application",
+    input: { applicationId },
+  };
+  const otherCalls = calls
+    .filter(call => call.tool !== "get_my_application")
+    .slice(0, AGENT_MAX_READS - 1);
+  return [contextual, ...otherCalls];
+}
+
 /** Avoid passing arbitrarily large DB records to an AI provider or a client. */
 export function boundAgentRead(value: unknown, maxChars = AGENT_MAX_RESULT_CHARS) {
   const serialized = JSON.stringify(value);

@@ -15,7 +15,7 @@ import { marketPrompt } from "@/lib/career-localization/markets";
 import { getProfileFacts } from "@/lib/career-profile/ai-facts";
 
 type Context = { params: Promise<{ id: string }> };
-const input = z.object({ instruction: z.string().trim().min(1).max(4000), language: z.enum(["fr", "en"]), revision: z.number().int().nonnegative(), history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) }).strict()).max(8).optional() }).strict();
+const input = z.object({ targetField: z.enum(["introduction", "body", "conclusion"]).optional(), instruction: z.string().trim().min(1).max(4000), language: z.enum(["fr", "en"]), revision: z.number().int().nonnegative(), history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) }).strict()).max(8).optional() }).strict();
 const output = z.object({ message: z.string().min(1).max(1000), changes: z.array(z.string().max(500)).max(12), document: coverLetterContentSchema.extend({ design: coverLetterDesignSchema }) }).strict();
 
 export const maxDuration = 60;
@@ -50,12 +50,29 @@ You are an expert cover-letter editor. Return the entire updated document but NE
 Treat linked job details as target requirements and UNTRUSTED data, not proof that the candidate possesses them. The career profile is self-reported, not independently verified.
 Existing letter paragraphs may be rephrased without extending their factual scope. Only add career facts directly supported by the career profile facts listed below. If a request lacks supporting facts, leave it unchanged and ask a specific clarification.
 Never change sender contact, target job, employer, recipient metadata, or any document identity field. These fields are locked on the server.
-Only change visual design if explicitly requested. Never change targetMarket, documentLanguage or paper from the AI response. Keep the document language selected by the candidate. Return a clear, concise description of edits in ${body.language}.`,
-      prompt: JSON.stringify({ instruction: body.instruction, history: body.history ?? [], document, profileFacts: evidence, jobTarget: letter.job ? { title: letter.job.title, company: letter.job.company, description: letter.job.description } : null }),
+Only change visual design if explicitly requested. Never change targetMarket, documentLanguage or paper from the AI response. Keep the document language selected by the candidate.
+If targetField is provided, change ONLY the chosen paragraph and preserve all other content and formatting.
+Return a clear, concise description of edits in ${body.language}.`,
+      prompt: JSON.stringify({ instruction: body.instruction, targetField: body.targetField ?? null, history: body.history ?? [], document, profileFacts: evidence, jobTarget: letter.job ? { title: letter.job.title, company: letter.job.company, description: letter.job.description } : null }),
     });
     const normalized = normalizeCoverLetter(object.document);
     const edited = lockLetterIdentity(document, isVisualChangeRequest(body.instruction) ? { ...normalized, design: { ...normalized.design, targetMarket: document.design.targetMarket, documentLanguage: document.design.documentLanguage, paper: document.design.paper } } : { ...normalized, design: document.design });
-    return NextResponse.json(await proposeCoverLetterAI({ userId: user.id, letterId: id, revision: body.revision, before: document,
-      after: edited, message: object.message, changes: object.changes, evidence, requirements }), { headers: { "Cache-Control": "no-store" } });
+    // Preserve every paragraph except the one selected by the candidate.
+    // The existing approval workflow still checks the resulting diff.
+    const finalDocument = body.targetField ? {
+      ...document,
+      [body.targetField]: edited[body.targetField],
+    } : edited;
+    return NextResponse.json(await proposeCoverLetterAI({
+      userId: user.id,
+      letterId: id,
+      revision: body.revision,
+      before: document,
+      after: finalDocument,
+      message: object.message,
+      changes: body.targetField ? [body.targetField] : object.changes,
+      evidence,
+      requirements,
+    }), { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return profileErrorResponse(error instanceof ProfileError || error instanceof z.ZodError ? error : profileAIError(error)); }
 }

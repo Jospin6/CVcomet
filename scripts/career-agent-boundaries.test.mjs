@@ -39,10 +39,10 @@ test('server authority remains in existing owner-scoped read tool implementation
   assert.ok(!source.includes('rawInput.userId'));
 });
 
-test('assistant UI displays only server-approved read traces, not private tool results', () => {
+test('assistant UI shows conversation text without exposing tool results', () => {
   const source = read('src/app/dashboard/assistant/page.tsx');
-  assert.ok(source.includes('result.steps?.filter'));
-  assert.ok(source.includes('labels[s.tool]'));
+  assert.ok(source.includes('toMessages(current.runs)'));
+  assert.ok(source.includes('aria-live="polite"'));
   assert.ok(source.includes('role="status"'));
   assert.ok(!source.includes('step.result'));
 });

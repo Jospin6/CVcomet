@@ -11,7 +11,7 @@ import { executeCareerReadTool } from "./tool-registry";
 import type { CareerActor } from "./policy";
 import type { AgentHistoryMessage } from "./mission-policy";
 import {
-  AGENT_MAX_MESSAGE_CHARS, AGENT_MAX_READS, assertAgentAnswer, executeAgentReads,
+  AGENT_MAX_MESSAGE_CHARS, AGENT_MAX_READS, assertAgentAnswer, executeAgentReads, withApplicationContext,
 } from "./agent-engine";
 
 /** Structured tool selection, validated a second time by the pure executor. */
@@ -71,11 +71,11 @@ export async function runCareerAgent(actor: CareerActor, message: string, signal
     model: ai.model, schema: planSchema, maxTokens: 400, maxRetries: 0,
     abortSignal: AbortSignal.any([AbortSignal.timeout(14000), ...(signal ? [signal] : [])]),
     system: [systemPolicy,
-      "Select zero to three DISTINCT read tools for the question. Do not call tools without a clear need.",
+      "Select zero to three DISTINCT read tools for the question (only two additional tools when applicationContextId is supplied). Do not call tools without a clear need.",
       "When a resume ID is unknown, list_my_resumes first; do not fabricate UUIDs.",
       "For the candidate’s career history, read get_my_profile; use get_my_resume when a specific resume ID is provided. All career facts are self-reported.",
       "Possible tools: get_my_profile {}, list_my_resumes {limit?:number}, get_my_resume {resumeId:uuid}, list_my_applications {limit?:number}, get_my_application {applicationId:uuid}, list_my_application_packets {limit?:number}, get_my_job_match_insights {matchId:uuid}.",
-      "When the trusted applicationContextId is supplied, prioritize get_my_application with exactly that ID. Never guess one.",
+      "When applicationContextId is supplied, the server automatically reads that application with ownership checks. Do not request get_my_application again.",
       "Use get_my_job_match_insights only for an explicitly supplied saved analysis UUID. Never guess a match ID.",
       "Never send user IDs, SQL, URLs or instructions inside tool inputs. Do not select disabled tools.",
     ].join("\n"),
@@ -84,7 +84,10 @@ export async function runCareerAgent(actor: CareerActor, message: string, signal
   await auditAIUsage(actor.id, ai.provider, ai.modelId, plan.usage);
 
   phase = "TOOLS";
-  const { reads, steps } = await executeAgentReads(plan.object.calls,
+  // Always load the selected, owned application when a context ID was supplied.
+  // The LLM cannot redirect this read to another application.
+  const selectedReads = withApplicationContext(plan.object.calls, applicationId);
+  const { reads, steps } = await executeAgentReads(selectedReads,
     (tool, input) => executeCareerReadTool(actor, tool, input), { signal, deadline });
   toolCount = steps.length;
   if (Date.now() >= deadline || signal?.aborted) throw new CareerContractError(504, "AGENT_TIME_BUDGET_EXCEEDED");

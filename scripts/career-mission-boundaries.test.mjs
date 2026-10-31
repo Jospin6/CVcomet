@@ -50,13 +50,14 @@ test('user-only approval decision never creates an arbitrary permission or calls
   assert.ok(!route.includes('consumeCareerApproval'));
   assert.ok(!route.includes('send_application_email'));
 });
-test('dashboard opts in to persistence and supports resume, archive and deletion', () => {
+test('minimal chat persists first messages and leaves approval user-controlled', () => {
   const ui=read('src/app/dashboard/assistant/page.tsx');
-  for (const marker of ['/api/career/v1/missions', 'requestKey', 'crypto.randomUUID()',
-    'Conversation temporaire', 'Créer une mission', 'archive', 'restore', 'delete', 'Réessayer avec le même identifiant',
-    'decideApproval', 'actionExecuted']) {
-    if(marker==='actionExecuted') assert.ok(!ui.includes(marker));
-    else assert.ok(ui.includes(marker),marker);
-  }
-  assert.ok(ui.includes('/api/assistant')); // stateless fallback explicitly maintained
+  for (const marker of [
+    '/api/career/v1/missions', 'requestKey', 'crypto.randomUUID()',
+    'title: question.slice(0, 100)', 'openMission(missionId)',
+    'decideApproval', 'draftReviewed', 'newChat()',
+  ]) assert.ok(ui.includes(marker), marker);
+  assert.ok(!ui.includes('actionExecuted'));
+  assert.ok(!ui.includes('Conversation temporaire'));
+  assert.ok(!ui.includes('onClick={() => void updateMission('));
 });
