@@ -10,7 +10,7 @@ test('countries are schema-validated and stored in existing JSON design objects'
   }
 });
 test('market policy is consumed by both conversational proposals and single-field AI', () => {
-  for (const path of ['src/lib/resume-conversation-ai.ts','src/app/api/resume-ai/route.ts','src/app/api/cover-letters/[id]/assistant/route.ts']) assert.match(read(path),/marketPrompt\(/);
+  for (const path of ['src/lib/resume-conversation-ai.ts','src/app/api/resume-ai/route.ts','src/lib/agentic/agents/cover-letter/prompts/edit.prompt.ts']) assert.match(read(path),/marketPrompt\(/);
   assert.match(read('src/app/api/resume-ai/route.ts'),/storedCV\.design/);
   assert.match(read('src/app/api/cvs/[id]/assistant/route.ts'),/conversation: \{ userId: user\.id \}/);
 });
@@ -21,9 +21,10 @@ test('user country and writing language controls exist in both studios and prese
     assert.match(s,/recommendedPaper\(targetMarket\)/);
     assert.match(s,/design\("documentLanguage", value\)/);
   }
-  const letter = read('src/app/api/cover-letters/[id]/assistant/route.ts');
-  assert.match(letter,/targetMarket: document\.design\.targetMarket/);
-  assert.match(letter,/paper: document\.design\.paper/);
+  // LangGraph verifier is the single shared enforcement point for editor and application drafts.
+  const letter = read('src/lib/agentic/agents/cover-letter/tools/verify-edit.tool.ts');
+  assert.match(letter,/targetMarket: before\.design\.targetMarket/);
+  assert.match(letter,/paper: before\.design\.paper/);
 });
 test('DOCX and both PDF exports respect selected paper and language', () => {
   const docx = read('src/lib/resume-export/docx.ts');

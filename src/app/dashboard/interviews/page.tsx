@@ -34,6 +34,7 @@ type Report = {
   improvements?: string[];
   recommendedAction?: string;
   reason?: string;
+  evidence?: Array<{ dimension: string; quote: string }>;
 };
 type Session = {
   id: string;
@@ -439,13 +440,24 @@ export default function InterviewsPage() {
                   </div>
                 </div>
               )}
+              {report.kind === "AI_SCREENING" && Array.isArray(report.evidence) && report.evidence.length > 0 && (
+                <div className="space-y-2 rounded-xl border p-4">
+                  <p className="text-sm font-semibold">{t("Evidence from your answers", "Extraits de vos réponses")}</p>
+                  {report.evidence.slice(0, 6).map((item, index) => (
+                    <p key={index} className="text-sm text-muted-foreground">
+                      <span className="font-medium">{screeningDimensions[item.dimension]?.[language] ?? item.dimension}:</span>{" "}
+                      <span className="italic">“{item.quote}”</span>
+                    </p>
+                  ))}
+                </div>
+              )}
               {report.recommendedAction && <p className="rounded-lg border p-3 text-sm">{report.recommendedAction}</p>}
               <p className="text-xs text-muted-foreground">
                 {t("Educational feedback only, not a prediction of hiring.", "Retour pédagogique uniquement, pas une prédiction d'embauche.")}
               </p>
             </div>
           )}
-          {current.status === "VOICE_ENDING" && <p className="text-sm text-muted-foreground">{t("Report pending.", "Rapport en préparation.")}</p>}
+          {["VOICE_ENDING", "VOICE_EVALUATING"].includes(current.status) && <p className="text-sm text-muted-foreground">{t("Report pending.", "Rapport en préparation.")}</p>}
         </div>
       ) : (
         <div className="rounded-2xl bg-muted/25 p-5 sm:p-7">

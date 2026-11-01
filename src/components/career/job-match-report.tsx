@@ -338,7 +338,33 @@ export function JobMatchReport({
       )}
 
       {tab === "prepare" && (
-        <section role="tabpanel" id="job-match-panel-prepare" aria-labelledby="job-match-tab-prepare">
+        <section role="tabpanel" id="job-match-panel-prepare" aria-labelledby="job-match-tab-prepare" className="space-y-4">
+          {!!match.resumePlan?.length && (
+            <div className="rounded-xl border p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold">{fr ? "Plan de préparation du CV" : "Resume preparation plan"}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{fr
+                    ? "Actions fondées sur des preuves, non appliquées automatiquement."
+                    : "Evidence-based suggestions, never applied automatically."}</p>
+                </div>
+                <Button size="sm" variant="outline" disabled={busy} onClick={onTailor}>
+                  <FilePenLine className="size-4" /> {fr ? "Préparer une proposition" : "Prepare a proposal"}
+                </Button>
+              </div>
+              <div className="divide-y">
+                {match.resumePlan.map(item => (
+                  <div key={item.requirementId} className="space-y-1 py-3 text-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{item.title}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs ${statusStyle[item.status]}`}>{statuses[item.status]}</span>
+                    </div>
+                    <p className="text-xs leading-5 text-muted-foreground">{item.nextStep}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {prepareContent}
         </section>
       )}

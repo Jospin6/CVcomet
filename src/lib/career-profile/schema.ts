@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { reconcileExtractedProfile } from "./merge";
 import { referralSources, resumeMarkets } from "@/lib/resume-market";
 
 export const careerGoals = ["FIRST_JOB", "BETTER_JOB", "CAREER_CHANGE", "INTERNSHIP", "REMOTE_WORK", "INTERNATIONAL_JOB", "IMPROVE_RESUME"] as const;
@@ -126,26 +127,10 @@ export function profileCompleteness(profile: Partial<Omit<ProfileData, "experien
   return { sections, completed, total: Object.keys(sections).length, percentage: Math.round(completed / Object.keys(sections).length * 100) };
 }
 
-// Import fills empty fields and appends unique items; nothing is persisted here.
+// This client-side helper and the agent use the same safe, deterministic merge.
+// Import only proposes changes; saving still requires explicit user confirmation.
 export function mergeExtractedProfile(current: ProfileData, extracted: Partial<ProfileData>): ProfileData {
-  const merged = { ...current };
-  const collections = ["experiences", "education", "projects", "certifications", "awards", "professionalLinks"] as const;
-  for (const key of Object.keys(current) as (keyof ProfileData)[]) {
-    if (collections.includes(key as typeof collections[number]) || key === "email") continue;
-    const value = extracted[key];
-    if (!current[key] && typeof value === "string") Object.assign(merged, { [key]: value });
-  }
-  const fingerprint = (item: object) => JSON.stringify(Object.fromEntries(Object.entries(item).filter(([key]) => key !== "id").sort(([a], [b]) => a.localeCompare(b))));
-  for (const key of collections) {
-    const existing = new Set(current[key].map(fingerprint));
-    Object.assign(merged, { [key]: [...current[key], ...(extracted[key] || []).filter(item => {
-      const identity = fingerprint(item);
-      if (existing.has(identity)) return false;
-      existing.add(identity);
-      return true;
-    })] });
-  }
-  return merged;
+  return reconcileExtractedProfile(current, extracted).proposal;
 }
 
 export const generationInputSchema = z.object({

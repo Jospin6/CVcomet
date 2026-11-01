@@ -53,6 +53,6 @@ export default function AdminQualityPage() {
       </section>
       <p className="text-xs text-muted-foreground">{data.note} These metrics exclude: {data.excluded.join(", ")}.</p>
     </>}
-    <Link href="/admin" className="text-sm underline">Return to administration</Link>
+    <div className="flex flex-wrap gap-4 text-sm"><Link href="/admin/agentic-quality" className="underline">Supervision multi-agents</Link><Link href="/admin" className="underline">Return to administration</Link></div>
   </main>;
 }

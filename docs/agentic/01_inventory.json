@@ -1,0 +1,105 @@
+{
+  "migration": "CVComet LangGraph / 20 étapes",
+  "baselineArchive": "cvcomet(3).zip",
+  "baselineSha256": "6a00de192a24a46d826fd113bf4d3b763237fcf93ea7e4610134a6c66995ca1c",
+  "completedStep": 1,
+  "modules": [
+    {
+      "id": "profile",
+      "step": 6,
+      "service": "src/lib/career-profile/ai.ts",
+      "entry": "src/app/api/career-profile/import/route.ts",
+      "purpose": "Extraction et amélioration du profil"
+    },
+    {
+      "id": "resume",
+      "step": 7,
+      "service": "src/lib/resume-conversation-ai.ts",
+      "entry": "src/app/api/cvs/[id]/assistant/route.ts",
+      "purpose": "Édition et suggestions de CV approuvées"
+    },
+    {
+      "id": "cover-letter",
+      "step": 8,
+      "service": "src/lib/cover-letter-ai/proposal-service.ts",
+      "entry": "src/app/api/cover-letters/[id]/assistant/route.ts",
+      "purpose": "Rédaction et modifications de lettres"
+    },
+    {
+      "id": "ats",
+      "step": 9,
+      "service": "src/lib/career/ats-service.ts",
+      "entry": "src/app/api/ats/route.ts",
+      "purpose": "Diagnostic ATS et correspondance du CV visible"
+    },
+    {
+      "id": "job-match",
+      "step": 10,
+      "service": "src/lib/career/job-match.ts",
+      "entry": "src/app/api/job-match/route.ts",
+      "purpose": "Extraction des exigences et comparaison déterministe"
+    },
+    {
+      "id": "job-discovery",
+      "step": 11,
+      "service": "src/lib/find-jobs/for-you.ts",
+      "entry": "src/app/api/find-jobs/for-you/route.ts",
+      "purpose": "Présélection d'offres et scores explicables"
+    },
+    {
+      "id": "career-map",
+      "step": 12,
+      "service": "src/lib/career-map/service.ts",
+      "entry": "src/app/api/career-map/route.ts",
+      "purpose": "Trajectoires et compétences transférables"
+    },
+    {
+      "id": "interview-text",
+      "step": 13,
+      "service": "src/lib/career/interview.ts",
+      "entry": "src/app/api/interviews/route.ts",
+      "purpose": "Questions, réponses et évaluation écrites"
+    },
+    {
+      "id": "interview-voice",
+      "step": 14,
+      "service": "src/lib/career/screening.ts",
+      "entry": "src/app/api/interviews/screening/start/route.ts",
+      "purpose": "Simulation vocale LiveKit et rapport"
+    },
+    {
+      "id": "application",
+      "step": 15,
+      "service": "src/lib/career-os/application-packet-service.ts",
+      "entry": "src/app/api/career/v1/application-packets/route.ts",
+      "purpose": "Dossier de candidature et approbation"
+    },
+    {
+      "id": "supervisor",
+      "step": 16,
+      "service": "src/lib/career-os/agent-service.ts",
+      "entry": "src/app/api/career/v1/agent/route.ts",
+      "purpose": "Assistant et outils à lecture limitée"
+    },
+    {
+      "id": "mission-memory",
+      "step": 17,
+      "service": "src/lib/career-os/mission-service.ts",
+      "entry": "src/app/api/career/v1/agent/route.ts",
+      "purpose": "Historique de missions en PostgreSQL"
+    }
+  ],
+  "existingGraphFiles": [],
+  "criticalGuardFiles": [
+    "src/lib/career-os/policy.ts",
+    "src/lib/career-os/tool-registry.ts",
+    "src/lib/resume-ai/proposal-service.ts",
+    "src/lib/cover-letter-ai/proposal-service.ts",
+    "src/lib/ai/quota-service.ts"
+  ],
+  "missingPreviouslyReportedGraphFiles": [
+    "src/lib/agentic/career-read-graph.ts",
+    "src/lib/agentic/job-match-graph.ts"
+  ],
+  "auditCorrection": "Source zip SHA-256 verified again during step02; no LangGraph implementation files in this immutable archive."
+}

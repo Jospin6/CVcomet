@@ -83,6 +83,7 @@ model User {
   careerEvidence       CareerEvidence[]
   resumeAIProposals   ResumeAIProposal[]
   coverLetterAIProposals CoverLetterAIProposal[]
+  careerAgentMemories CareerAgentMemory[]
   careerMissions CareerMission[]
   applicationPackets CareerApplicationPacket[]
   jobRecommendationPreference JobRecommendationPreference?
@@ -629,6 +630,7 @@ model AIUsage {
   estimatedCost Decimal? @db.Decimal(12, 6)
   createdAt     DateTime @default(now())
   @@index([userId, feature, createdAt])
+  @@index([createdAt])
 }
 
 enum CareerAgentOutcome {
@@ -657,9 +659,12 @@ model CareerAgentObservation {
   durationMs Int
   toolCount  Int                @default(0)
   errorCode  String?            @db.VarChar(60)
+  // Historical rows are UNKNOWN; never backfill them as GRAPH without evidence.
+  engine     String             @default("UNKNOWN") @db.VarChar(12)
   createdAt  DateTime           @default(now())
   @@index([createdAt])
   @@index([userId, createdAt])
+  @@index([engine, createdAt, outcome])
 }
 
 enum AIProvider {
@@ -899,6 +904,7 @@ model CareerMission {
   revision    Int                 @default(0)
   activeRunId String?             @db.Uuid
   runs        CareerMissionRun[]
+  progressEvents CareerMissionProgressEvent[]
   approvals   CareerMissionApproval[]
   applicationPackets CareerApplicationPacket[]
   createdAt   DateTime            @default(now())
@@ -913,8 +919,12 @@ model CareerMissionRun {
   userId      String
   requestKey  String                 @db.Uuid
   question    String                 @db.VarChar(6000)
+  attachmentsMeta Json?                // Sanitized file names/types only, never document content
+  inputDigest String?                 @db.VarChar(64) // Idempotency includes attachment hashes
+  specialist String?                  @db.VarChar(32) // Agent selected by server
   answer      String?                @db.VarChar(10000)
   steps       Json?
+  progressEvents CareerMissionProgressEvent[]
   status      CareerMissionRunStatus @default(RUNNING)
   attempt     Int                    @default(1)
   leaseToken  String                 @db.Uuid
@@ -928,6 +938,25 @@ model CareerMissionRun {
   @@index([missionId, createdAt, id])
   @@index([userId, status])
   @@index([feedbackAt])
+  @@index([createdAt, status])
+}
+
+// Bounded technical progress. Only safe step identifiers/codes; never prompts, documents or tool payloads.
+model CareerMissionProgressEvent {
+  id         BigInt @id @default(autoincrement())
+  userId     String
+  missionId  String
+  mission    CareerMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  runId      String
+  run        CareerMissionRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  attempt    Int
+  kind       String @db.VarChar(40)
+  step       String? @db.VarChar(80)
+  code       String? @db.VarChar(60)
+  createdAt  DateTime @default(now())
+  @@index([userId, missionId, runId, id])
+  @@index([runId, attempt, id])
+  @@index([createdAt, kind])
 }
 
 // Approvals bind one exact proposed action digest to its owner and mission.
@@ -994,4 +1023,20 @@ model JobRecommendationPreference {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   filters    Json
   updatedAt  DateTime @updatedAt
+}
+
+// Stage 17: opt-in preferences ONLY. Conversation and documents stay in their source tables.
+model CareerAgentMemory {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key           String   @db.VarChar(32)
+  value         String   @db.VarChar(120)
+  allowedAgents String[] @default([])
+  revision      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@index([userId, updatedAt])
 }

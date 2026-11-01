@@ -138,6 +138,8 @@ function getWords(french: boolean) {
     textPreview: "Aperçu du contenu (pas le rendu PDF définitif)",
     noCountries: "Aucun pays identifié dans les offres",
     profileOnly: "Le score est calculé exclusivement à partir du CV sélectionné.",
+    verifiedCoverage: "Offres analysées en profondeur",
+    openToApply: "Ouvrez une offre pour préparer une candidature ; aucun envoi automatique.",
   } : {
     myResume: "My Resume",
     edited: "Last edited",
@@ -187,6 +189,8 @@ function getWords(french: boolean) {
     textPreview: "Content preview (not the final PDF layout)",
     noCountries: "No job countries identified",
     profileOnly: "Match scores use only the selected resume.",
+    verifiedCoverage: "Deeply analyzed offers",
+    openToApply: "Open an offer to prepare an application; nothing is submitted automatically.",
   };
 }
 
@@ -355,6 +359,8 @@ export function JobsForYou({
   const [hasResults, setHasResults] = useState(false);
   const [jobs, setJobs] = useState<MatchJob[]>([]);
   const [considered, setConsidered] = useState(0);
+  const [verifiedCount, setVerifiedCount] = useState(0);
+  const [deepMatchCount, setDeepMatchCount] = useState(0);
   const firstMatchStarted = useRef(false);
   const [explained, setExplained] = useState<string | null>(null);
 
@@ -418,7 +424,7 @@ export function JobsForYou({
       const response = await fetch("/api/find-jobs/for-you", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ preferences: next, save: true }),
+        body: JSON.stringify({ preferences: next, save: true, language: french ? "fr" : "en" }),
       });
       const data = await readApiResponse(response) as {
         jobs?: MatchJob[];
@@ -426,10 +432,14 @@ export function JobsForYou({
         countries?: Country[];
         warningCode?: string | null;
         matchingStatus?: string;
+        verifiedCount?: number;
+        deepMatchCount?: number;
       };
       if (requestId !== requestSequence.current) return;
       setJobs(data.jobs || []);
       setConsidered(data.totalConsidered || 0);
+      setVerifiedCount(data.verifiedCount || 0);
+      setDeepMatchCount(data.deepMatchCount || 0);
       if (data.countries) setCountries(data.countries);
       setPrefs(next);
       setDraft(next);
@@ -438,7 +448,7 @@ export function JobsForYou({
       if (data.warningCode) {
         setWarning(matchErrorMessage(data.warningCode, french));
       } else if (data.matchingStatus === "unavailable" ||
-        data.matchingStatus === "partial") {
+        (data.matchingStatus === "partial" && (data.verifiedCount || 0) < (data.deepMatchCount || 0))) {
         setWarning(getWords(french).unscored);
       }
     } catch (reason) {
@@ -547,6 +557,9 @@ export function JobsForYou({
           </h2>
           {hasResults && <span className="text-xs text-muted-foreground">
             {c.result}: {considered}
+            {jobs.length > 0 && deepMatchCount > 0 && (
+              <> · {c.verifiedCoverage}: {verifiedCount}/{deepMatchCount}</>
+            )}
           </span>}
         </div>
         {!resumes.length ? (
@@ -685,7 +698,9 @@ export function JobsForYou({
           </article>
         ))}
         {hasResults && !!jobs.length && (
-          <p className="text-xs text-muted-foreground">{c.indicative}</p>
+          <p className="text-xs text-muted-foreground">
+            {c.indicative} {c.openToApply}
+          </p>
         )}
       </section>
 

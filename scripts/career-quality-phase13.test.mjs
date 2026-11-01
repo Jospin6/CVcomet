@@ -24,9 +24,9 @@ test("the output guard is not claimed to detect all hallucinations", () => {
 });
 test("observations cannot store arbitrary prompts, PII, user identifiers, or provider errors", () => {
   const event = sanitizeAgentObservation({ outcome: "FAILED", phase: "TOOLS", durationMs: 1050, toolCount: 2,
-    errorCode: "candidate@example.org CV text: Private" , arbitrary: "top secret" });
-  assert.deepEqual(Object.keys(event), ["outcome", "phase", "durationMs", "toolCount", "errorCode"]);
-  assert.deepEqual(event, { outcome: "FAILED", phase: "TOOLS", durationMs: 1050, toolCount: 2, errorCode: "AGENT_FAILED" });
+    errorCode: "candidate@example.org CV text: Private", engine: "GRAPH", arbitrary: "top secret" });
+  assert.deepEqual(Object.keys(event), ["outcome", "engine", "phase", "durationMs", "toolCount", "errorCode"]);
+  assert.deepEqual(event, { outcome: "FAILED", engine: "GRAPH", phase: "TOOLS", durationMs: 1050, toolCount: 2, errorCode: "AGENT_FAILED" });
   assert.ok(!JSON.stringify(event).includes("candidate@example"));
 });
 test("negative, NaN, over-range or fractional metrics fail closed", () => {

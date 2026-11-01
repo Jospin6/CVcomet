@@ -105,16 +105,27 @@ async function withAgentDeadline<T>(action: () => Promise<T>, options: { signal?
 export async function executeAgentReads(
   proposed: unknown,
   execute: (tool: CareerReadTool, input: Record<string, unknown>) => Promise<unknown>,
-  options: { signal?: AbortSignal; deadline?: number } = {},
+  options: { signal?: AbortSignal; deadline?: number; onToolEvent?: (kind: "started" | "completed" | "failed", tool: CareerReadTool) => void } = {},
 ): Promise<{ reads: AgentRead[]; steps: AgentStep[] }> {
   const calls = validateAgentCalls(proposed);
   const reads: AgentRead[] = [];
   const steps: AgentStep[] = [];
+  const emitTool = (kind: "started" | "completed" | "failed", tool: CareerReadTool) => {
+    try { options.onToolEvent?.(kind, tool); } catch { /* Observer errors never affect reads. */ }
+  };
   for (const call of calls) {
     if (options.signal?.aborted || (options.deadline !== undefined && Date.now() >= options.deadline)) {
       throw new CareerContractError(504, "AGENT_TIME_BUDGET_EXCEEDED");
     }
-    const raw = await withAgentDeadline(() => execute(call.tool, call.input), options);
+    emitTool("started", call.tool);
+    let raw: unknown;
+    try {
+      raw = await withAgentDeadline(() => execute(call.tool, call.input), options);
+    } catch (error) {
+      emitTool("failed", call.tool);
+      throw error;
+    }
+    emitTool("completed", call.tool);
     const { result, truncated } = boundAgentRead(raw);
     reads.push({ tool: call.tool,
       source: "self_reported",

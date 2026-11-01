@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/career/auth-user";
 import { apiError } from "@/lib/career/api";
 import { z } from "zod";
 import { createPreparation, preparationInput } from "@/lib/career/interview";
-import { fallbackQuestions } from "@/lib/career/interview-coach-policy";
+import { runInterviewPreparationAgent } from "@/lib/agentic/agents/interview-text/agent/interview-text.agent";
 
 const input=z.object({type:z.enum(["HR","BEHAVIORAL","TECHNICAL","LEADERSHIP"]),applicationId:z.string().uuid().optional(),title:z.string().trim().min(1).max(160)}).strict();
 export async function GET(){
@@ -21,7 +21,11 @@ export async function POST(req:Request){
     const body=input.parse(raw);
     const application=body.applicationId?await prisma.jobApplication.findFirst({where:{id:body.applicationId,userId:user.id},select:{id:true}}):null;
     if(body.applicationId&&!application)return NextResponse.json({error:"APPLICATION_NOT_FOUND"},{status:404});
-    const questions=fallbackQuestions(5,"fr");
+    // Basic text practice also flows through LangGraph, without a provider call or quota.
+    const prepared=await runInterviewPreparationAgent({actorId:user.id,
+      input:{role:body.title.trim().length>=2 ? body.title : "General interview",level:"",language:"fr",questionCount:5,
+        jobDescription:"",resumeContext:"",profile:"{}",factsFromProfile:[]},deps:{}});
+    const questions=prepared.questions;
     const session=await prisma.interviewSession.create({data:{...body,userId:user.id,status:"ACTIVE",configuration:{role:body.title,language:"fr",questionCount:5,questionSet:{questions,recruiterQuestions:[]}},messages:{create:{role:"assistant",content:questions[0].question}}},include:{messages:true}});
     return NextResponse.json(session,{status:201});
   }catch(error){return apiError(error);}

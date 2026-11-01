@@ -4,6 +4,9 @@ import type { Prisma } from "@prisma/client";
 import { CareerContractError } from "./contracts";
 import type { CareerActor } from "./policy";
 import { runCareerAgent } from "./agent-service";
+import { assistantInputDigest, publicAttachmentManifest, type AssistantAttachment } from "@/lib/agentic/agents/supervisor/tools/multimodal.tool";
+import type { SupervisorSpecialist } from "@/lib/agentic/agents/supervisor/tools/contracts.tool";
+import { createMissionStreamAgent } from "@/lib/agentic/agents/mission-stream/agent/mission-stream.agent";
 import {
   MISSION_HISTORY_LIMIT, MISSION_LEASE_MS, MISSION_MAX_LIST,
   assertSameMissionRequest, contextFromCompletedRuns, requireApprovalDecision,
@@ -18,10 +21,10 @@ function missionOverview(m: { id: string; title: string; status: string; revisio
     busy: !!m.activeRunId, createdAt: m.createdAt, updatedAt: m.updatedAt };
 }
 
-function publicRun(r: { id: string; requestKey: string; question: string; answer: string | null; status: string; steps: unknown; errorCode: string | null; feedbackRating: string | null; createdAt: Date; updatedAt: Date }) {
+function publicRun(r: { id: string; requestKey: string; question: string; answer: string | null; status: string; steps: unknown; attachmentsMeta?: unknown; specialist?: string | null; errorCode: string | null; feedbackRating: string | null; createdAt: Date; updatedAt: Date }) {
   // Never expose raw model outputs beyond the assistant answer or any tool records.
   return { id: r.id, requestKey: r.requestKey, question: r.question, answer: r.answer,
-    status: r.status, steps: r.status === "COMPLETED" && Array.isArray(r.steps) ? r.steps : [],
+    status: r.status, specialist: r.specialist ?? null, attachments: Array.isArray(r.attachmentsMeta) ? r.attachmentsMeta : [], steps: r.status === "COMPLETED" && Array.isArray(r.steps) ? r.steps : [],
     errorCode: r.errorCode, feedbackRating: r.status === "COMPLETED" ? r.feedbackRating : null, createdAt: r.createdAt, updatedAt: r.updatedAt };
 }
 
@@ -107,9 +110,11 @@ export async function deleteCareerMission(actor: MissionOwner, id: string) {
   });
 }
 
-type Claim = { kind: "cached"; answer: ReturnType<typeof publicRun> } | { kind: "claimed"; runId: string; leaseToken: string };
+type Claim = { kind: "cached"; answer: ReturnType<typeof publicRun> } | { kind: "claimed"; runId: string; leaseToken: string; attempt: number };
 
-async function claimMissionRun(actor: MissionOwner, missionId: string, requestKey: string, message: string): Promise<Claim> {
+async function claimMissionRun(actor: MissionOwner, missionId: string, requestKey: string, message: string, attachments: readonly AssistantAttachment[],
+  applicationId?: string, requestedSpecialist?: SupervisorSpecialist): Promise<Claim> {
+  const inputDigest = assistantInputDigest(message, attachments, applicationId, requestedSpecialist);
   const now = new Date();
   const leaseToken = randomUUID();
   const leaseUntil = new Date(now.getTime() + MISSION_LEASE_MS);
@@ -120,23 +125,26 @@ async function claimMissionRun(actor: MissionOwner, missionId: string, requestKe
     const prior = await tx.careerMissionRun.findUnique({ where: { missionId_requestKey: { missionId, requestKey } } });
     if (prior) {
       assertSameMissionRequest(prior.question, message);
+      if ((prior.inputDigest ?? null) !== inputDigest) throw new CareerContractError(409, "REQUEST_KEY_REUSED");
       if (prior.status === "COMPLETED") return { kind: "cached", answer: publicRun(prior) };
     }
     await releaseExpiredRun(tx, actor.id, missionId, mission.activeRunId, now);
     let runId: string;
+    const attempt = prior ? prior.attempt + 1 : 1;
     if (prior) {
       const retried = await tx.careerMissionRun.updateMany({ where: { id: prior.id, userId: actor.id, missionId, status: "FAILED" },
         data: { status: "RUNNING", errorCode: null, leaseUntil, leaseToken, attempt: { increment: 1 } } });
       if (retried.count !== 1) throw conflict();
       runId = prior.id;
     } else {
-      const created = await tx.careerMissionRun.create({ data: { missionId, userId: actor.id, requestKey, question: message, leaseToken, leaseUntil } });
+      const created = await tx.careerMissionRun.create({ data: { missionId, userId: actor.id, requestKey, question: message, leaseToken, leaseUntil,
+        inputDigest, attachmentsMeta: publicAttachmentManifest(attachments) } });
       runId = created.id;
     }
     const locked = await tx.careerMission.updateMany({ where: { id: missionId, userId: actor.id, status: "ACTIVE", activeRunId: null },
       data: { activeRunId: runId, revision: { increment: 1 } } });
     if (locked.count !== 1) throw conflict();
-    return { kind: "claimed", runId, leaseToken };
+    return { kind: "claimed", runId, leaseToken, attempt };
   }).catch((error: unknown) => {
     if (error && typeof error === "object" && "code" in error && (error.code === "P2002" || error.code === "P2034")) throw conflict();
     throw error;
@@ -144,16 +152,22 @@ async function claimMissionRun(actor: MissionOwner, missionId: string, requestKe
 }
 
 /** Store only sanitized summaries of read tools; never persist raw private tool results. */
-export async function executeCareerMissionRun(actor: CareerActor, missionId: string, requestKey: string, message: string, signal?: AbortSignal, applicationId?: string) {
-  const claim = await claimMissionRun(actor, missionId, requestKey, message);
+export async function executeCareerMissionRun(actor: CareerActor, missionId: string, requestKey: string, message: string, signal?: AbortSignal, applicationId?: string,
+  attachments: AssistantAttachment[] = [], requestedSpecialist?: SupervisorSpecialist) {
+  const claim = await claimMissionRun(actor, missionId, requestKey, message, attachments, applicationId, requestedSpecialist);
   if (claim.kind === "cached") return { ...claim.answer, replayed: true };
+  const progress = createMissionStreamAgent({ userId: actor.id, missionId, runId: claim.runId, attempt: claim.attempt });
+  progress.onProgress({ kind: "mission.started" });
   try {
     const history = await prisma.careerMissionRun.findMany({ where: { missionId, userId: actor.id, status: "COMPLETED" },
       select: { question: true, answer: true }, orderBy: { createdAt: "desc" }, take: MISSION_HISTORY_LIMIT });
-    const result = await runCareerAgent(actor, message, signal, contextFromCompletedRuns(history.reverse().filter((r): r is { question: string; answer: string } => !!r.answer)), applicationId);
+    const result = await runCareerAgent(actor, message, signal, contextFromCompletedRuns(history.reverse().filter((r): r is { question: string; answer: string } => !!r.answer)), applicationId, missionId, progress, attachments, requestedSpecialist);
+    await progress.flush();
     const saved = await prisma.$transaction(async tx => {
       const done = await tx.careerMissionRun.updateMany({ where: { id: claim.runId, missionId, userId: actor.id, status: "RUNNING", leaseToken: claim.leaseToken },
-        data: { answer: result.message, steps: result.steps, status: "COMPLETED", errorCode: null } });
+        data: { answer: result.message, steps: result.steps,
+          specialist: "specialist" in result && typeof result.specialist === "string" ? result.specialist : null,
+          status: "COMPLETED", errorCode: null } });
       if (done.count !== 1) throw conflict();
       const unlocked = await tx.careerMission.updateMany({ where: { id: missionId, userId: actor.id, activeRunId: claim.runId },
         data: { activeRunId: null, revision: { increment: 1 } } });
@@ -161,6 +175,12 @@ export async function executeCareerMissionRun(actor: CareerActor, missionId: str
       return tx.careerMissionRun.findFirst({ where: { id: claim.runId, missionId, userId: actor.id } });
     });
     if (!saved) throw notFound();
+    const pendingApproval = await prisma.careerMissionApproval.count({ where: {
+      userId: actor.id, missionId, status: "PENDING", expiresAt: { gt: new Date() },
+    } });
+    if (pendingApproval > 0) progress.onProgress({ kind: "approval.required" });
+    progress.onProgress({ kind: "mission.completed" });
+    await progress.flush();
     return { ...publicRun(saved), replayed: false };
   } catch (error) {
     const errorCode = error instanceof CareerContractError ? error.code : "AGENT_FAILED";
@@ -172,6 +192,8 @@ export async function executeCareerMissionRun(actor: CareerActor, missionId: str
         if (stopped.count) await tx.careerMission.updateMany({ where: { id: missionId, userId: actor.id, activeRunId: claim.runId }, data: { activeRunId: null, revision: { increment: 1 } } });
       });
     } catch { /* Preserve the original failure; lease recovery remains possible. */ }
+    progress.onProgress({ kind: "mission.failed", code: errorCode });
+    await progress.flush();
     throw error;
   }
 }

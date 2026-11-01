@@ -63,7 +63,7 @@ export default function AdminDashboard() {
       <h1 className="text-2xl text-foreground font-bold mb-8">Admin Dashboard</h1>
 
       <div className="mb-4 flex flex-wrap justify-end gap-3">
-        <Button asChild variant="outline"><Link href="/admin/quality"><ShieldCheck className="size-4" />AI quality</Link></Button>
+        <Button asChild variant="outline"><Link href="/admin/agentic-quality"><ShieldCheck className="size-4" />Agent evaluation</Link></Button>
         <Button asChild variant="outline"><Link href="/admin/billing"><CreditCard className="size-4" />Billing health</Link></Button>
         <Button asChild><Link href="/admin/ai"><Cpu className="size-4" />{t("shell.aiSettings")}</Link></Button>
         <Dialog>

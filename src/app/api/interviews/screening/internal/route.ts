@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { apiError } from "@/lib/career/api";
+import { ProfileError } from "@/lib/career-profile/http";
 import { completeScreening, getScreeningForWorker } from "@/lib/career/screening";
 
 export const runtime = "nodejs";
@@ -13,6 +14,27 @@ function authorized(req: Request): boolean {
   const b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
 }
+/** Reject oversized POST bodies even when Content-Length is missing or forged. */
+async function readBoundedJson(req: Request, maxBytes = 200_000): Promise<unknown> {
+  if (Number(req.headers.get("content-length") || 0) > maxBytes) throw new ProfileError(413, "TOO_LARGE");
+  if (!req.body) throw new ProfileError(400, "VALIDATION");
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > maxBytes) throw new ProfileError(413, "TOO_LARGE");
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+}
+
 export async function GET(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   try {
@@ -24,8 +46,6 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   try {
-    const size = Number(req.headers.get("content-length") || 0);
-    if (size > 150_000) return NextResponse.json({ error: "TOO_LARGE" }, { status: 413 });
-    return NextResponse.json(await completeScreening(await req.json()));
+    return NextResponse.json(await completeScreening(await readBoundedJson(req)));
   } catch (error) { return apiError(error); }
 }

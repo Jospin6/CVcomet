@@ -49,6 +49,15 @@ export type RequirementResult = JobRequirement & {
   status: "DEMONSTRATED" | "PARTIAL" | "NOT_DEMONSTRATED" | "VERIFY";
   explanation: string; evidenceSources: Evidence[];
 };
+export type ResumePreparationAction = Readonly<{
+  requirementId: string; title: string;
+  status: RequirementResult["status"];
+  priority: RequirementResult["priority"];
+  kind: "SELECT_RESUME" | "BRING_PROFILE_EVIDENCE" | "REINFORCE_CV" | "VERIFY_FACTS" | "REVIEW_GAP";
+  evidencePaths: string[];
+  nextStep: string;
+  requiresApproval: true;
+}>;
 export type MatchResult = {
   version: 1; overallScore: number | null; skillScore: number | null; keywordScore: number | null;
   experienceScore: number | null; educationScore: number | null;
@@ -56,6 +65,8 @@ export type MatchResult = {
   requirements: RequirementResult[]; evaluatedCount: number; unverifiedCount: number; totalCount: number;
   matchedSkills: string[]; missingSkills: string[]; unverifiedSkills: string[]; recommendations: string[];
   scoreExplanation: string; source: "PROFILE" | "PROFILE_AND_RESUME"; intelligence?: JobIntelligence;
+  /** Read-only plan for Resume Agent; API approvals remain mandatory. */
+  resumePlan?: ResumePreparationAction[];
 };
 export type TailorChange = { path: string; current: string; proposed: string; reason: string; evidence: string };
 export type TailorProposal = { id: string; cvId: string; sourceSignature: string; mode: "TAILOR" | "IMPROVE"; changes: TailorChange[]; rejectedCount: number };

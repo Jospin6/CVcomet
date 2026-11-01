@@ -4,13 +4,13 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import prisma from "../../../prisma/prisma";
 import { coverLetterSchema } from "@/helpers/schema";
-import { generateCoverLetterPrompt, generateCoverLetterSystemPrompt, generatedLanguagePrompt } from "@/helpers/helpers";
 import { getAIModel } from "@/lib/ai/model";
 import { factualRules, reserveProfileAI } from "@/lib/career-profile/ai";
 import { careerProfileContext, getCareerProfile } from "@/lib/career-profile/service";
 import { ProfileError, profileAIError } from "@/lib/career-profile/http";
 import { normalizeEditorResume } from "@/lib/resume-editor";
 import { marketPrompt, resolveDocumentLanguage } from "@/lib/career-localization/markets";
+import { runCoverLetterCreationAgent } from "@/lib/agentic/agents/cover-letter/agent/creation.agent";
 import { requireFeature } from "./entitlements";
 import { canonicalTerm, careerEvidence } from "./job-match";
 import { jobAnalysisSchema } from "./job-schema";
@@ -80,12 +80,25 @@ export async function jobCoverLetter(userId: string, raw: unknown) {
   }
   await requireFeature(userId, "COVER_LETTER");
   if (data.drafts.letter?.fingerprint === data.fingerprint) return { draft: data.drafts.letter.draft, reused: true };
-  const model = await getAIModel(); await reserveProfileAI(userId, "COVER_LETTER");
   try {
-    const { object } = await generateObject({ model, schema: coverLetterSchema, temperature: 0, maxTokens: 3200, maxRetries: 1, abortSignal: AbortSignal.timeout(45000),
-      system: generateCoverLetterSystemPrompt() + "\n" + data.localization + "\nDo not include any experience-duration or achievement number absent from candidate evidence. Never claim a required technology absent from candidate evidence. Do not invent personal motivations. Use only provided notes for personal motivations. Never invent company information.",
-      prompt: generateCoverLetterPrompt({ description: JSON.stringify({ jobDescription: data.job.description, candidateResume: data.resume, notes: body.notes }), user: data.confirmedProfile, curentLanguage: data.documentLanguage === "de" ? "German (Deutsch)" : generatedLanguagePrompt(data.documentLanguage) }) });
-    const draft = letterSchema.parse({ ...object.coverLetter, companyName: data.job.company || "", companyAddress: "", positionTitle: data.job.title, recipientName: "", recipientTitle: "", senderName: data.profile.name, senderEmail: data.profile.email, senderPhone: data.profile.phone, senderAddress: data.profile.address, sendertitle: data.profile.headline });
+    // The graph returns a draft only. The existing SAVE branch still owns writes.
+    const draft = await runCoverLetterCreationAgent({
+      actorId: userId,
+      input: {
+        job: { title: data.job.title, company: data.job.company || "",
+          description: data.job.description },
+        profile: { name: data.profile.name, email: data.profile.email,
+          phone: data.profile.phone, address: data.profile.address,
+          headline: data.profile.headline },
+        confirmedProfile: data.confirmedProfile,
+        resume: data.resume,
+        notes: body.notes,
+        localization: data.localization,
+        documentLanguage: data.documentLanguage,
+        facts: data.facts,
+        technicalRequirements: data.technicalRequirements,
+      },
+    });
     assertDocumentFacts([draft.introduction, draft.body, draft.conclusion].join("\n"), data.facts, data.technicalRequirements);
     await saveDrafts(userId, data.job.id, { letter: { fingerprint: data.fingerprint, draft } });
     return { draft };

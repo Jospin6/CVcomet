@@ -10,6 +10,7 @@ const internal = read('src/app/api/interviews/screening/internal/route.ts');
 const start = read('src/app/api/interviews/screening/start/route.ts');
 const agent = read('workers/screening-agent.mjs');
 const coach = read('src/lib/career/interview.ts');
+const voiceValidation = read('src/lib/agentic/agents/interview-voice/tools/validation.tool.ts');
 
 test('Basic and Personalized modes are in a modal with 20 questions', () => {
   assert.match(page, /"basic" \| "personalized"/);
@@ -37,7 +38,9 @@ test('Worker context protected and room-bound with constant-time secret compare'
 test('Voice scoring is generated from transcript and not synthetic', () => {
   assert.match(service, /answerCount < 2/);
   assert.match(service, /generateObject/);
-  assert.match(service, /overallScore: null/);
+  assert.match(service, /unavailableVoiceReport/);
+  assert.match(service, /runVoiceEvaluationAgent/);
+  assert.match(voiceValidation, /overallScore: null/);
   assert.match(service, /VOICE_UNGRADED/);
   assert.doesNotMatch(service, /Math\.random/);
 });

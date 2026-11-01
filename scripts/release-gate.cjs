@@ -68,18 +68,20 @@ async function main() {
   const testOk = run('unit_regressions_phases_00_to_13', 'npm', ['run', 'test:cvcomet:baseline']);
   const finalTestsOk = run('phase_14_security_release_tests', 'npm', ['run', 'test:phase14']);
   const syntaxOk = run('typescript_tsx_parse_only', 'npm', ['run', 'check:syntax']);
+  const stage19Ok = run('stage19_offline_evaluation_controls', 'npm', ['run', 'test:agentic:stage19']);
   if (staging) {
     const required = ['DATABASE_URL', 'BETTER_AUTH_SECRET', 'BETTER_AUTH_URL', 'NEXT_PUBLIC_APP_URL', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_PRO_PRICE_ID', 'STRIPE_CAREER_PRO_PRICE_ID'];
     const envOk = prerequisite('required_environment_configuration', required.every(v => Boolean(process.env[v])));
     const lock = prerequisite('reproducible_dependency_lockfile', ['package-lock.json','npm-shrinkwrap.json','yarn.lock','pnpm-lock.yaml'].some(file => fs.existsSync(path.join(root, file))));
     const deps = prerequisite('installed_dependencies', fs.existsSync(path.join(root,'node_modules')));
-    if (lock && deps && envOk && testOk && finalTestsOk && syntaxOk) {
+    if (lock && deps && envOk && testOk && finalTestsOk && syntaxOk && stage19Ok) {
+      run('stage19_real_langgraph_evaluation', 'npm', ['run','test:agentic:stage19:integration']);
       run('prisma_schema_validate', 'npm', ['exec', '--', 'prisma', 'validate']);
       run('database_migration_status', 'npm', ['exec', '--', 'prisma', 'migrate', 'status']);
       run('typescript_semantic_check', 'npm', ['run', 'typecheck']);
       run('nextjs_production_build', 'npm', ['run', 'build'], 240000);
     } else {
-      for (const name of ['prisma_schema_validate','database_migration_status','typescript_semantic_check','nextjs_production_build']) add(name, 'NOT_RUN', 'prerequisites_missing_or_tests_failed');
+      for (const name of ['stage19_real_langgraph_evaluation','prisma_schema_validate','database_migration_status','typescript_semantic_check','nextjs_production_build']) add(name, 'NOT_RUN', 'prerequisites_missing_or_tests_failed');
     }
     const rawUrl = process.env.CVCOMET_STAGING_URL;
     let url;

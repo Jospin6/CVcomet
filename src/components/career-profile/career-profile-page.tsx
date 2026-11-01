@@ -15,6 +15,7 @@ import { fetchUser } from "@/redux/user/userSlice";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { AppDispatch } from "@/redux/store";
 import { marketProfiles, resumeMarkets, referralSources } from "@/lib/resume-market";
+import type { ProfileImportReview } from "@/lib/career-profile/merge";
 
 const steps = ["resume", "market", "goal", "level", "job", "review"];
 const profileTabs = [
@@ -38,6 +39,7 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
   const [importing, setImporting] = useState(false);
   const [importReady, setImportReady] = useState(false);
   const [imported, setImported] = useState(false);
+  const [importReview, setImportReview] = useState<ProfileImportReview | null>(null);
   const [error, setError] = useState("");
   const [issues, setIssues] = useState<string[]>([]);
   const [message, setMessage] = useState("");
@@ -96,7 +98,11 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
       const data = await response.json();
       if (response.status === 401) { router.replace("/login"); return; }
       if (!response.ok) throw new Error(data.error || "AI_FAILED");
-      update({ ...mergeExtractedProfile(draft, data.extracted), resumeSource: "UPLOAD" });
+      // Preserve unsaved local edits. The server proposal is safe for a clean
+      // draft; both paths use the same deterministic conflict-aware merge.
+      const proposed = dirty ? mergeExtractedProfile(draft, data.extracted) : data.proposal;
+      update({ ...proposed, resumeSource: "UPLOAD" });
+      setImportReview(data.review);
       setImported(true); setImportReady(true); setMessage(t("career.imported"));
       if (onboarding) changeStep(1);
       else setActiveTab("overview");
@@ -118,7 +124,7 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
         if (data.issues) { showIssues(data.issues.map((issue: { path: string }) => issue.path)); return; }
         throw new Error(data.error || "UNAVAILABLE");
       }
-      setSaved(data); setDraft(draftOf(data)); setImported(false); setConfirmed(false); setMessage(t("career.saved"));
+      setSaved(data); setDraft(draftOf(data)); setImported(false); setImportReview(null); setConfirmed(false); setMessage(t("career.saved"));
       if (session?.id) void dispatch(fetchUser(session.id));
       if (onboarding) router.replace("/dashboard/profile");
     } catch (error) { setError(translateError(error instanceof Error ? error.message : "UNAVAILABLE")); }
@@ -207,6 +213,34 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
           </p>
         )}
 
+        {importReview && (
+          <div role="status" className="rounded-lg border bg-muted/20 p-3 text-xs leading-5">
+            <p className="font-medium">{french ? "Import IA — vérifie avant d’enregistrer" : "AI import — review before saving"}</p>
+            <p className="text-muted-foreground">
+              {importReview.addedFields.length} {french ? "champs proposés" : "suggested fields"} ·
+              {Object.values(importReview.addedRecords).reduce((sum, count) => sum + (count || 0), 0)} {french ? "éléments ajoutés" : "records added"} ·
+              {importReview.conflicts.length} {french ? "conflits à vérifier" : "conflicts to review"}
+            </p>
+            {importReview.conflicts.length > 0 && (
+              <p className="mt-1 text-muted-foreground">
+                {french ? "Valeurs existantes conservées : " : "Existing values preserved: "}
+                {[...new Set(importReview.conflicts.map(item => item.field))].join(", ")}
+              </p>
+            )}
+            {importReview.evidenceMode === "native_pdf_review" && (
+              <p className="mt-1 text-muted-foreground">{french ? "PDF scanné : vérifie soigneusement les informations extraites." : "Scanned PDF: carefully review extracted facts."}</p>
+            )}
+            {Boolean(importReview.unverifiedFields?.length) && (
+              <p className="mt-1 text-muted-foreground">{french ? "Informations non vérifiées omises : " : "Unverified facts omitted: "}{importReview.unverifiedFields?.join(", ")}</p>
+            )}
+            {Object.values(importReview.incompleteRecords).some(Boolean) && (
+              <p className="mt-1 text-muted-foreground">
+                {french ? "Certains éléments incomplets ne sont pas ajoutés automatiquement." : "Incomplete records were not added automatically."}
+              </p>
+            )}
+          </div>
+        )}
+
         <div
           role="tablist"
           aria-label={t("career.sectionNavigation")}
@@ -283,6 +317,7 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
                 onClick={() => {
                   setDraft(draftOf(saved));
                   setImported(false);
+                  setImportReview(null);
                   setConfirmed(false);
                   setError("");
                   setIssues([]);
@@ -332,6 +367,17 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
     </div>
     {error && <div ref={errorRef} tabIndex={-1} role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"><p>{error}</p>{issues.length > 0 && <ul className="mt-2 list-inside list-disc">{issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul>}</div>}
     {message && <p role="status" className="rounded-lg bg-primary/5 p-4 text-sm">{message}</p>}
+    {importReview && (
+      <div role="status" className="rounded-lg border bg-muted/20 p-3 text-xs leading-5">
+        <p className="font-medium">AI import — review the suggested facts before saving.</p>
+        <p className="text-muted-foreground">{importReview.conflicts.length} conflicts ·
+          {Object.values(importReview.addedRecords).reduce((sum, count) => sum + (count || 0), 0)} new records</p>
+        {importReview.conflicts.length > 0 && <p className="text-muted-foreground">Existing values retained: {[...new Set(importReview.conflicts.map(item => item.field))].join(", ")}</p>}
+        {importReview.unverifiedFields?.length ? <p className="text-muted-foreground">Unverified facts omitted: {importReview.unverifiedFields.join(", ")}</p> : null}
+        {importReview.evidenceMode === "native_pdf_review" ? <p className="text-muted-foreground">Scanned PDF: please review extracted facts.</p> : null}
+      </div>
+    )}
+
     <fieldset disabled={busy || importing} className="min-w-0 space-y-6">
       {onboarding && !review && <section className="app-section space-y-6">
         <h2 ref={stepHeading} tabIndex={-1} className="type-h2">{t("career.steps." + steps[step])}</h2>

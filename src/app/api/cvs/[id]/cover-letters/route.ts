@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assertTrustedWriteOrigin } from "@/lib/security/request-origin";
 import { z } from "zod";
 import prisma from "../../../../../../prisma/prisma";
 import { getSessionUser } from "@/lib/auth";
@@ -20,6 +21,7 @@ export async function GET(_: Request, { params }: Context) {
 
 export async function POST(req: Request, { params }: Context) {
   try {
+    assertTrustedWriteOrigin(req);
     const user = await getSessionUser(); if (!user) throw new ProfileError(401, "UNAUTHORIZED");
     const { id } = await params, body = input.parse(await profileJson(req));
     const source = await resumeSourceJob(user.id, id);

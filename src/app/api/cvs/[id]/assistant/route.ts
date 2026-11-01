@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "../../../../../../prisma/prisma";
 import { getSessionUser } from "@/lib/auth";
-import { reserveProfileAI } from "@/lib/career-profile/ai";
 import { ProfileError, profileErrorResponse, profileJson } from "@/lib/career-profile/http";
 import { normalizeEditorResume } from "@/lib/resume-editor";
 import {
@@ -10,7 +9,7 @@ import {
   resumeConversationChanges,
   resumeConversationFields,
 } from "@/lib/resume-conversation";
-import { generateResumeConversation } from "@/lib/resume-conversation-ai";
+import { runResumeAgent } from "@/lib/agentic/agents/resume/agent/resume.agent";
 import { proposeResumeAI } from "@/lib/resume-ai/proposal-service";
 import { assertTrustedWriteOrigin } from "@/lib/security/request-origin";
 import { getProfileFacts } from "@/lib/career-profile/ai-facts";
@@ -48,10 +47,13 @@ export async function POST(req: Request, { params }: Context) {
     if (input.targetField && !resumeConversationFields(document).includes(input.targetField)) {
       throw new ProfileError(400, "INVALID_FIELD");
     }
-    await reserveProfileAI(user.id, "RESUME_EDIT");
-    const { object, document: edited } = await generateResumeConversation({
-      ...input, document, profileFacts: profileEvidence,
-      linkedJobAdvert: linkedMatch?.job || null,
+    // LangGraph now plans, generates, validates and prepares review. Quota is
+    // reserved inside its model tool, only if a model call is required.
+    const { object, document: edited } = await runResumeAgent({
+      actorId: user.id,
+      signal: req.signal,
+      input: { ...input, document, profileFacts: profileEvidence,
+        linkedJobAdvert: linkedMatch?.job || null },
     });
     if (object.status === "clarification") return NextResponse.json({ ...object, preview: null, revision: cv.revision }, { headers: { "Cache-Control": "no-store" } });
     if (!edited) throw new ProfileError(502, "AI_INVALID_RESPONSE");

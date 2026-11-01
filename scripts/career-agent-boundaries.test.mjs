@@ -43,6 +43,9 @@ test('assistant UI shows conversation text without exposing tool results', () =>
   const source = read('src/app/dashboard/assistant/page.tsx');
   assert.ok(source.includes('toMessages(current.runs)'));
   assert.ok(source.includes('aria-live="polite"'));
-  assert.ok(source.includes('role="status"'));
+  assert.ok(source.includes('<CareerMissionProgress'));
+  const progress = read('src/components/career/CareerMissionProgress.tsx');
+  assert.ok(progress.includes('role="status"'));
+  assert.ok(progress.includes('aria-live="polite"')); 
   assert.ok(!source.includes('step.result'));
 });

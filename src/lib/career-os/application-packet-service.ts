@@ -1,7 +1,8 @@
 import prisma from "../../../prisma/prisma";
 import { Prisma } from "@prisma/client";
 import { CareerContractError } from "./contracts";
-import { assertEditable, assertSourcesCurrent, decidePacket, draftApplicationEmail, intentHash, type PacketLanguage } from "./application-packet-policy";
+import { assertEditable, assertSourcesCurrent, decidePacket, intentHash, type PacketLanguage } from "./application-packet-policy";
+import { runApplicationPacketAgent } from "@/lib/agentic/agents/application/agent/application.agent";
 
 type Actor = { id: string };
 const missing = () => new CareerContractError(404, "PACKET_NOT_FOUND");
@@ -36,7 +37,10 @@ export async function createApplicationPacket(actor: Actor, body: CreateInput) {
   ]);
   if (!job || !cv || (body.coverLetterId && !letter) || (body.missionId && !mission)) throw new CareerContractError(404, "RESOURCE_NOT_FOUND");
   if (letter && ((letter.cvId && letter.cvId !== cv.id) || (letter.jobId && letter.jobId !== job.id))) throw new CareerContractError(409, "LETTER_JOB_RESUME_MISMATCH");
-  const draft = draftApplicationEmail({ company: job.company, title: job.title, name: user?.name ?? null, language: body.language });
+  const draft = await runApplicationPacketAgent({ actorId: actor.id, input: {
+    company: job.company?.slice(0, 240) ?? null, jobTitle: job.title.slice(0, 240),
+    signer: user?.name?.slice(0, 160) ?? null, language: body.language,
+  } });
   try {
     const packet = await prisma.careerApplicationPacket.create({ data: {
       userId: actor.id, requestKey: body.requestKey, intentHash: hash, missionId: mission?.id,

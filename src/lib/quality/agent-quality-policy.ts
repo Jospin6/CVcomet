@@ -3,6 +3,7 @@ import { CareerContractError } from "../career-os/contracts.ts";
 
 export type AgentPhase = "PLAN" | "TOOLS" | "ANSWER";
 export type AgentOutcome = "COMPLETED" | "FAILED";
+export type AgentEngine = "GRAPH" | "LEGACY" | "UNKNOWN";
 
 const allowedErrors = new Set([
   "AGENT_EMPTY_ANSWER", "AGENT_UNSUPPORTED_ACTION_CLAIM", "AGENT_PLAN_REJECTED",
@@ -34,12 +35,13 @@ export function reviewCareerAgentAnswer(text: string): string {
 }
 
 export type OperationalObservation = Readonly<{
-  outcome: AgentOutcome; phase: AgentPhase; durationMs: number; toolCount: number; errorCode: string | null;
+  outcome: AgentOutcome; phase: AgentPhase; durationMs: number; toolCount: number; errorCode: string | null; engine: AgentEngine;
 }>;
 export function sanitizeAgentObservation(input: Partial<OperationalObservation>): OperationalObservation {
   const outcome: AgentOutcome = input.outcome === "COMPLETED" ? "COMPLETED" : "FAILED";
   return {
     outcome,
+    engine: input.engine === "GRAPH" || input.engine === "LEGACY" ? input.engine : "UNKNOWN",
     phase: input.phase === "TOOLS" || input.phase === "ANSWER" ? input.phase : "PLAN",
     durationMs: boundedMetric(input.durationMs, 120000),
     toolCount: boundedMetric(input.toolCount, 3),

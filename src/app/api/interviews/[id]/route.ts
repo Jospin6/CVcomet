@@ -34,7 +34,7 @@ export async function DELETE(
       select: { id: true, status: true, createdAt: true },
     });
     if (!session) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
-    if (["VOICE_ACTIVE", "VOICE_ENDING"].includes(session.status)
+    if (["VOICE_ACTIVE", "VOICE_ENDING", "VOICE_EVALUATING"].includes(session.status)
       && session.createdAt.getTime() > Date.now() - 30 * 60_000) {
       return NextResponse.json({ error: "FINISH_VOICE_CALL_FIRST" }, { status: 409 });
     }

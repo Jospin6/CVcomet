@@ -16,11 +16,16 @@ import {
   ChevronRight,
   LoaderCircle,
   MessageSquare,
+  Brain,
   PanelLeft,
   Plus,
+  Paperclip, Mic, Square, Volume2, FileText, Image as ImageIcon,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import CareerMemoryPanel from "@/components/career/CareerMemoryPanel";
+import CareerMissionProgress, { type MissionProgressEvent } from "@/components/career/CareerMissionProgress";
+import AssistantMarkdown from "@/components/career/AssistantMarkdown";
 
 // The existing mission and agent APIs remain the source of truth.
 // This page changes presentation and starts a saved chat on the first message.
@@ -29,6 +34,8 @@ type Message = {
   role: "user" | "assistant";
   content: string;
   steps?: Step[];
+  attachments?: { name: string; kind: "image" | "document"; size: number }[];
+  specialist?: string | null;
 };
 type Mission = {
   id: string;
@@ -46,6 +53,8 @@ type Run = {
   status: "COMPLETED" | "FAILED" | "RUNNING";
   steps: Step[];
   errorCode: string | null;
+  attachments?: { name: string; kind: "image" | "document"; size: number }[];
+  specialist?: string | null;
 };
 type Approval = {
   id: string;
@@ -60,6 +69,49 @@ type Detail = Mission & {
   approvals: Approval[];
 };
 type ApiEnvelope<T> = { data?: T; error?: { code: string } };
+
+const SPECIALIST_WORKSPACES = {
+  profile: { fr: "Profil", en: "Profile", path: "/dashboard/profile" },
+  resume: { fr: "CV", en: "Resume", path: "/dashboard/resumes" },
+  cover_letter: { fr: "Lettre de motivation", en: "Cover letter", path: "/dashboard/cover-letters" },
+  ats: { fr: "Analyse ATS", en: "ATS analysis", path: "/dashboard/ats" },
+  job_match: { fr: "Job Match", en: "Job Match", path: "/dashboard/job-match" },
+  job_discovery: { fr: "Offres pour moi", en: "Jobs for you", path: "/dashboard/find-jobs" },
+  career_map: { fr: "Career Map", en: "Career Map", path: "/dashboard/career-map" },
+  interview_text: { fr: "Entretien texte", en: "Text interview", path: "/dashboard/interviews" },
+  interview_voice: { fr: "Entretien vocal", en: "Voice interview", path: "/dashboard/interviews" },
+  application: { fr: "Candidatures", en: "Applications", path: "/dashboard/application-agent" },
+} as const;
+type SpecialistChoice = "auto" | keyof typeof SPECIALIST_WORKSPACES;
+const MAX_FILES = 3;
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_UPLOAD_SIZE = 12 * 1024 * 1024;
+function workspaceFor(specialist?: string | null) {
+  return specialist && specialist in SPECIALIST_WORKSPACES
+    ? SPECIALIST_WORKSPACES[specialist as keyof typeof SPECIALIST_WORKSPACES] : null;
+}
+
+function SelectedAttachment({ file, onRemove, disabled, french }: {
+  file: File; onRemove: () => void; disabled: boolean; french: boolean;
+}) {
+  const [preview, setPreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!/^image\/(?:png|jpeg|webp)$/.test(file.type)) return;
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+  return <div className="inline-flex max-w-64 items-center gap-2 rounded-xl border border-border bg-muted/50 px-2 py-1.5 text-xs">
+    {preview ? <span role="img" aria-label={file.name} className="size-8 shrink-0 rounded-md bg-cover bg-center"
+      style={{ backgroundImage: `url("${preview}")` }} /> : <FileText className="size-4 shrink-0" />}
+    <span className="min-w-0 truncate">{file.name}</span>
+    <button type="button" aria-label={`${french ? "Retirer" : "Remove"} ${file.name}`} disabled={disabled}
+      onClick={onRemove} className="shrink-0 rounded p-0.5 hover:bg-muted">
+      <X className="size-3.5" />
+    </button>
+  </div>;
+}
+
 type ApplicationContext = {
   id: string;
   company: string;
@@ -104,11 +156,19 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return payload.data;
 }
 
+/** A mission ID in the URL is only a navigation hint; the API verifies ownership. */
+function syncMissionUrl(id: string | null) {
+  const url = new URL(window.location.href);
+  if (id) url.searchParams.set("missionId", id);
+  else url.searchParams.delete("missionId");
+  window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+}
+
 function toMessages(runs: Run[]): Message[] {
   return runs.flatMap((run): Message[] => [
-    { role: "user", content: run.question },
+    { role: "user", content: run.question, attachments: run.attachments },
     {
-      role: "assistant",
+      role: "assistant", specialist: run.specialist,
       content:
         run.status === "COMPLETED" && run.answer
           ? run.answer
@@ -124,15 +184,28 @@ export default function CareerAgentPage() {
   const french = i18n.resolvedLanguage?.startsWith("fr") ?? false;
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recorderTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestSequence = useRef(0);
   const preservingOlderScroll = useRef(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [memoryOpen, setMemoryOpen] = useState(false);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [specialistChoice, setSpecialistChoice] = useState<SpecialistChoice>("auto");
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [tracking, setTracking] = useState<{ missionId: string; requestKey: string; active: boolean } | null>(null);
+  const [progressEvents, setProgressEvents] = useState<MissionProgressEvent[]>([]);
+  const [progressWarning, setProgressWarning] = useState(false);
+  const lastProgressId = useRef(BigInt(0));
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -142,6 +215,8 @@ export default function CareerAgentPage() {
     missionId: string;
     requestKey: string;
     question: string;
+    attachments: File[];
+    specialist: SpecialistChoice;
   } | null>(null);
   const [applicationId, setApplicationId] = useState("");
   const [appContext, setAppContext] = useState<ApplicationContext | null>(null);
@@ -194,6 +269,7 @@ export default function CareerAgentPage() {
   const openMission = useCallback(async (id: string) => {
     const sequence = ++requestSequence.current;
     setSelectedId(id);
+    syncMissionUrl(id);
     setDetail(null);
     setLoading(true);
     setRetry(null);
@@ -205,6 +281,12 @@ export default function CareerAgentPage() {
       setDetail(current);
       setMessages(toMessages(current.runs));
       setOlderCursor(current.nextRunCursor);
+      setProgressEvents([]);
+      setProgressWarning(false);
+      lastProgressId.current = BigInt(0);
+      const latest = current.runs.at(-1);
+      setTracking(latest ? { missionId: id, requestKey: latest.requestKey,
+        active: latest.status === "RUNNING" } : null);
     } catch {
       if (sequence === requestSequence.current) {
         setError("Impossible d'ouvrir cette conversation.");
@@ -214,16 +296,27 @@ export default function CareerAgentPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("missionId");
+    if (fromUrl && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(fromUrl)) void openMission(fromUrl);
+  }, [openMission]);
+
   function newChat() {
     if (pending || loading || creating) return;
     ++requestSequence.current;
     setSelectedId(null);
+    syncMissionUrl(null);
     setDetail(null);
     setMessages([]);
     setOlderCursor(null);
+    setTracking(null);
+    setProgressEvents([]);
+    setProgressWarning(false);
+    lastProgressId.current = BigInt(0);
     setRetry(null);
     setError(null);
     setMessage("");
+    setFiles([]);
     setDraftFromChat(false);
     setDraftProposal(null);
     setDraftInstruction("");
@@ -257,14 +350,89 @@ export default function CareerAgentPage() {
     }
   }
 
+  function addFiles(selected: FileList | null) {
+    if (!selected) return;
+    const next = [...files, ...Array.from(selected)];
+    if (next.length > MAX_FILES || next.some(file => file.size > MAX_FILE_SIZE || file.size === 0) ||
+      next.reduce((sum, file) => sum + file.size, 0) > MAX_UPLOAD_SIZE) {
+      setError(french ? "Maximum 3 fichiers, 5 Mo chacun et 12 Mo au total." : "Maximum 3 files, 5 MB each and 12 MB total.");
+      return;
+    }
+    setFiles(next);
+    setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function toggleRecorder() {
+    if (recorderRef.current?.state === "recording") {
+      recorderRef.current.stop();
+      return;
+    }
+    if (pending || transcribing || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setVoiceError(french ? "Enregistrement vocal indisponible dans ce navigateur." : "Voice recording unavailable in this browser.");
+      return;
+    }
+    setVoiceError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"]
+        .find(type => MediaRecorder.isTypeSupported(type));
+      if (!mimeType) { stream.getTracks().forEach(track => track.stop()); throw new Error("AUDIO_UNSUPPORTED"); }
+      const chunks: Blob[] = [];
+      const recorder = new MediaRecorder(stream, { mimeType });
+      recorderRef.current = recorder;
+      recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+      recorder.onstop = () => {
+        stream.getTracks().forEach(track => track.stop());
+        if (recorderTimeout.current) clearTimeout(recorderTimeout.current);
+        recorderRef.current = null;
+        setRecording(false);
+        const ext = mimeType.includes("webm") ? "webm" : mimeType.includes("ogg") ? "ogg" : "mp4";
+        const audio = new File(chunks, `message.${ext}`, { type: mimeType });
+        if (audio.size < 200) return;
+        setTranscribing(true);
+        const form = new FormData();
+        form.append("audio", audio);
+        form.append("language", french ? "fr" : "en");
+        void api<{ text: string }>("/api/career/v1/agent/transcribe", { method: "POST", body: form })
+          .then(result => setMessage(old => [old.trim(), result.text].filter(Boolean).join(" ").slice(0, 6000)))
+          .catch(cause => setVoiceError(cause instanceof Error ? cause.message : "TRANSCRIPTION_UNAVAILABLE"))
+          .finally(() => { setTranscribing(false); promptRef.current?.focus(); });
+      };
+      recorder.start(250);
+      setRecording(true);
+      recorderTimeout.current = setTimeout(() => {
+        if (recorder.state === "recording") recorder.stop();
+      }, 45_000);
+    } catch {
+      setVoiceError(french ? "Microphone refusé ou indisponible." : "Microphone permission denied or unavailable.");
+    }
+  }
+
+  useEffect(() => () => {
+    if (recorderTimeout.current) clearTimeout(recorderTimeout.current);
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  }, []);
+
+  function speak(text: string) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text.slice(0, 3000));
+    utterance.lang = french ? "fr-FR" : "en-US";
+    window.speechSynthesis.speak(utterance);
+  }
+
   // A new conversation is persisted automatically on its first message,
   // rather than exposing a confusing temporary-chat vs mission choice.
   async function send(
     event?: FormEvent<HTMLFormElement>,
-    repeated?: { missionId: string; requestKey: string; question: string },
+    repeated?: { missionId: string; requestKey: string; question: string; attachments: File[]; specialist: SpecialistChoice },
   ) {
     event?.preventDefault();
-    const question = (repeated?.question ?? message).trim();
+    const sendingFiles = repeated?.attachments ?? files;
+    const selectedSpecialist = repeated?.specialist ?? specialistChoice;
+    const question = (repeated?.question ?? message).trim() || (sendingFiles.length ? (french ? "Analyse ces fichiers et explique-moi les points essentiels." : "Analyze these files and explain the key points.") : "");
     if (
       pending || loading || creating ||
       question.length < 2 || question.length > 6000 ||
@@ -287,7 +455,12 @@ export default function CareerAgentPage() {
     setRetry(null);
     setMessage("");
     setPending(true);
-    if (!repeated) setMessages((old) => [...old, { role: "user", content: question }]);
+    if (!repeated) setMessages((old) => [...old, { role: "user", content: question,
+      attachments: sendingFiles.map(file => ({ name: file.name, size: file.size,
+        kind: /\.(?:png|jpe?g|webp)$/i.test(file.name) ? "image" as const : "document" as const })) }]);
+    setProgressEvents([]);
+    setProgressWarning(false);
+    lastProgressId.current = BigInt(0);
 
     try {
       if (!missionId) {
@@ -302,26 +475,40 @@ export default function CareerAgentPage() {
         });
         missionId = mission.id;
         setSelectedId(mission.id);
+        syncMissionUrl(mission.id);
+      }
+      setTracking({ missionId, requestKey, active: true });
+      const body = sendingFiles.length ? new FormData() : null;
+      if (body) {
+        body.append("apiVersion", "v1");
+        body.append("requestKey", requestKey);
+        body.append("message", question);
+        if (appContext) body.append("applicationId", appContext.id);
+        if (selectedSpecialist !== "auto") body.append("specialist", selectedSpecialist);
+        for (const file of sendingFiles) body.append("files", file);
       }
       const run = await api<Run>(`/api/career/v1/missions/${missionId}/runs`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          apiVersion: "v1",
-          requestKey,
-          message: question,
+        ...(body ? { body } : { headers: { "content-type": "application/json" }, body: JSON.stringify({
+          apiVersion: "v1", requestKey, message: question,
           ...(appContext ? { applicationId: appContext.id } : {}),
-        }),
+          ...(selectedSpecialist !== "auto" ? { specialist: selectedSpecialist } : {}),
+        }) }),
       });
       if (run.status !== "COMPLETED") throw new Error("MISSION_NOT_COMPLETE");
+      setFiles([]);
       await openMission(missionId);
       await refreshList();
-    } catch {
-      setError(
-        "La réponse n'a pas abouti. Vérifiez la conversation avant de réessayer.",
-      );
-      if (missionId) setRetry({ missionId, requestKey, question });
-      else setMessage(question);
+    } catch (cause) {
+      const code = cause instanceof Error ? cause.message : "UNAVAILABLE";
+      setError(code === "ASSISTANT_VISION_MODEL_REQUIRED" ?
+        (french ? "Le modèle IA actif ne prend pas en charge les images. Choisissez un modèle vision dans la configuration IA." : "The active AI model does not support images. Choose a vision model in AI settings.") :
+        code === "MULTIMODAL_REQUIRES_GRAPH" ?
+          (french ? "Les pièces jointes nécessitent l'activation du moteur LangGraph." : "Attachments require the LangGraph engine to be enabled.") :
+          code.startsWith("ASSISTANT_") ? code :
+          (french ? "La réponse n'a pas abouti. Vérifiez la conversation avant de réessayer." : "The response failed. Check the conversation before retrying."));
+      if (missionId) setRetry({ missionId, requestKey, question, attachments: sendingFiles, specialist: selectedSpecialist });
+      else { setMessage(question); setFiles(sendingFiles); }
     } finally {
       setPending(false);
       setCreating(false);
@@ -441,9 +628,58 @@ export default function CareerAgentPage() {
     }
   }
 
+  // EventSource replays owner-scoped durable progress after reload/reconnect.
+  // No tokens, prompts or tool payloads are ever streamed.
+  useEffect(() => {
+    if (!tracking) return;
+    const source = new EventSource(
+      `/api/career/v1/missions/${encodeURIComponent(tracking.missionId)}/runs/events?requestKey=${encodeURIComponent(tracking.requestKey)}`,
+    );
+    let stopped = false;
+    let reconnects = 0;
+    const receive = (event: Event) => {
+      if (stopped || !(event instanceof MessageEvent)) return;
+      try {
+        const value = JSON.parse(event.data) as MissionProgressEvent;
+        if (typeof value.kind !== "string") return;
+        if (value.id && /^\d{1,24}$/.test(value.id)) {
+          const next = BigInt(value.id);
+          if (next <= lastProgressId.current) return;
+          lastProgressId.current = next;
+        }
+        setProgressEvents(old => [...old.slice(-47), value]);
+        if (value.kind === "mission.completed" || value.kind === "mission.failed") {
+          source.close();
+          setTracking(null);
+          // After a page reload, rehydrate saved final answer (or a failed run).
+          if (tracking.active && value.code !== "MISSION_INTERRUPTED" && !pending) {
+            void openMission(tracking.missionId).then(() => refreshList());
+          }
+        }
+      } catch { /* Invalid/partial SSE data never enters the UI. */ }
+    };
+    const kinds = ["mission.started", "step.started", "step.completed", "step.failed",
+      "tool.started", "tool.completed", "tool.failed", "approval.required", "mission.completed", "mission.failed"];
+    for (const kind of kinds) source.addEventListener(kind, receive);
+    source.addEventListener("progress.error", () => {
+      if (!stopped) { setProgressWarning(true); source.close(); }
+    });
+    source.onerror = () => {
+      if (!stopped && ++reconnects > 2) {
+        setProgressWarning(true);
+        source.close(); // bounded reconnects after expired sessions or server failure
+      }
+    };
+    return () => {
+      stopped = true;
+      source.close();
+      for (const kind of kinds) source.removeEventListener(kind, receive);
+    };
+  }, [tracking?.missionId, tracking?.requestKey, tracking?.active]);
+
   const isEmpty = !loading && messages.length === 0;
-  const canSend = !pending && !loading && !creating &&
-    detail?.status !== "ARCHIVED" && message.trim().length >= 2;
+  const canSend = !pending && !tracking?.active && !loading && !creating &&
+    detail?.status !== "ARCHIVED" && !recording && !transcribing && (message.trim().length >= 2 || files.length > 0);
   const pendingApprovals = detail?.approvals?.filter(
     (item) => item.status === "PENDING" &&
       new Date(item.expiresAt).getTime() > Date.now(),
@@ -537,6 +773,13 @@ export default function CareerAgentPage() {
               </Link>
             )}
           </div>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setMemoryOpen(true)}
+              aria-label={french ? "Gérer ma mémoire" : "Manage memory"}
+              className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
+              <Brain className="size-4" aria-hidden="true" />
+              <span className="hidden sm:inline">{french ? "Mémoire" : "Memory"}</span>
+            </button>
           <button
             type="button"
             onClick={newChat}
@@ -546,6 +789,8 @@ export default function CareerAgentPage() {
           >
             <Plus className="size-5" />
           </button>
+          </div>
+          {memoryOpen && <CareerMemoryPanel french={french} onClose={() => setMemoryOpen(false)} />}
         </div>
 
         <div
@@ -589,22 +834,38 @@ export default function CareerAgentPage() {
                     {item.role === "user" ? (
                       <div className="max-w-[88%] rounded-3xl bg-muted px-4 py-2.5 text-[14px] leading-6 text-foreground sm:max-w-[78%]">
                         <p className="whitespace-pre-wrap break-words">{item.content}</p>
+                        {!!item.attachments?.length && <div className="mt-2 flex flex-wrap gap-1.5">
+                          {item.attachments.map((attachment, n) => <span key={`${attachment.name}-${n}`} className="inline-flex items-center gap-1 rounded-md bg-background/70 px-2 py-1 text-[11px]">
+                            {attachment.kind === "image" ? <ImageIcon className="size-3" /> : <FileText className="size-3" />}
+                            <span className="max-w-36 truncate">{attachment.name}</span>
+                          </span>)}
+                        </div>}
                       </div>
                     ) : (
-                      <div className="min-w-0 max-w-full whitespace-pre-wrap break-words px-1 text-[14px] leading-7 text-foreground sm:text-[15px]">
-                        {item.content}
+                      <div className="min-w-0 max-w-full break-words px-1 text-[14px] leading-7 text-foreground sm:text-[15px]">
+                        <AssistantMarkdown content={item.content} />
+                        <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                          {workspaceFor(item.specialist) && <Link className="underline-offset-2 hover:underline" href={workspaceFor(item.specialist)!.path}>
+                            {french ? workspaceFor(item.specialist)!.fr : workspaceFor(item.specialist)!.en} <ChevronRight className="inline size-3" />
+                          </Link>}
+                          <button type="button" onClick={() => speak(item.content)} className="inline-flex items-center gap-1 hover:text-foreground"
+                            aria-label={french ? "Lire la réponse" : "Read response aloud"}>
+                            <Volume2 className="size-3.5" /> {french ? "Écouter" : "Listen"}
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
             )}
-            {pending && (
-              <div role="status" className="flex items-center gap-2 pb-5 text-sm text-muted-foreground">
-                <span className="size-2 animate-pulse rounded-full bg-primary" />
-                {french ? "CVComet réfléchit…" : "CVComet is thinking…"}
-              </div>
-            )}
+            <CareerMissionProgress
+              events={progressEvents}
+              active={pending || Boolean(tracking?.active)}
+              french={french}
+              warning={progressWarning}
+              onRefresh={selectedId ? () => void openMission(selectedId) : undefined}
+            />
 
             {/* Keep explicit document approval in the conversation only when needed. */}
             {appContext && (draftFromChat || draftProposal) && (
@@ -734,6 +995,26 @@ export default function CareerAgentPage() {
                 )}
               </div>
             )}
+            <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <label htmlFor="career-specialist" className="sr-only">{french ? "Agent spécialisé" : "Specialist agent"}</label>
+              <select id="career-specialist" value={specialistChoice}
+                onChange={e => setSpecialistChoice(e.target.value as SpecialistChoice)}
+                disabled={pending || tracking?.active}
+                className="max-w-48 truncate rounded-lg border border-border/70 bg-background px-2.5 py-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <option value="auto">{french ? "Tous les agents · Auto" : "All agents · Auto"}</option>
+                {Object.entries(SPECIALIST_WORKSPACES).map(([id, workspace]) =>
+                  <option key={id} value={id}>{french ? workspace.fr : workspace.en}</option>)}
+              </select>
+              {workspaceFor(specialistChoice) && <Link href={workspaceFor(specialistChoice)!.path}
+                className="inline-flex items-center gap-0.5 hover:underline">
+                {french ? "Ouvrir le workflow" : "Open workflow"} <ChevronRight className="size-3" />
+              </Link>}
+            </div>
+            {files.length > 0 && <div aria-label="Fichiers à envoyer" className="mb-2 flex flex-wrap gap-2">
+              {files.map((file, index) => <SelectedAttachment key={`${file.name}-${index}`} file={file}
+                disabled={pending} french={french} onRemove={() => setFiles(current => current.filter((_, i) => i !== index))} />)}
+            </div>}
+            {voiceError && <p className="mb-2 text-xs text-destructive" role="alert">{voiceError}</p>}
             <form
               onSubmit={(event) => { void send(event); }}
               className="rounded-[24px] border border-border/80 bg-card px-3 py-3 shadow-sm focus-within:border-ring/50 sm:px-4"
@@ -748,12 +1029,30 @@ export default function CareerAgentPage() {
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
                 onKeyDown={onComposerKeyDown}
-                disabled={pending || loading || creating || detail?.status === "ARCHIVED"}
+                disabled={pending || tracking?.active || loading || creating || detail?.status === "ARCHIVED"}
                 maxLength={6000}
                 placeholder={french ? "Écrire à CVComet…" : "Message CVComet…"}
                 className="block min-h-[28px] w-full resize-none overflow-y-auto bg-transparent text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-50 sm:text-[15px]"
               />
-              <div className="mt-2 flex items-center justify-end">
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1">
+                  <input ref={fileInputRef} type="file" multiple className="sr-only"
+                    accept=".png,.jpg,.jpeg,.webp,.pdf,.docx,.txt,image/png,image/jpeg,image/webp,application/pdf"
+                    onChange={event => addFiles(event.target.files)} aria-label={french ? "Joindre des fichiers" : "Attach files"}/>
+                  <button type="button" disabled={pending || files.length >= MAX_FILES}
+                    onClick={() => fileInputRef.current?.click()} title={french ? "Ajouter des images ou documents" : "Attach images or documents"}
+                    aria-label={french ? "Joindre" : "Attach"} className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40">
+                    <Paperclip className="size-4" />
+                  </button>
+                  <button type="button" disabled={pending || transcribing}
+                    onClick={() => void toggleRecorder()}
+                    title={recording ? (french ? "Arrêter l'enregistrement" : "Stop recording") : (french ? "Dicter un message" : "Dictate message")}
+                    aria-label={recording ? "Arrêter" : "Microphone"}
+                    className={`rounded-lg p-2 ${recording ? "bg-destructive/10 text-destructive" : "text-muted-foreground hover:bg-muted hover:text-foreground"} disabled:opacity-40`}>
+                    {transcribing ? <LoaderCircle className="size-4 animate-spin" /> : recording ? <Square className="size-4" /> : <Mic className="size-4" />}
+                  </button>
+                  {recording && <span className="text-xs text-destructive">{french ? "Enregistrement…" : "Recording…"}</span>}
+                </div>
                 <button
                   type="submit"
                   disabled={!canSend}

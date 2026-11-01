@@ -278,7 +278,7 @@ function fixture({ authorized = true, wait, jobs = [] } = {}) {
       atsAnalysis: { create: async ({ data }) => { const row = { id: "analysis-" + saved.length, createdAt: new Date(), ...data }; saved.push(row); return row; }, findMany: async ({ where }) => saved.filter(row => row.userId === where.userId && (!where.cvId || row.cvId === where.cvId)) },
     },
     "@/lib/career/auth-user": { requireUser: async () => { if (!authorized) throw Object.assign(new Error("Unauthorized"), { status: 401 }); return { id: owner }; } },
-    "@/lib/career/ats-service": { assessAtsResume: async input => { const { resume, keywords, language, document, jobDescription } = input; inputs.push(input); calls++; if (wait) await wait; return analyzeResume(resume, keywords, language, { document, semantic: assessed(resume), ...(jobDescription ? { jobMatch: { status: "COMPLETE", score: 50, requirements: [] } } : {}) }); } },
+    "@/lib/agentic/agents/ats/agent/ats.agent": { runAtsAgent: async ({ actorId, input }) => { const { resume, keywords, language, document, jobDescription } = input; inputs.push(input); calls++; if (wait) await wait; return analyzeResume(resume, keywords, language, { document, semantic: assessed(resume), ...(jobDescription ? { jobMatch: { status: "COMPLETE", score: 50, requirements: [] } } : {}) }); } },
   })("src/app/api/ats/route.ts");
   const post = body => route.POST(new Request("http://localhost/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }));
   return { post, route, saved, cv, inputs, calls: () => calls };

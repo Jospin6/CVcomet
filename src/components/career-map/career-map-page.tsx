@@ -33,6 +33,7 @@ type RoleNode = {
   missing: string[];
   explanation: string;
   plan: SkillStep[];
+  evidence?: { skill: string; sources: string[] }[];
 };
 type CareerPreferences = {
   targetRoles: string[];
@@ -67,6 +68,19 @@ const safeHttpUrl = (value: string | null | undefined) => {
   if (!value) return null;
   try { const url = new URL(value); return ["http:", "https:"].includes(url.protocol) ? url.href : null; }
   catch { return null; }
+};
+
+const CAREER_MAP_ERRORS: Record<string, string> = {
+  CAREER_MAP_SETUP_REQUIRED: "Career Map is not initialized. Stop the server, regenerate Prisma Client and restart it.",
+  CAREER_MAP_MIGRATION_REQUIRED: "The Career Map database tables are missing. Apply the Prisma migrations to Neon, then restart the server.",
+  CAREER_MAP_DB_UNAVAILABLE: "Cannot reach Neon. Check the database connection and server logs.",
+  CAREER_MAP_GRAPH_FAILED: "The career graph failed to execute. Check the server logs and installed LangGraph dependencies.",
+  CAREER_MAP_TIMEOUT: "Career Map generation timed out. Please try again.",
+  CAREER_MAP_CANCELLED: "Career Map generation was cancelled.",
+  CAREER_MAP_DB_CONSTRAINT: "The selected profile or CV reference is no longer valid. Refresh the page.",
+  CAREER_MAP_INTERNAL_ERROR: "Career Map failed unexpectedly. Check the server logs to identify the underlying error.",
+  CV_NOT_FOUND: "The selected CV cannot be found in your account. Choose a different one.",
+  UNAVAILABLE: "Career Map is unavailable. Check the terminal running Next.js for the underlying error.",
 };
 
 const DEFAULT_PREFERENCES: CareerPreferences = {
@@ -223,6 +237,25 @@ function RoleDetails({
           </div>
         </section>
       </div>
+      {Boolean(role.evidence?.length) && (
+        <section className="space-y-2" aria-label="Career skill evidence">
+          <h3 className="text-sm font-semibold">Where these skills are mentioned</h3>
+          <p className="text-xs text-muted-foreground">Document mentions, not independently verified professional proficiency.</p>
+          <div className="space-y-1">
+            {role.evidence?.slice(0, 8).map(({ skill, sources }) => (
+              <div key={skill} className="flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-xs">
+                <span className="font-medium">{skill}</span>
+                <span className="text-muted-foreground">{sources.map(source => ({
+                  "profile.skills": "Profile skills", "profile.experiences": "Profile experience",
+                  "profile.projects": "Profile project", "profile.certifications": "Profile certification",
+                  "resume.skills": "CV skills", "resume.experiences": "CV experience",
+                  "resume.projects": "CV project", "resume.certifications": "CV certification",
+                } as Record<string, string>)[source] || "Career document").join(" · ")}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       {role.plan.length > 0 && (
         <section className="space-y-2">
           <h3 className="text-sm font-semibold">Suggested next steps</h3>
@@ -524,7 +557,7 @@ export function CareerMapPage() {
           >
             {error === "MAP_LIMIT"
               ? "You have reached the map creation limit. Try again later."
-              : error}
+              : CAREER_MAP_ERRORS[error] ?? error}
           </div>
         )}
 

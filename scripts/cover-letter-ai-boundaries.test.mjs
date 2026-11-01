@@ -19,7 +19,10 @@ test('generation uses the account profile and existing letter, without querying 
   const s=read('src/app/api/cover-letters/[id]/assistant/route.ts');
   assert.match(s,/getProfileFacts\(user\.id/);
   assert.doesNotMatch(s,/careerEvidence\.findMany/);
-  assert.match(s,/lockLetterIdentity\(/);
+  // The LangGraph verification tool now enforces identity locks for ALL entry points.
+  assert.match(s,/runCoverLetterEditAgent\(/);
+  const verify=read('src/lib/agentic/agents/cover-letter/tools/verify-edit.tool.ts');
+  assert.match(verify,/lockLetterIdentity\(/);
 });
 test('studio compares and approves a proposal rather than committing model output',()=>{
   const s=read('src/components/resumes/cover-letter-studio.tsx');

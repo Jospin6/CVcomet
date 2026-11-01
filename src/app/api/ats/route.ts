@@ -5,7 +5,7 @@ import prisma from "../../../../prisma/prisma";
 import { requireUser } from "@/lib/career/auth-user";
 import { apiError } from "@/lib/career/api";
 import { atsStorageScores, storedAtsReport, type AtsAnalysis } from "@/lib/career/ats";
-import { assessAtsResume } from "@/lib/career/ats-service";
+import { runAtsAgent } from "@/lib/agentic/agents/ats/agent/ats.agent";
 import { inspectAtsPdf, MAX_ATS_PDF_BYTES } from "@/lib/career/ats-pdf";
 import { normalizeEditorResume, resumeContentSchema } from "@/lib/resume-editor";
 import { boundedBody, ProfileError } from "@/lib/career-profile/http";
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     if (!operation) {
       operation = (async () => {
         const document = pdf ? await inspectAtsPdf(pdf, resume, body.language) : undefined;
-        const report = await assessAtsResume({ userId: user.id, resume, keywords: body.keywords, language: body.language, document, jobDescription, jobAnalysis: job?.analysis });
+        const report = await runAtsAgent({ actorId: user.id, input: { resume, keywords: body.keywords, language: body.language, document, jobDescription, jobAnalysis: job?.analysis }, signal: req.signal });
         if (targetJob) report.targetJob = targetJob;
         report.fingerprint = fingerprint;
         const saved = await prisma.atsAnalysis.create({ data: { ...atsStorageScores(report), userId: user.id, cvId: cv.id, strengths: report.strengths, issues: { kind: "ATS_REPORT_V2", report } as unknown as Prisma.InputJsonValue } });

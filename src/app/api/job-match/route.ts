@@ -6,11 +6,12 @@ import prisma from "../../../../prisma/prisma";
 import { requireUser } from "@/lib/career/auth-user";
 import { requireFeature } from "@/lib/career/entitlements";
 import { apiError } from "@/lib/career/api";
-import { analyzeJobDescription, matchJob } from "@/lib/career/job-match";
+import { runJobMatchAgent } from "@/lib/agentic/agents/job-match/agent/job-match.agent";
+import { validateSavedJobAnalysis } from "@/lib/agentic/agents/job-match/tools/plan.tool";
 import { getCareerProfile } from "@/lib/career-profile/service";
 import { reserveProfileAI } from "@/lib/career-profile/ai";
 import { ProfileError, profileJson } from "@/lib/career-profile/http";
-import { jobTextSchema, jobSourceSchema, jobAnalysisSchema } from "@/lib/career/job-schema";
+import { jobTextSchema, jobSourceSchema } from "@/lib/career/job-schema";
 import { normalizeJobText } from "@/lib/career/job-input";
 import { normalizeEditorResume } from "@/lib/resume-editor";
 import { savedJobTitle } from "@/lib/career/job-opportunities";
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
       : body.source;
     const fingerprint = createHash("sha256")
       .update(JSON.stringify({
-        version: 2,
+        version: 3,
         userId: user.id,
         applicationJobId: application?.jobId,
         cvId: cv?.id,
@@ -99,14 +100,15 @@ export async function POST(req: Request) {
     if (inFlight.has(fingerprint)) return NextResponse.json(await inFlight.get(fingerprint));
 
     const operation = (async () => {
-      const oldAnalysis = application?.job?.analysis
-        ? jobAnalysisSchema.safeParse(application.job.analysis)
-        : null;
-      if (!oldAnalysis?.success) await reserveProfileAI(user.id, "JOB_ANALYSIS");
-      const analysis = oldAnalysis?.success
-        ? oldAnalysis.data
-        : await analyzeJobDescription(description, undefined, body.language);
-      const result = matchJob(profile, analysis, resume);
+      // Do not trust a stored analysis when its citations no longer match the
+      // owned posting. Charge only when fresh extraction is actually required.
+      const savedAnalysis = validateSavedJobAnalysis(application?.job?.analysis, description);
+      if (!savedAnalysis) await reserveProfileAI(user.id, "JOB_ANALYSIS");
+      const { analysis, match: result } = await runJobMatchAgent({
+        actorId: user.id,
+        input: { description, language: body.language, profile, resume, savedAnalysis },
+        signal: req.signal,
+      });
 
       return prisma.$transaction(async tx => {
         const job = application?.job ?? await tx.jobOpportunity.create({
@@ -138,7 +140,7 @@ export async function POST(req: Request) {
 
         // Keep the linked job unchanged but persist its analysis for the
         // result page; otherwise the new match cannot be rendered on reload.
-        if (application?.job && !oldAnalysis?.success) {
+        if (application?.job && !savedAnalysis) {
           await tx.jobOpportunity.update({
             where: { id: job.id },
             data: {
