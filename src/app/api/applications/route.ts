@@ -16,9 +16,14 @@ export async function POST(req: Request) {
     // This also makes the existing Job Match "Save application" action functional.
     const job = b.jobId ? await prisma.jobOpportunity.findFirst({
       where: { id: b.jobId, userId: u.id },
-      select: { id: true, title: true, company: true, location: true, sourceUrl: true },
+      select: { id: true, title: true, company: true, location: true, sourceUrl: true, description: true },
     }) : null;
     if (b.jobId && !job) throw new ProfileError(404, "JOB_NOT_FOUND");
+    // A new application is a concrete CV + job-description pair.
+    // Keep old incomplete applications readable for migration, but never create more.
+    if (!b.cvId) throw new ProfileError(422, "APPLICATION_CV_REQUIRED");
+    if (!b.jobId || !job?.description || job.description.trim().length < 100)
+      throw new ProfileError(422, "APPLICATION_JOB_DESCRIPTION_REQUIRED");
     const jobTitle = (b.jobTitle || job?.title || "").trim();
     const company = (b.company || job?.company || (job ? "Entreprise à préciser" : "")).trim();
     if (!company || !jobTitle) throw new ProfileError(400, "COMPANY_AND_TITLE_REQUIRED");
@@ -28,12 +33,17 @@ export async function POST(req: Request) {
     ]);
     if (b.cvId && !cv) throw new ProfileError(404, "RESUME_NOT_FOUND");
     if (b.coverLetterId && !letter) throw new ProfileError(404, "LETTER_NOT_FOUND");
+    if (letter && ((letter.cvId && letter.cvId !== b.cvId) ||
+      (letter.jobId && letter.jobId !== b.jobId))) {
+      throw new ProfileError(409, "LETTER_CONTEXT_MISMATCH");
+    }
     const existing = await prisma.jobApplication.findFirst({
       where: { userId: u.id, archivedAt: null,
         ...(job ? { jobId: job.id } : { company, jobTitle }) },
-      select: { id: true },
+      select: { id: true, cvId: true },
     });
     if (existing) {
+      if (existing.cvId !== b.cvId) throw new ProfileError(409, "APPLICATION_RESUME_MISMATCH");
       if (reopenExisting) return NextResponse.json({ id: existing.id, reused: true });
       throw new ProfileError(409, "DUPLICATE_APPLICATION");
     }

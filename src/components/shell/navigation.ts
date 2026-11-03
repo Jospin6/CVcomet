@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   ContactRound,
   FileText,
-  ScanLine,
   BriefcaseBusiness,
   Map,
   ClipboardList,
@@ -34,7 +33,6 @@ export const navigationGroups: { key: string; items: NavigationItem[] }[] = [
   {
     key: "jobSearch",
     items: [
-      { key: "ats", icon: ScanLine, href: "/dashboard/ats" },
       { key: "jobMatch", icon: BriefcaseBusiness, href: "/dashboard/job-match" },
       { key: "careerMap", icon: Map, href: "/dashboard/career-map" },
       { key: "applications", icon: ClipboardList, href: "/dashboard/applications" },
@@ -58,7 +56,6 @@ export const commandActions: NavigationItem[] = [
   { key: "assistant", icon: Sparkles, href: "/dashboard/assistant" },
   { key: "createResume", icon: FileText, href: "/dashboard/resumes" },
   { key: "createLetter", icon: FileText, href: "/dashboard/cover-letters" },
-  { key: "analyzeResume", icon: ScanLine, href: "/dashboard/ats" },
   { key: "matchJob", icon: BriefcaseBusiness, href: "/dashboard/job-match" },
   { key: "careerMap", icon: Map, href: "/dashboard/career-map" },
   { key: "addApplication", icon: ClipboardList, href: "/dashboard/applications" },

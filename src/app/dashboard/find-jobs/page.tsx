@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import {
   FindJob,
   JobDetailView,
-  CompanyLogo,
   JobResultRow,
   PrepareAction,
 } from "@/components/jobs/find-jobs-view";
@@ -139,8 +138,6 @@ function getLabels(french: boolean) {
         sourcesWarning: "Certaines offres sont temporairement indisponibles.",
         reset: "Réinitialiser",
         apply: "Appliquer les filtres",
-        companies: "Entreprises populaires",
-        trending: "Postes recherchés",
         results: "Offres d'emploi",
         loading: "Chargement des offres…",
         empty: "Aucune offre ne correspond à cette recherche.",
@@ -178,8 +175,6 @@ function getLabels(french: boolean) {
         sourcesWarning: "Some jobs are temporarily unavailable.",
         reset: "Reset filters",
         apply: "Apply filters",
-        companies: "Popular companies",
-        trending: "Trending positions",
         results: "Job openings",
         loading: "Loading jobs…",
         empty: "No matching jobs found.",
@@ -223,6 +218,9 @@ export default function FindJobs() {
   const [saving, setSaving] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [error, setError] = useState("");
+  const [pendingPrepare, setPendingPrepare] = useState<{ job: FindJob; action: PrepareAction } | null>(null);
+  const [availableResumes, setAvailableResumes] = useState<{ id: string; title: string }[]>([]);
+  const [chosenResume, setChosenResume] = useState("");
 
   // Keep saved status aligned with server data, including jobs saved previously.
   useEffect(() => {
@@ -399,8 +397,18 @@ export default function FindJobs() {
     }
   };
 
-  const prepare = async (job: FindJob, action: PrepareAction) => {
+  const prepare = async (job: FindJob, action: PrepareAction, cvId?: string) => {
     if (preparing) return;
+    if (!cvId) {
+      try {
+        const response = await fetch("/api/cvs?mine=1", { cache: "no-store" });
+        if (!response.ok) throw Error("RESUMES_UNAVAILABLE");
+        setAvailableResumes(await response.json());
+        setChosenResume("");
+        setPendingPrepare({ job, action });
+      } catch { setError(c.trackingError); }
+      return;
+    }
     setPreparing(true);
     setError("");
 
@@ -443,6 +451,7 @@ export default function FindJobs() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           jobId,
+          cvId,
           company: job.company || "Unknown company",
           jobTitle: job.title,
           location: job.location || undefined,
@@ -458,6 +467,7 @@ export default function FindJobs() {
       if (!application.id) throw new Error("APPLICATION_ID_MISSING");
       const id = encodeURIComponent(application.id);
 
+      setPendingPrepare(null);
       if (action === "interview") {
         router.push(`/dashboard/interviews?applicationId=${id}`);
       } else if (action === "letter") {
@@ -490,10 +500,25 @@ export default function FindJobs() {
           saved={savedMap.has(selected.sourceUrl)}
           saving={saving === selected.sourceUrl}
           preparing={preparing}
-          onBack={() => { setSelected(null); setError(""); }}
+          onBack={() => { setSelected(null); setError(""); setPendingPrepare(null); }}
           onSave={(job) => void toggleSave(job)}
           onPrepare={(job, action) => void prepare(job, action)}
         />
+        {pendingPrepare && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-label={french ? "Associer un CV" : "Link a resume"}>
+          <div className="w-full max-w-sm space-y-4 rounded-xl border bg-background p-5 shadow-xl">
+            <h2 className="text-sm font-semibold">{french ? "Sélectionnez le CV de cette candidature" : "Choose the resume for this application"}</h2>
+            {availableResumes.length ? <select className="h-10 w-full rounded-md border bg-background px-2 text-sm" value={chosenResume} onChange={event => setChosenResume(event.target.value)}>
+              <option value="">{french ? "Choisir un CV" : "Choose a resume"}</option>
+              {availableResumes.map(cv => <option key={cv.id} value={cv.id}>{cv.title || "Resume"}</option>)}
+            </select> : <p className="text-xs text-muted-foreground">{french ? "Créez d'abord un CV dans Documents." : "Create a resume in Documents first."}</p>}
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => setPendingPrepare(null)}>{french ? "Annuler" : "Cancel"}</Button>
+              <Button size="sm" disabled={!chosenResume || preparing} onClick={() => void prepare(pendingPrepare.job, pendingPrepare.action, chosenResume)}>
+                {french ? "Continuer" : "Continue"}
+              </Button>
+            </div>
+          </div>
+        </div>}
       </div>
     );
   }
@@ -731,56 +756,6 @@ export default function FindJobs() {
           </div>
         )}
       </section>
-
-      {/* All suggestions come from real analyzed offers, not hardcoded lists. */}
-      {tab !== "saved" && data.companies.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="text-sm font-medium">{c.companies}</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {data.companies.map((company) => (
-              <button
-                key={company.name}
-                type="button"
-                onClick={() => searchFor(company.name)}
-                className={
-                  "flex min-h-24 min-w-28 shrink-0 flex-col items-center " +
-                  "justify-center gap-2 rounded-2xl border bg-card p-3 " +
-                  "text-sm transition-colors hover:border-primary/30"
-                }
-              >
-                <CompanyLogo
-                  name={company.name}
-                  logoUrl={company.logoUrl}
-                />
-                <span className="max-w-28 truncate">{company.name}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {tab !== "saved" && data.positions.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-medium">{c.trending}</h2>
-          <div className="flex flex-wrap gap-2">
-            {data.positions.map((role) => (
-              <button
-                key={role.title}
-                type="button"
-                onClick={() => searchFor(role.title)}
-                className={
-                  "inline-flex items-center gap-2 rounded-xl border bg-card " +
-                  "px-3 py-2 text-xs font-medium transition-colors " +
-                  "hover:border-primary/30 hover:bg-muted/20 sm:text-sm"
-                }
-              >
-                <BriefcaseBusiness className="size-4 text-primary" />
-                {role.title}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Search results: compact horizontal rows, not image-led cards. */}
       <section ref={resultsRef} id="job-results" className="scroll-mt-6 space-y-4">

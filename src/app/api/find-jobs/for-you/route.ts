@@ -31,12 +31,10 @@ const inputSchema = z.object({
 }).strict();
 
 /**
- * Narrow interface for the preferences delegate. A stale generated Prisma client
- * might not have this delegate yet; GET and POST degrade gracefully until
- * `prisma generate` is run after applying the schema/migration.
- *
- * This is deliberately typed rather than `any`, and still only accepts the
- * authenticated user's ID in the routes below.
+ * A generated Prisma client can be older than an already-applied Neon schema.
+ * Prefer the typed delegate when present, but use parameterized SQL for this
+ * one known table if the delegate is absent or its generated mapping is stale.
+ * Never interpret a missing delegate as evidence of a missing migration.
  */
 type PreferenceStore = {
   findUnique: (args: {
@@ -126,11 +124,61 @@ async function defaultsFromCareerProfile(
   };
 }
 
-/** Only missing preference tables are optional; all other DB failures surface. */
-function missingPreferenceTable(error: unknown): boolean {
+/** Prisma reports missing relations/columns differently for model and raw SQL. */
+function isPreferenceSchemaError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
-  const code = (error as { code?: unknown }).code;
-  return code === "P2021" || code === "P2022";
+  const failure = error as { code?: unknown; meta?: { code?: unknown } };
+  return failure.code === "P2021" || failure.code === "P2022" ||
+    (failure.code === "P2010" &&
+      (failure.meta?.code === "42P01" || failure.meta?.code === "42703"));
+}
+
+/** SQL parameters are bound by Prisma; the table/column identifiers are static. */
+async function readSavedPreference(userId: string): Promise<{ filters: unknown } | null> {
+  const store = getPreferenceStore();
+  if (store) {
+    try {
+      return await store.findUnique({ where: { userId } });
+    } catch (error) {
+      // The generated model can be stale even if the table exists in Neon.
+      if (!isPreferenceSchemaError(error)) throw error;
+    }
+  }
+  const rows = await prisma.$queryRaw<Array<{ filters: unknown }>>`
+    SELECT "filters"
+    FROM public."JobRecommendationPreference"
+    WHERE "userId" = ${userId}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
+async function savePreference(
+  userId: string, filters: MatchingPreferences,
+): Promise<void> {
+  const store = getPreferenceStore();
+  if (store) {
+    try {
+      await store.upsert({
+        where: { userId },
+        create: { userId, filters },
+        update: { filters },
+      });
+      return;
+    } catch (error) {
+      if (!isPreferenceSchemaError(error)) throw error;
+    }
+  }
+  // The SQL path works without a regenerated JobRecommendationPreference model.
+  // Keep updatedAt in sync with the @updatedAt behavior of Prisma's delegate.
+  await prisma.$executeRaw`
+    INSERT INTO public."JobRecommendationPreference"
+      ("userId", "filters", "updatedAt")
+    VALUES (${userId}, ${JSON.stringify(filters)}::jsonb, CURRENT_TIMESTAMP)
+    ON CONFLICT ("userId") DO UPDATE SET
+      "filters" = EXCLUDED."filters",
+      "updatedAt" = CURRENT_TIMESTAMP
+  `;
 }
 
 // In-process optimization only. Never cache profiles or job text in LangGraph.
@@ -145,25 +193,18 @@ export async function GET() {
     try {
       profileDefaults = await defaultsFromCareerProfile(user.id);
     } catch (error) {
-      if (!missingPreferenceTable(error)) throw error;
-    }
-    const preferenceStore = getPreferenceStore();
-    if (!preferenceStore) {
-      return NextResponse.json({
-        preferences: profileDefaults,
-        warningCode: "PRISMA_MIGRATION_REQUIRED",
-      }, { headers: { "Cache-Control": "no-store" } });
+      if (!isPreferenceSchemaError(error)) throw error;
     }
     try {
-      const saved = await preferenceStore.findUnique({
-        where: { userId: user.id },
-      });
+      const saved = await readSavedPreference(user.id);
       const parsed = matchingPreferencesSchema.safeParse(saved?.filters);
       return NextResponse.json({
         preferences: parsed.success ? parsed.data : profileDefaults,
       }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) {
-      if (!missingPreferenceTable(error)) throw error;
+      if (!isPreferenceSchemaError(error)) throw error;
+      // The table/columns are missing from the connected database, not merely
+      // from the generated Prisma client. Return safe defaults, not a fake save.
       return NextResponse.json({
         preferences: profileDefaults,
         warningCode: "PRISMA_MIGRATION_REQUIRED",
@@ -201,16 +242,11 @@ export async function POST(req: Request) {
     // not make genuine job listings inaccessible.
     let preferenceWarning: string | null = null;
     if (input.save) {
-      const store = getPreferenceStore();
-      if (!store) preferenceWarning = "PRISMA_MIGRATION_REQUIRED";
-      else try {
-        await store.upsert({
-          where: { userId: user.id },
-          update: { filters: preferences },
-          create: { userId: user.id, filters: preferences },
-        });
+      try {
+        await savePreference(user.id, preferences);
       } catch (error) {
-        if (!missingPreferenceTable(error)) throw error;
+        if (!isPreferenceSchemaError(error)) throw error;
+        // Only a database schema failure should trigger this warning.
         preferenceWarning = "PRISMA_MIGRATION_REQUIRED";
       }
     }

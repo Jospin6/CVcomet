@@ -140,7 +140,7 @@ export default function JobMatch() {
   const generateEmail = () => act("email", async () => { setEmail(await request<Email>("/api/application-email", { ...documentBody(), action: "GENERATE" })); });
   const saveLetter = () => act("save-letter", async () => { const data = await request<{ letterId: string }>("/api/generate-cover-letter", { ...documentBody(), action: "SAVE", draft: letter }); setLetterConversation(data.letterId); setMessage(c.saved); });
   const saveEmail = () => act("save-email", async () => { await request("/api/application-email", { ...documentBody(), action: "SAVE", draft: email }); setMessage(c.saved); });
-  const saveApplication = () => act("application", async () => { const data = await request<{ id: string }>("/api/applications", { jobId: result!.job.id, cvId: result!.tailoredCvId || cvId || undefined }); setApplicationId(data.id); setMessage(c.saved); });
+  const saveApplication = () => act("application", async () => { const selectedResume = result!.tailoredCvId || cvId; if (!selectedResume) throw new Error(language === "fr" ? "Sélectionnez un CV avant de créer la candidature." : "Select a resume before creating this application."); const data = await request<{ id: string }>("/api/applications", { jobId: result!.job.id, cvId: selectedResume }); setApplicationId(data.id); setMessage(c.saved); });
   const copy = (value: string) => act("copy", async () => { await navigator.clipboard.writeText(value); setMessage(c.copied); });
   const analysis = result?.job.analysis, match = result?.result;
   const applicationCvId = result?.tailoredCvId || cvId;

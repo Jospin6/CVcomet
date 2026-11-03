@@ -53,12 +53,13 @@ export function ApplicationIntake({ onClose }: { onClose: () => void }) {
 
   const create = async () => {
     if (!job || creating) return;
+    if (!form.cvId) { setError(language === "fr" ? "Sélectionnez un CV pour cette candidature." : "Select a resume for this application."); return; }
     setCreating(true); setError("");
     try {
       const response = await fetch("/api/applications", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ jobId: job.job.id, reopenExisting: true }),
+        body: JSON.stringify({ jobId: job.job.id, cvId: form.cvId, reopenExisting: true }),
       });
       const result = await response.json().catch(() => null) as { id?: string; error?: string; reused?: boolean } | null;
       if (!response.ok || !result?.id) throw new Error(result?.error || "CREATE_FAILED");
@@ -74,11 +75,11 @@ export function ApplicationIntake({ onClose }: { onClose: () => void }) {
       <div><h2 className="text-base font-semibold">{c.question}</h2><p className="mt-1 text-xs text-muted-foreground">{c.hint}</p></div>
       <Button size="icon" variant="ghost" onClick={onClose} aria-label={c.close}><X className="size-4" /></Button>
     </div>
-    <JobAnalysisForm form={form} showResumeSelection={false} analyzeLabel={c.analyze} />
+    <JobAnalysisForm form={form} showResumeSelection={true} analyzeLabel={c.analyze} />
     {job && <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t bg-primary/[0.03] px-4 py-3">
       <div className="min-w-0"><p className="text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{c.review}</p><p className="mt-1 truncate text-sm font-semibold">{job.job.title}</p><p className="truncate text-xs text-muted-foreground">{[job.job.company, job.job.location].filter(Boolean).join(" · ")}</p></div>
-      <Button disabled={creating} onClick={() => void create()}>{creating ? <LoaderCircle className="size-4 animate-spin" /> : <Check className="size-4" />}{creating ? c.creating : c.create}<ArrowRight className="size-4" /></Button>
+      <Button disabled={creating || !form.cvId} onClick={() => void create()}>{creating ? <LoaderCircle className="size-4 animate-spin" /> : <Check className="size-4" />}{creating ? c.creating : c.create}<ArrowRight className="size-4" /></Button>
     </div>}
-    {error && <p role={error === "EXISTING" ? "status" : "alert"} className={error === "EXISTING" ? "mt-3 text-xs text-primary" : "mt-3 text-xs text-destructive"}>{error === "EXISTING" ? c.existing : c.failed}</p>}
+    {error && <p role={error === "EXISTING" ? "status" : "alert"} className={error === "EXISTING" ? "mt-3 text-xs text-primary" : "mt-3 text-xs text-destructive"}>{error === "EXISTING" ? c.existing : error === "CREATE_FAILED" ? c.failed : error}</p>}
   </section>;
 }

@@ -124,7 +124,7 @@ const tools: ToolLink[] = [
   {
     id: "ats",
     icon: TrendingUp,
-    href: "/dashboard/ats",
+    href: "/dashboard/resumes",
     title: ["Analyse de CV", "Resume Analysis"],
     description: ["Comprendre les points à améliorer", "Find ways to improve"],
   },
@@ -138,7 +138,7 @@ const tools: ToolLink[] = [
   {
     id: "feedback",
     icon: FileSearch,
-    href: "/dashboard/ats",
+    href: "/dashboard/resumes",
     title: ["Avis sur mon CV", "Resume Feedback"],
     description: ["Obtenir des conseils d'amélioration", "Get improvement feedback"],
   },
@@ -190,7 +190,7 @@ const guides = [
   {
     id: "ats",
     icon: FileSearch,
-    href: "/dashboard/ats",
+    href: "/dashboard/resumes",
     fr: "Vérifier son CV avant de postuler",
     en: "Check your resume before applying",
   },

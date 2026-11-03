@@ -15,7 +15,14 @@ Return exactly one contributions entry per nonempty experience/project descripti
 Return exactly one skillEvidence entry for EVERY supplied claimedSkills term, without adding or merging terms. DEMONSTRATED requires a quoted practical application in an experience/project description with an identified action and method; equivalent natural-language wording is valid (for example a quoted negotiation action can support 'negotiation'). PARTIAL means some practical evidence is present but the claim is only partly supported. UNSUPPORTED means only a skills list/headline, vague duty or no relevant practical application is supplied, with an empty evidence list. Do not infer proficiency from mentioning or learning a tool. Evidence must be exact quotes from practical description fields, never a skills list, employer name or degree title.
 Return specific recommendations for the most consequential issues: headline unsupported by projects/experience; vague contributions; missing methods/deliverables; grammar; questionable classification (for example a mentoring activity under certifications). Never accuse a claim of being false, and never penalize a document for lacking unverifiable metrics. For a concern cite an EXACT quote and EXISTING field path. Missing fields are handled by structural checks, so do not fabricate missing-field quotes.
 Each recommendation needs a concise title, explanation, concrete next action and optional proposedText (empty string if more facts are needed). proposedText may ONLY rephrase the cited field without adding technologies, employers, dates, performance numbers or responsibilities. Preserve factual scope. Questions asking for missing facts belong in suggestion, never in a fabricated rewrite.
-Return explanations, titles and suggestions in the requested language. Preserve the original language of each field in proposedText; this task does not request translation. Preserve evidence quotations in their original language.`;
+Return explanations, titles and suggestions in the requested language. Preserve the original language of each field in proposedText; this task does not request translation. Preserve evidence quotations in their original language.
+
+MANDATORY OUTPUT CONTRACT (all four root arrays are required, no additional keys):
+- skillEvidence: [{"skill":"exact supplied term","status":"DEMONSTRATED|PARTIAL|UNSUPPORTED","evidence":[{"field":"existing field path","quote":"exact verbatim substring"}]}]. Exactly one per claimedSkills term, in the same order; status UNSUPPORTED needs evidence [].
+- contributions: [{"field":"existing description path","actionQuote":"verbatim or empty","methodQuote":"verbatim or empty","outcomeQuote":"verbatim or empty","outcomeType":"OBSERVED|TASK_ONLY|NOT_STATED"}]. Exactly one per requiredContributionFields path (possibly []).
+- criteria: [{"id":"specificity|positioning|writing","rating":0,"reason":"explanation at least 10 characters","evidence":[{"field":"existing field path","quote":"exact verbatim substring"}]}]. Exactly 3 objects, one per ID; use integer rating 0-4, and evidence [] if rating is zero.
+- issues: [{"field":"existing field path","severity":"critical|warning|info","title":"short title","reason":"explanation at least 10 characters","suggestion":"specific action at least 10 characters","quote":"verbatim source excerpt","proposedText":"safe rephrase or empty string"}]. Zero or more; prefer [] over unverifiable suggestions.
+Do NOT output '|' separated alternatives literally: choose ONE enum value. Do NOT omit fields, add null or invent quotations. Keep quotes short and precisely copied. The examples above describe field types, not real content to copy.`;
 }
 
 /** Document fields are untrusted data, not tool instructions. */
@@ -24,6 +31,7 @@ export function atsEvidenceReviewUserPrompt(input: {
   headline: string;
   visibleFields: AtsEvidence[];
   claimedSkills: { term: string }[];
+  requiredContributionFields?: string[];
   correction?: { reason: string; untrustedPreviousResponse?: unknown };
 }) {
   return JSON.stringify(input);

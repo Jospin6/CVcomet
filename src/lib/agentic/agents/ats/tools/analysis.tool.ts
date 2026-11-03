@@ -4,7 +4,8 @@ import { reserveProfileAI } from "@/lib/career-profile/ai";
 import { ProfileError, profileAIError } from "@/lib/career-profile/http";
 import { emptyProfile } from "@/lib/career-profile/schema";
 import { reviewAtsContent } from "@/lib/career/ats-review";
-import { analyzeJobDescription, matchJob } from "@/lib/career/job-match";
+import { matchJob } from "@/lib/career/job-match";
+import { extractAtsJobRequirements } from "./job-extraction.tool";
 import { assessAtsJobMatch } from "@/lib/career/ats-job-match";
 import type { JobAnalysis } from "@/lib/career/job-schema";
 import type { EditorResume } from "@/lib/resume-editor";
@@ -33,12 +34,14 @@ export async function prepareAtsModel(identity: AgentRunIdentity, signal: AbortS
   try {
     const model = deps.acquireModel
       ? await deps.acquireModel(identity.access.actorId, signal)
-      : await getAIModel({ structuredOutputs: true });
+      : await getAIModel();
     if (!deps.acquireModel) await reserveProfileAI(identity.access.actorId, "ATS_REVIEW");
     return { model, modelError: null };
   } catch (error) {
     if (signal.aborted) throw new AgenticError("AGENT_CANCELLED", 499);
-    return { model: null, modelError: code(error) };
+    const category = code(error);
+    console.warn("ATS model preparation unavailable", { category });
+    return { model: null, modelError: category };
   }
 }
 
@@ -51,7 +54,9 @@ export async function runAtsEvidenceReview(
     return await (deps.review ?? reviewAtsContent)(state.plan.visible, state.input.language ?? "en", state.model, signal);
   } catch (error) {
     if (signal.aborted) throw new AgenticError("AGENT_CANCELLED", 499);
-    return unavailable(code(error));
+    const category = code(error);
+    console.warn("ATS semantic review unavailable", { category });
+    return unavailable(category);
   }
 }
 
@@ -66,10 +71,12 @@ export async function runAtsJobMatch(
   try {
     const job = deps.extractJob
       ? await deps.extractJob(state.input.jobDescription ?? "", state.input.language ?? "en", state.model)
-      : await analyzeJobDescription(state.input.jobDescription ?? "", undefined, state.input.language ?? "en", state.model);
+      : await extractAtsJobRequirements(state.input.jobDescription ?? "", state.input.language ?? "en", state.model, signal);
     return assessAtsJobMatch(visible, matchJob(emptyProfile(), job, visible));
   } catch (error) {
     if (signal.aborted) throw new AgenticError("AGENT_CANCELLED", 499);
-    return { status: "UNAVAILABLE", score: null, error: code(error), requirements: [] };
+    const category = code(error);
+    console.warn("ATS job analysis unavailable", { category });
+    return { status: "UNAVAILABLE", score: null, error: category, requirements: [] };
   }
 }

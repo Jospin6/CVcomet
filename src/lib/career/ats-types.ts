@@ -40,4 +40,7 @@ export type AtsAnalysis = {
   review: { status: SemanticReview["status"]; error?: string };
   keywords: { matched: string[]; missing: string[]; status: "NOT_PROVIDED" | "CHECKED" };
   strengths: string[]; issues: AtsIssue[];
+  diagnostics?: ("PDF_UNAVAILABLE" | "ATS_ENGINE_UNAVAILABLE")[];
+  supportingLetter?: { status: "LINKED" | "PROVIDED" | "NOT_PROVIDED"; note: string; checks?: { label: string; observed: boolean | null }[] };
+
 };
