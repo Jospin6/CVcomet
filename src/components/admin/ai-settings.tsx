@@ -1,4 +1,5 @@
 "use client";
+import { getCentralCopy } from "@/lib/i18n/central-copy";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -12,52 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import type { AIAdminView, AIProviderId, AIProviderView, AIModelOption } from "@/lib/ai/catalog";
 
-const copy = {
-  fr: {
-    back: "Administration", title: "Fournisseurs et modèles IA", description: "Configurez les cinq fournisseurs et choisissez celui utilisé par toutes les fonctions IA.",
-    current: "Configuration active", applies: "Utilisée pour les imports de CV, les réécritures, les CV, les lettres, les emails, l’analyse des offres et l’assistant.",
-    immediate: "Chaque changement s’applique aux prochaines requêtes, sans redémarrage.", active: "Actif", ready: "Clé configurée", missing: "Clé manquante", disabled: "Désactivé",
-    key: "Clé API", keyHint: "Laissez ce champ vide pour conserver la clé actuelle. Une nouvelle clé la remplace à l’enregistrement.",
-    savedKey: "Une clé chiffrée est enregistrée.", serverKey: "Une clé est configurée sur le serveur.", noKey: "Ajoutez une clé pour utiliser ce fournisseur.",
-    model: "Modèle", modelHint: "Chargez la liste, puis sélectionnez un modèle ou saisissez son identifiant exact.", load: "Charger les modèles", loaded: "modèles disponibles",
-    enabled: "Fournisseur disponible", save: "Enregistrer", activate: "Enregistrer et activer", test: "Tester le modèle", testHint: "Le test effectue une courte génération JSON, facturée par le fournisseur selon votre offre.",
-    remove: "Supprimer la clé", server: "Utiliser la clé du serveur", success: "Configuration enregistrée", activated: "Fournisseur activé", tested: "Connexion et génération JSON réussies", ms: "ms",
-    keyRemoved: "Clé supprimée", keyRestored: "Clé du serveur sélectionnée", encryption: "Le serveur doit avoir un secret de chiffrement pour enregistrer les clés.",
-    security: "Les clés restent côté serveur et sont chiffrées en base. Elles ne sont jamais affichées dans cette page.",
-    errors: {
-      AI_AUTH_ERROR: "Clé refusée ou accès non autorisé. Vérifiez la clé et les permissions du fournisseur.", AI_RATE_LIMIT: "Quota ou limite du fournisseur atteint. Vérifiez votre offre et votre facturation.",
-      AI_TIMEOUT: "Le fournisseur a mis trop de temps à répondre.", AI_FAILED: "L’appel au fournisseur a échoué. Réessayez ou vérifiez sa configuration.",
-      AI_PROVIDER_UNAVAILABLE: "Le service du fournisseur est temporairement indisponible ou surchargé. Réessayez dans un instant ou choisissez un autre modèle ou fournisseur.",
-      AI_INVALID_RESPONSE: "Le modèle n’a pas renvoyé des données JSON exploitables. Réessayez ou choisissez un autre modèle.",
-      AI_UNAVAILABLE: "Ajoutez une clé et un modèle, puis activez le fournisseur.", AI_KEY_REQUIRED: "Ajoutez une clé API avant de charger les modèles.",
-      AI_KEY_UNREADABLE: "La clé enregistrée ne peut plus être déchiffrée. Enregistrez une nouvelle clé.", AI_ENCRYPTION_UNAVAILABLE: "Le secret de chiffrement du serveur est manquant.",
-      AI_ACTIVE_PROVIDER_REQUIRED: "Activez d’abord un autre fournisseur avant de désactiver celui-ci ou de supprimer sa clé.", AI_PROVIDER_NOT_READY: "Le fournisseur doit être disponible et avoir une clé et un modèle.",
-      AI_MODEL_UNAVAILABLE: "Ce modèle est introuvable ou ne prend pas en charge cette opération.", FORBIDDEN: "Cette action est réservée aux administrateurs.", UNAUTHORIZED: "Reconnectez-vous pour continuer.", VALIDATION: "Vérifiez les champs saisis.",
-    },
-  },
-  en: {
-    back: "Administration", title: "AI providers and models", description: "Configure all five providers and choose the one used by every AI feature.",
-    current: "Active configuration", applies: "Used for resume imports, rewriting, resumes, cover letters, emails, job analysis and the assistant.",
-    immediate: "Changes apply to new requests immediately, without restarting.", active: "Active", ready: "Key configured", missing: "Missing key", disabled: "Disabled",
-    key: "API key", keyHint: "Leave this field empty to keep the current key. A new key replaces it when you save.",
-    savedKey: "An encrypted key is stored.", serverKey: "A key is configured on the server.", noKey: "Add a key to use this provider.",
-    model: "Model", modelHint: "Load the list, then select a model or enter its exact identifier.", load: "Load models", loaded: "available models",
-    enabled: "Provider available", save: "Save", activate: "Save and activate", test: "Test model", testHint: "The test makes a short JSON generation request, billed by the provider according to your plan.",
-    remove: "Remove key", server: "Use server key", success: "Configuration saved", activated: "Provider activated", tested: "Connection and JSON generation successful", ms: "ms",
-    keyRemoved: "Key removed", keyRestored: "Server key selected", encryption: "The server needs an encryption secret to store keys.",
-    security: "Keys stay on the server and are encrypted in the database. They are never displayed on this page.",
-    errors: {
-      AI_AUTH_ERROR: "Key rejected or access denied. Check the provider key and permissions.", AI_RATE_LIMIT: "The provider quota or rate limit was reached. Check your plan and billing.",
-      AI_TIMEOUT: "The provider took too long to respond.", AI_FAILED: "The provider request failed. Try again or check its configuration.",
-      AI_PROVIDER_UNAVAILABLE: "The provider service is temporarily unavailable or overloaded. Try again shortly or choose another model or provider.",
-      AI_INVALID_RESPONSE: "The model did not return usable JSON data. Try again or choose another model.",
-      AI_UNAVAILABLE: "Add a key and model, then activate the provider.", AI_KEY_REQUIRED: "Add an API key before loading models.",
-      AI_KEY_UNREADABLE: "The stored key cannot be decrypted. Save a new key.", AI_ENCRYPTION_UNAVAILABLE: "The server encryption secret is missing.",
-      AI_ACTIVE_PROVIDER_REQUIRED: "Activate another provider before disabling this one or removing its key.", AI_PROVIDER_NOT_READY: "The provider must be available and have a key and model.",
-      AI_MODEL_UNAVAILABLE: "This model was not found or does not support this operation.", FORBIDDEN: "This action is reserved for administrators.", UNAUTHORIZED: "Sign in again to continue.", VALIDATION: "Check the entered values.",
-    },
-  },
-};
+const copy = getCentralCopy("aiSettings");
 type Copy = typeof copy.fr | typeof copy.en;
 
 async function api<T>(path: string, body: unknown, method = "POST"): Promise<T> {

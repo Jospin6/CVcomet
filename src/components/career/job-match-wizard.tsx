@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -128,13 +129,13 @@ export function JobMatchWizard({ open, onOpenChange, form, errorText }: Props) {
         <DialogHeader className="px-5 pt-5 pb-2 pr-12">
           <DialogTitle>
             {preview
-              ? fr ? "Aperçu du CV" : "Resume preview"
+              ? translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_wizard.text001")
               : c.title}
           </DialogTitle>
           <DialogDescription className="sr-only">
             {preview
-              ? fr ? "Aperçu du document" : "Document preview"
-              : fr ? "Analyser une offre" : "Analyze a job"}
+              ? translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_wizard.text002")
+              : translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_wizard.text003")}
           </DialogDescription>
         </DialogHeader>
 
@@ -153,7 +154,7 @@ export function JobMatchWizard({ open, onOpenChange, form, errorText }: Props) {
                 onClick={() => setPreview(null)}
               >
                 <ArrowLeft className="size-4" />
-                {fr ? "Retour aux CV" : "Back to resumes"}
+                {translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_wizard.text004")}
               </Button>
               <Button
                 type="button"
@@ -163,7 +164,7 @@ export function JobMatchWizard({ open, onOpenChange, form, errorText }: Props) {
                 }}
               >
                 <Check className="size-4" />
-                {fr ? "Choisir ce CV" : "Select this resume"}
+                {translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_wizard.text005")}
               </Button>
             </DialogFooter>
           </div>
@@ -184,7 +185,7 @@ export function JobMatchWizard({ open, onOpenChange, form, errorText }: Props) {
 
               {step === 1 ? (
                 <div className="space-y-4">
-                  <div className="flex flex-wrap gap-1" role="group" aria-label={fr ? "Méthode d'importation" : "Import method"}>
+                  <div className="flex flex-wrap gap-1" role="group" aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_wizard.text006")}>
                     {([
                       { key: "TEXT", label: "Text", icon: FileText },
                       { key: "URL", label: "URL", icon: Link2 },
@@ -323,7 +324,7 @@ export function JobMatchWizard({ open, onOpenChange, form, errorText }: Props) {
                           <button
                             type="button"
                             aria-pressed={selected}
-                            aria-label={`${fr ? "Choisir" : "Select"} ${title}`}
+                            aria-label={`${translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_wizard.text007")} ${title}`}
                             disabled={!!busy}
                             className="relative block w-full overflow-hidden bg-muted/40 p-2 text-left hover:bg-muted/70"
                             onClick={() => setCvId(cv.id)}
@@ -345,7 +346,7 @@ export function JobMatchWizard({ open, onOpenChange, form, errorText }: Props) {
                               type="button"
                               disabled={!!busy}
                               className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                              aria-label={`${fr ? "Aperçu" : "Preview"} ${title}`}
+                              aria-label={`${translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_wizard.text008")} ${title}`}
                               onClick={() => setPreview(record)}
                             >
                               <Eye className="size-4" />
@@ -384,7 +385,7 @@ export function JobMatchWizard({ open, onOpenChange, form, errorText }: Props) {
             <DialogFooter className="px-5 pb-5 pt-2">
               {step === 1 ? (
                 <Button type="button" disabled={!canContinue} onClick={() => setStep(2)}>
-                  {fr ? "Continuer" : "Continue"}
+                  {translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_wizard.text009")}
                   <ArrowRight className="size-4" />
                 </Button>
               ) : (
@@ -396,7 +397,7 @@ export function JobMatchWizard({ open, onOpenChange, form, errorText }: Props) {
                     onClick={() => setStep(1)}
                   >
                     <ArrowLeft className="size-4" />
-                    {fr ? "Retour" : "Back"}
+                    {translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_wizard.text010")}
                   </Button>
                   <Button type="button" disabled={!ready} onClick={() => void analyze()}>
                     {busy === "analyze" ? (

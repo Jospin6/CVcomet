@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -215,27 +216,27 @@ export function CareerProfilePage({ onboarding = false }: { onboarding?: boolean
 
         {importReview && (
           <div role="status" className="rounded-lg border bg-muted/20 p-3 text-xs leading-5">
-            <p className="font-medium">{french ? "Import IA — vérifie avant d’enregistrer" : "AI import — review before saving"}</p>
+            <p className="font-medium">{translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_profile_page.text001")}</p>
             <p className="text-muted-foreground">
-              {importReview.addedFields.length} {french ? "champs proposés" : "suggested fields"} ·
-              {Object.values(importReview.addedRecords).reduce((sum, count) => sum + (count || 0), 0)} {french ? "éléments ajoutés" : "records added"} ·
-              {importReview.conflicts.length} {french ? "conflits à vérifier" : "conflicts to review"}
+              {importReview.addedFields.length} {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_profile_page.text002")} ·
+              {Object.values(importReview.addedRecords).reduce((sum, count) => sum + (count || 0), 0)} {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_profile_page.text003")} ·
+              {importReview.conflicts.length} {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_profile_page.text004")}
             </p>
             {importReview.conflicts.length > 0 && (
               <p className="mt-1 text-muted-foreground">
-                {french ? "Valeurs existantes conservées : " : "Existing values preserved: "}
+                {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_profile_page.text005")}
                 {[...new Set(importReview.conflicts.map(item => item.field))].join(", ")}
               </p>
             )}
             {importReview.evidenceMode === "native_pdf_review" && (
-              <p className="mt-1 text-muted-foreground">{french ? "PDF scanné : vérifie soigneusement les informations extraites." : "Scanned PDF: carefully review extracted facts."}</p>
+              <p className="mt-1 text-muted-foreground">{translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_profile_page.text006")}</p>
             )}
             {Boolean(importReview.unverifiedFields?.length) && (
-              <p className="mt-1 text-muted-foreground">{french ? "Informations non vérifiées omises : " : "Unverified facts omitted: "}{importReview.unverifiedFields?.join(", ")}</p>
+              <p className="mt-1 text-muted-foreground">{translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_profile_page.text007")}{importReview.unverifiedFields?.join(", ")}</p>
             )}
             {Object.values(importReview.incompleteRecords).some(Boolean) && (
               <p className="mt-1 text-muted-foreground">
-                {french ? "Certains éléments incomplets ne sont pas ajoutés automatiquement." : "Incomplete records were not added automatically."}
+                {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_profile_page.text008")}
               </p>
             )}
           </div>

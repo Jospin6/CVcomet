@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useState } from "react";
 import { CheckCircle2, CircleAlert, LoaderCircle, ChevronDown } from "lucide-react";
@@ -23,14 +24,14 @@ const labels: Record<string, [string, string]> = {
 };
 function describe(event: MissionProgressEvent, french: boolean) {
   const phrase = labels[event.step ?? ""];
-  if (event.kind === "mission.started") return french ? "Mission démarrée" : "Mission started";
-  if (event.kind === "approval.required") return french ? "Une validation est nécessaire" : "Approval required";
-  if (event.kind === "mission.completed") return french ? "Mission terminée" : "Mission completed";
-  if (event.kind === "mission.failed") return french ? "Mission interrompue" : "Mission interrupted";
-  if (event.kind === "tool.failed" || event.kind === "step.failed") return french ? "Étape non aboutie" : "Step failed";
-  const fallback = french ? "Traitement" : "Processing";
+  if (event.kind === "mission.started") return translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text001");
+  if (event.kind === "approval.required") return translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text002");
+  if (event.kind === "mission.completed") return translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text003");
+  if (event.kind === "mission.failed") return translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text004");
+  if (event.kind === "tool.failed" || event.kind === "step.failed") return translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text005");
+  const fallback = translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text006");
   return (phrase ? phrase[french ? 0 : 1] : fallback) +
-    (event.kind.endsWith(".completed") ? (french ? " terminé" : " completed") : "");
+    (event.kind.endsWith(".completed") ? (translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text007")) : "");
 }
 export default function CareerMissionProgress({ events, active, french, onRefresh, warning }: {
   events: readonly MissionProgressEvent[]; active: boolean; french: boolean;
@@ -41,9 +42,9 @@ export default function CareerMissionProgress({ events, active, french, onRefres
   const finished = latest?.kind === "mission.completed";
   const failed = latest?.kind === "mission.failed";
   if (!active && events.length === 0 && !warning) return null;
-  const status = failed ? (french ? "Interrompue" : "Interrupted") : finished ?
-    (french ? "Terminée" : "Completed") : active ?
-      (french ? "En cours" : "In progress") : (french ? "Suivi" : "Progress");
+  const status = failed ? (translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text008")) : finished ?
+    (translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text009")) : active ?
+      (translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text010")) : (translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text011"));
   return (
     <div className="mb-5 rounded-xl border border-border/60 bg-muted/20 px-3.5 py-3 text-xs text-muted-foreground"
       aria-live="polite" role="status">
@@ -52,21 +53,21 @@ export default function CareerMissionProgress({ events, active, french, onRefres
           <CheckCircle2 className="size-4" aria-hidden="true" /> : active ?
             <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : null}
         <span className="min-w-0 flex-1 truncate font-medium text-foreground">
-          {latest ? describe(latest, french) : (french ? "CVComet prépare la mission…" : "CVComet is preparing the mission…")}
+          {latest ? describe(latest, french) : (translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text012"))}
         </span>
         <span>{status}</span>
         {events.length > 1 && (
           <button type="button" onClick={() => setExpanded(v => !v)}
-            aria-label={french ? "Afficher les étapes" : "Show steps"} aria-expanded={expanded}
+            aria-label={translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text013")} aria-expanded={expanded}
             className="rounded-md p-1 hover:bg-muted">
             <ChevronDown className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
           </button>
         )}
       </div>
       {warning && <div className="mt-2 flex items-center justify-between gap-2">
-        <span>{french ? "Suivi direct indisponible. Le travail enregistré reste accessible." : "Live updates unavailable. Saved work remains accessible."}</span>
+        <span>{translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text014")}</span>
         {onRefresh && <button type="button" onClick={onRefresh} className="shrink-0 underline">
-          {french ? "Vérifier" : "Refresh"}</button>}
+          {translateCentral(french ? "fr" : "en", "uiText.components_career_CareerMissionProgress.text015")}</button>}
       </div>}
       {expanded && <ol className="mt-3 space-y-2 border-t border-border/60 pt-3">
         {events.slice(-12).map((event, index) => (

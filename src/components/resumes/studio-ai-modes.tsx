@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import {
   useEffect,
@@ -67,7 +68,7 @@ export function StudioAIModes({
 }) {
   return (
     <div className="studio-ai-workspace">
-      <div className="studio-ai-mode-tabs" role="tablist" aria-label={fr ? "Mode de l'assistant" : "Assistant mode"}>
+      <div className="studio-ai-mode-tabs" role="tablist" aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_ai_modes.text001")}>
         <button
           type="button"
           role="tab"
@@ -86,7 +87,7 @@ export function StudioAIModes({
           aria-selected={mode === "selection"}
           onClick={() => onModeChange("selection")}
         >
-          <TextSelect className="size-3.5" /> {fr ? "Texte sélectionné" : "Selected text"}
+          <TextSelect className="size-3.5" /> {translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_ai_modes.text002")}
         </button>
       </div>
       <div
@@ -137,29 +138,27 @@ export function StudioSelectedEdit({
   }, [value]);
 
   return (
-    <section className="studio-selected-editor" aria-label={fr ? "Modification ciblée" : "Focused edit"}>
+    <section className="studio-selected-editor" aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_ai_modes.text003")}>
       <div className="studio-selected-scroll">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-semibold">{fr ? "Passage à modifier" : "Text to edit"}</span>
+          <span className="text-[11px] font-semibold">{translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_ai_modes.text004")}</span>
           <span className="min-w-0 truncate text-[10px] text-muted-foreground" title={fieldLabel}>
             {fieldLabel}
           </span>
         </div>
         <div className="studio-selected-quote whitespace-pre-wrap break-words">
-          {text || (fr ? "Sélectionnez un passage dans le document." : "Select text in the document.")}
+          {text || (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_ai_modes.text005"))}
         </div>
         {!exactSelection && (
           <p className="text-[10px] leading-4 text-muted-foreground">
-            {fr
-              ? "Sélectionnez des mots dans le document pour cibler un passage précis."
-              : "Highlight words in the document to target an exact passage."}
+            {translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_ai_modes.text006")}
           </p>
         )}
         {restriction && <p role="status" className="text-xs text-muted-foreground">{restriction}</p>}
         {busy && (
           <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground">
             <Loader2 className="size-3.5 animate-spin" />
-            {fr ? "Préparation de la modification…" : "Preparing your edit…"}
+            {translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_ai_modes.text007")}
           </p>
         )}
         {feedback && <p role="status" className="text-xs leading-5 text-muted-foreground">{feedback}</p>}
@@ -167,7 +166,7 @@ export function StudioSelectedEdit({
       </div>
       <form className="studio-selected-footer" onSubmit={onSubmit}>
         <label htmlFor="studio-selected-instruction" className="sr-only">
-          {fr ? "Modification demandée" : "Requested change"}
+          {translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_ai_modes.text008")}
         </label>
         <div className="studio-chat-composer">
           <textarea
@@ -175,7 +174,7 @@ export function StudioSelectedEdit({
             id="studio-selected-instruction"
             rows={1}
             maxLength={1800}
-            placeholder={fr ? "Que souhaitez-vous changer dans ce passage ?" : "What would you change in this passage?"}
+            placeholder={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_ai_modes.text009")}
             value={value}
             onChange={event => onChange(event.target.value)}
             onKeyDown={event => {
@@ -191,7 +190,7 @@ export function StudioSelectedEdit({
           <button
             className="studio-chat-send"
             type="submit"
-            aria-label={fr ? "Proposer une modification" : "Suggest edit"}
+            aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_ai_modes.text010")}
             disabled={!text || !value.trim() || busy || disabled || Boolean(restriction)}
           >
             {busy ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}

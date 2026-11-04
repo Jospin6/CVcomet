@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import {
   useEffect,
@@ -90,7 +91,7 @@ export function IndustrySelect({
         onChange={(event) => onChange(event.target.value)}
       >
         <option value="">
-          {french ? "Choisir un secteur" : "Select industry"}
+          {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_direction_fields.text001")}
         </option>
         {isLegacyValue && <option value={value}>{value}</option>}
         {industries.map((industry) => (
@@ -152,7 +153,7 @@ export function CountryPicker({
   }, [open]);
 
   const label = mode === "code"
-    ? french ? "Pays de résidence" : "Area of residence"
+    ? translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_direction_fields.text002")
     : t("career.fields.targetCountry");
 
   return (
@@ -173,7 +174,7 @@ export function CountryPicker({
       >
         <span className="truncate">
           {selected?.name || value ||
-            (french ? "Choisir un pays" : "Select country")}
+            (translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_direction_fields.text003"))}
         </span>
         <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
       </button>
@@ -186,7 +187,7 @@ export function CountryPicker({
             <Search className="absolute left-2 top-2.5 size-4 text-muted-foreground" />
             <Input
               autoFocus
-              aria-label={french ? "Rechercher un pays" : "Search countries"}
+              aria-label={translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_direction_fields.text004")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               onKeyDown={(event) => {
@@ -206,7 +207,7 @@ export function CountryPicker({
                   setSearch("");
                 }}
               >
-                {french ? "Non précisé" : "Not specified"}
+                {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_direction_fields.text005")}
               </button>
             )}
             {visible.map((country) => (
@@ -232,7 +233,7 @@ export function CountryPicker({
             ))}
             {!visible.length && (
               <p className="p-2 text-xs text-muted-foreground">
-                {french ? "Aucun pays trouvé" : "No countries found"}
+                {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_direction_fields.text006")}
               </p>
             )}
           </div>
@@ -321,7 +322,7 @@ export function CareerDirectionFields({
             list="career-direction-positions"
             value={profile.targetJobTitle}
             onChange={(event) => update({ targetJobTitle: event.target.value })}
-            placeholder={french ? "Poste recherché" : "Target job title"}
+            placeholder={translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_direction_fields.text007")}
             maxLength={200}
             className="h-9"
           />
@@ -376,7 +377,7 @@ export function CareerDirectionFields({
 
       <fieldset className="space-y-2 border-t pt-4">
         <legend className="text-xs font-medium">
-          {french ? "Type d'emploi" : "Employment type"}
+          {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_direction_fields.text008")}
         </legend>
         <div className="flex flex-wrap gap-x-5 gap-y-3">
           {contracts.map(([key, en, fr]) => (
@@ -400,7 +401,7 @@ export function CareerDirectionFields({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label htmlFor="career-direction-salary-rate" className={labelClass}>
-            {french ? "Période salariale" : "Salary rate"}
+            {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_direction_fields.text009")}
           </label>
           <select
             id="career-direction-salary-rate"
@@ -417,7 +418,7 @@ export function CareerDirectionFields({
         </div>
         <div className="space-y-1.5">
           <label htmlFor="career-direction-min-salary" className={labelClass}>
-            {french ? "Salaire minimum (USD)" : "Minimum salary (USD)"}
+            {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_career_direction_fields.text010")}
           </label>
           <Input
             id="career-direction-min-salary"

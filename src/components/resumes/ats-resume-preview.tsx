@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
@@ -76,9 +77,7 @@ export function AtsResumePreview({
   if (!resume) {
     return (
       <div className="flex h-full min-h-40 items-center justify-center bg-muted p-4 text-center text-xs text-muted-foreground">
-        {language === "fr"
-          ? "Aperçu indisponible pour ce CV. Ouvrez-le dans l’éditeur."
-          : "This resume cannot be previewed. Open it in the editor."}
+        {translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_ats_resume_preview.text001")}
       </div>
     );
   }

@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowUpRight, ChevronDown, Loader2, RefreshCw, UploadCloud } from "lucide-react";
@@ -200,10 +201,10 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
   // An absent score is NOT a failing score. Show only metrics that were
   // genuinely evaluated; never turn incomplete checks into a universal ATS rate.
   const scoreRows = analysis ? [
-    { id: "readability", label: language === "fr" ? "Lisibilité ATS" : "ATS Readability", score: analysis.technical.status === "VERIFIED" ? analysis.technical.score : null },
-    { id: "structure", label: language === "fr" ? "Structure du CV" : "Resume Structure", score: structureScore },
-    { id: "content", label: language === "fr" ? "Qualité du contenu" : "Content Quality", score: analysis.content.score },
-    { id: "keywords", label: language === "fr" ? "Optimisation des mots-clés" : "Keyword Optimization", score: keywordScore },
+    { id: "readability", label: translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text001"), score: analysis.technical.status === "VERIFIED" ? analysis.technical.score : null },
+    { id: "structure", label: translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text002"), score: structureScore },
+    { id: "content", label: translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text003"), score: analysis.content.score },
+    { id: "keywords", label: translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text004"), score: keywordScore },
   ].filter(row => row.score !== null && row.score !== undefined) : [];
   const reviewPending = analysis?.review.status === "UNAVAILABLE";
   const jobPending = analysis?.jobMatch.status === "UNAVAILABLE";
@@ -217,21 +218,21 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
   const assessedWeight = displayScore?.assessedWeight ?? 0;
   const headlineScore = displayScore?.score ?? null;
   const headlineTitle = isLimitedHeadline
-    ? language === "fr" ? "Contrôles vérifiés" : "Verified checks"
+    ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text005")
     : headlineScore === null || headlineScore === undefined
-    ? language === "fr" ? "Non évalué" : "Not assessed"
+    ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text006")
     : headlineScore >= 80
-      ? isJobHeadline ? language === "fr" ? "Bonne correspondance" : "Good match" : language === "fr" ? "Bonne qualité" : "Good quality"
+      ? isJobHeadline ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text007") : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text008")
       : headlineScore >= 60
-        ? language === "fr" ? "À améliorer" : "Needs improvement"
-        : language === "fr" ? "Des corrections sont nécessaires" : "Needs attention";
+        ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text009")
+        : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text010");
   const limited = Boolean(reviewPending || jobPending || analysis?.diagnostics?.length);
   const issueAction = (issue: AtsIssue) => (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
       {issue.proposedText && (
         <button type="button" className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 transition hover:text-emerald-500 hover:underline disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400"
           disabled={stale || busy} onClick={() => onProposal(issue)}>
-          {language === "fr" ? "Corriger avec l’IA" : "Fix with AI"}<ArrowUpRight aria-hidden="true" className="size-3.5" />
+          {translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text011")}<ArrowUpRight aria-hidden="true" className="size-3.5" />
         </button>
       )}
       {(issue.field || issue.design) && (
@@ -249,26 +250,26 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
         onSubmit={event => { event.preventDefault(); if (!busy && !letterLoading) void run(); }}
         className="mx-auto w-full max-w-[480px] space-y-4 rounded-[22px] border bg-card px-5 py-5 shadow-sm sm:px-6"
       >
-        <div className="flex gap-2" role="group" aria-label={language === "fr" ? "Mode ATS" : "ATS assessment mode"}>
+        <div className="flex gap-2" role="group" aria-label={translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text012")}>
           {(["general", "job"] as const).map(item => (
             <button type="button" key={item} aria-pressed={mode === item}
               onClick={() => { selectionChanged.current = true; setMode(item); }}
               className={`min-w-0 flex-1 rounded-lg border px-3 py-2 text-xs transition-colors ${mode === item ? "border-primary bg-primary/10 font-medium" : "text-muted-foreground hover:bg-muted"}`}>
-              {item === "general" ? language === "fr" ? "CV seul" : "Resume only" : language === "fr" ? "Avec une offre" : "With job description"}
+              {item === "general" ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text013") : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text014")}
             </button>
           ))}
         </div>
         {applications.length > 0 && (
           <div className="space-y-1">
-            <label htmlFor="ats-application" className="text-xs text-muted-foreground">{language === "fr" ? "Candidature liée" : "Linked application"}</label>
+            <label htmlFor="ats-application" className="text-xs text-muted-foreground">{translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text015")}</label>
             <select id="ats-application" value={applicationId} onChange={event => { selectionChanged.current = true; setApplicationId(event.target.value); }}
               className="h-9 w-full rounded-md border bg-background px-3 text-xs">
               {applications.map(item => <option key={item.id} value={item.id}>{item.jobTitle} · {item.company}</option>)}
             </select>
             {linkedApplication && <p className="text-[11px] text-muted-foreground">
               {linkedLetter
-                ? language === "fr" ? "Lettre de motivation de la candidature détectée." : "Application cover letter detected."
-                : language === "fr" ? "Aucune lettre de motivation liée à cette candidature." : "No cover letter linked to this application."}
+                ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text016")
+                : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text017")}
             </p>}
           </div>
         )}
@@ -276,8 +277,8 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
           applicationId ? (
             <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
               {linkedApplication?.hasJobDescription
-                ? language === "fr" ? "Description du poste chargée depuis la candidature." : "Job description loaded from the application."
-                : language === "fr" ? "Description de poste manquante dans cette candidature." : "This application has no job description."}
+                ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text018")
+                : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text019")}
             </p>
           ) : (
             <div className="space-y-2">
@@ -285,7 +286,7 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
                 onChange={updateJobQuery} onSelect={chooseJob} />
               <button type="button" className="text-xs text-muted-foreground underline underline-offset-2"
                 onClick={() => setShowJobDescription(value => !value)}>
-                {language === "fr" ? "Coller une description de poste" : "Paste a job description"}
+                {translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text020")}
               </button>
               {showJobDescription && <Textarea value={jobDescription} onChange={event => { selectionChanged.current = true; setJobDescription(event.target.value); if (event.target.value.trim()) { setTargetJob(null); setJobQuery(""); } }}
                 maxLength={50000} rows={4} placeholder={c.jobPlaceholder} aria-label={c.jobLabel} />}
@@ -295,29 +296,29 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
         {!linkedLetter && (
           <details open={!applicationId} className="group rounded-lg border border-dashed px-3 py-2">
             <summary className="flex cursor-pointer list-none items-center justify-between text-xs [&::-webkit-details-marker]:hidden">
-              {language === "fr" ? "Lettre de motivation (facultatif)" : "Cover letter (optional)"}
+              {translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text021")}
               <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
             </summary>
             <div className="mt-3 space-y-2">
-              <div className="flex gap-2" role="group" aria-label={language === "fr" ? "Source de la lettre" : "Cover letter source"}>
+              <div className="flex gap-2" role="group" aria-label={translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text022")}>
                 {(["text", "url", "upload"] as const).map(item => <button type="button" key={item}
                   aria-pressed={letterInput === item} onClick={() => { setLetterInput(item); setLetterError(""); }}
                   className={`rounded-md px-2 py-1 text-[11px] ${letterInput === item ? "bg-primary/10 font-medium" : "bg-muted text-muted-foreground"}`}>
-                  {item === "text" ? language === "fr" ? "Texte" : "Text" : item === "url" ? "URL" : language === "fr" ? "Fichier" : "Upload"}
+                  {item === "text" ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text023") : item === "url" ? "URL" : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text024")}
                 </button>)}
               </div>
               {letterInput === "text" && <Textarea rows={3} maxLength={12000} value={letterText}
                 onChange={event => { selectionChanged.current = true; setLetterText(event.target.value); }}
-                placeholder={language === "fr" ? "Collez votre lettre de motivation…" : "Paste your cover letter…"} />}
+                placeholder={translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text025")} />}
               {letterInput === "url" && <div className="flex gap-2">
                 <input type="url" value={letterUrl} onChange={event => setLetterUrl(event.target.value)}
-                  placeholder="https://…" aria-label={language === "fr" ? "URL de la lettre" : "Cover letter URL"}
+                  placeholder="https://…" aria-label={translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text026")}
                   className="min-w-0 flex-1 rounded-md border bg-background px-2 text-xs" />
                 <Button type="button" size="sm" variant="outline" disabled={letterLoading || !letterUrl.trim()}
-                  onClick={() => void extractLetter({ url: letterUrl })}>{letterLoading ? <Loader2 className="size-3 animate-spin" /> : language === "fr" ? "Importer" : "Import"}</Button>
+                  onClick={() => void extractLetter({ url: letterUrl })}>{letterLoading ? <Loader2 className="size-3 animate-spin" /> : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text027")}</Button>
               </div>}
               {letterInput === "upload" && <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
-                <UploadCloud className="size-4" />{language === "fr" ? "Importer PDF, DOCX ou TXT" : "Upload PDF, DOCX or TXT"}
+                <UploadCloud className="size-4" />{translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text028")}
                 <input type="file" accept=".pdf,.docx,.txt" className="sr-only" disabled={letterLoading} onChange={event => {
                   const file = event.target.files?.[0]; if (!file) return;
                   const form = new FormData(); form.set("file", file); void extractLetter(form);
@@ -325,7 +326,7 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
               </label>}
               {letterText && letterInput !== "text" && <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
                 <span>{language === "fr" ? `Lettre importée (${letterText.length} caractères)` : `Letter imported (${letterText.length} characters)`}</span>
-                <button type="button" className="underline" onClick={() => setLetterText("")}>{language === "fr" ? "Effacer" : "Clear"}</button>
+                <button type="button" className="underline" onClick={() => setLetterText("")}>{translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text029")}</button>
               </div>}
               {letterError && <p role="alert" className="text-xs text-destructive">{letterError}</p>}
             </div>
@@ -335,32 +336,32 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
           <Button type="submit" className="h-9 min-w-[150px] rounded-xl bg-[#b8b5f4] px-6 text-xs font-semibold text-white hover:bg-[#a29fed] dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
             disabled={busy || letterLoading || (mode === "job" && ((!applicationId && !targetJob && jobDescription.trim().length < 100) || Boolean(applicationId && !linkedApplication?.hasJobDescription)))}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-            {busy ? c[phase] : language === "fr" ? "Analyser" : "Generate"}
+            {busy ? c[phase] : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text030")}
           </Button>
         </div>
         {error && <p role="alert" className="text-xs text-destructive">{errorMessage}</p>}
       </form>
 
       {analysis && (
-        <section className="mx-auto w-full overflow-hidden rounded-[22px] border border-border/70 bg-card px-4 py-5 shadow-sm sm:px-6 sm:py-6" aria-label={language === "fr" ? "Résultats ATS" : "ATS results"}>
+        <section className="mx-auto w-full overflow-hidden rounded-[22px] border border-border/70 bg-card px-4 py-5 shadow-sm sm:px-6 sm:py-6" aria-label={translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text031")}>
           <header className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h3 className="text-base font-semibold tracking-tight">ATS Checker</h3>
               <p className="mt-3 text-xs text-muted-foreground">
-                {language === "fr" ? "Analyse du CV" : "Resume analysis"} · {analysis.targetJob
+                {translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text032")} · {analysis.targetJob
                   ? `${analysis.targetJob.title}${analysis.targetJob.company ? `, ${analysis.targetJob.company}` : ""}`
                   : jobAudit
-                    ? language === "fr" ? "Analyse pour une offre" : "Job-specific ATS audit"
-                    : language === "fr" ? "Audit ATS général" : "General ATS audit"}
+                    ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text033")
+                    : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text034")}
               </p>
             </div>
             <span role="status" className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${stale
               ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
               : limited ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
               : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"}`}>
-              {stale ? language === "fr" ? "À actualiser" : "Needs refresh"
-                : limited ? language === "fr" ? "Contrôles disponibles" : "Checks ready"
-                : language === "fr" ? "Terminé" : "Completed"}
+              {stale ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text035")
+                : limited ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text036")
+                : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text037")}
             </span>
           </header>
 
@@ -375,15 +376,15 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
                   ? `Score limité aux contrôles vérifiés (${assessedWeight}/100 points du barème)`
                   : `Only verified checks scored (${assessedWeight}/100 rubric points)`
                 : isJobHeadline
-                  ? language === "fr" ? "Correspondance au poste · preuves dans le CV" : "Job match · evidence in resume"
-                  : language === "fr" ? "Qualité du CV · pas un taux d’acceptation ATS" : "Resume quality · not an ATS acceptance rate"}
+                  ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text038")
+                  : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text039")}
             </p>
           </div>
 
           {stale && <p role="status" className="mb-4 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">{c.stale}</p>}
 
           <div className="border-t border-border/60 pt-6">
-            <h4 className="mb-5 text-base font-semibold">{language === "fr" ? "Analyse" : "Analysis"}</h4>
+            <h4 className="mb-5 text-base font-semibold">{translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text040")}</h4>
             <div className="space-y-5">
               {scoreRows.map(metric => {
                 const score = metric.score;
@@ -396,7 +397,7 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
                     </div>
                     <div className="h-[7px] overflow-hidden rounded-full bg-foreground/15 dark:bg-white/15"
                       role="progressbar" aria-label={metric.label} aria-valuemin={0} aria-valuemax={100}
-                      aria-valuenow={score ?? undefined} aria-valuetext={score === null || score === undefined ? language === "fr" ? "Non évalué" : "Not assessed" : undefined}>
+                      aria-valuenow={score ?? undefined} aria-valuetext={score === null || score === undefined ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text041") : undefined}>
                       {score !== null && score !== undefined && (
                         <div className={`h-full rounded-full ${tone}`} style={{ width: `${Math.min(100, Math.max(0, score))}%` }} />
                       )}
@@ -409,12 +410,12 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
           </div>
 
           <div className="mt-7 border-t border-border/60 pt-6">
-            <h4 className="mb-4 text-base font-semibold">{language === "fr" ? "Problèmes détectés" : "Issues found"}</h4>
+            <h4 className="mb-4 text-base font-semibold">{translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text042")}</h4>
             <div className="space-y-3 text-sm">
               {[
-                { label: language === "fr" ? "Problèmes critiques" : "Critical issues", count: criticalCount, tone: "bg-red-500/10 text-red-600 dark:text-red-400" },
-                { label: language === "fr" ? "Avertissements" : "Warnings", count: warningCount, tone: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
-                { label: language === "fr" ? "Contrôles réussis" : "Passed checks", count: passedChecks, tone: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+                { label: translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text043"), count: criticalCount, tone: "bg-red-500/10 text-red-600 dark:text-red-400" },
+                { label: translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text044"), count: warningCount, tone: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
+                { label: translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text045"), count: passedChecks, tone: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
               ].map(item => (
                 <div key={item.label} className="flex items-center justify-between gap-3 py-0.5">
                   <span>{item.label}</span>
@@ -425,7 +426,7 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
           </div>
 
           <div className="mt-7 border-t border-border/60 pt-6">
-            <h4 className="mb-4 text-base font-semibold">{language === "fr" ? "Recommandations" : "Recommendations"}</h4>
+            <h4 className="mb-4 text-base font-semibold">{translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text046")}</h4>
             {issues.length === 0 ? (
               <p className="py-4 text-sm text-muted-foreground">{c.empty}</p>
             ) : (
@@ -443,10 +444,10 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
                             : issue.severity === "warning" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                             : "bg-muted text-muted-foreground"}`}>
                             {issue.severity === "critical"
-                              ? language === "fr" ? "Problème critique" : "Critical issue"
+                              ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text047")
                               : issue.severity === "warning"
-                                ? language === "fr" ? "À améliorer" : "Needs improvement"
-                                : language === "fr" ? "Conseil" : "Suggestion"}
+                                ? translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text048")
+                                : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text049")}
                           </span>
                           {issueAction(issue)}
                         </div>
@@ -460,7 +461,7 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
 
           <details className="group mt-4 border-t border-border/60 pt-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
-              {language === "fr" ? "Voir tous les détails" : "View all details"}
+              {translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text050")}
               <ChevronDown aria-hidden="true" className="size-4 transition-transform group-open:rotate-180" />
             </summary>
             <div className="mt-5 space-y-5 border-t border-border/50 pt-4">
@@ -468,21 +469,21 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
               {analysis.review.status !== "COMPLETE" && <p role="status" className="text-xs text-muted-foreground">{reviewMessage}</p>}
               {analysis.supportingLetter?.status && analysis.supportingLetter.status !== "NOT_PROVIDED" && (
                 <p className="text-xs text-muted-foreground">
-                  {language === "fr" ? "Lettre de motivation prise en compte uniquement comme contexte, pas comme preuve de compétences du CV." : "Cover letter used only as context, not evidence of resume skills."}
+                  {translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text051")}
                 </p>
               )}
               {analysis.supportingLetter?.checks?.length ? (
                 <div className="space-y-2 text-xs">
-                  <h5 className="font-semibold">{language === "fr" ? "Vérifications de la lettre" : "Cover letter checks"}</h5>
+                  <h5 className="font-semibold">{translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text052")}</h5>
                   {analysis.supportingLetter.checks.map((check, index) => <div key={index} className="flex justify-between gap-3 text-muted-foreground">
-                    <span>{check.label}</span><span>{check.observed === null ? "—" : check.observed ? "✓" : language === "fr" ? "Non repéré" : "Not found"}</span>
+                    <span>{check.label}</span><span>{check.observed === null ? "—" : check.observed ? "✓" : translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text053")}</span>
                   </div>)}
                 </div>
               ) : null}
               {analysis.jobMatch.status === "UNAVAILABLE" && <p role="status" className="text-xs text-muted-foreground">{c.jobUnavailable}</p>}
               {issues.length > 3 && (
                 <div className="space-y-4">
-                  <h5 className="text-xs font-semibold">{language === "fr" ? "Autres recommandations" : "Other recommendations"}</h5>
+                  <h5 className="text-xs font-semibold">{translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text054")}</h5>
                   {issues.slice(3).map(issue => (
                     <div key={issue.id} className="space-y-2 border-b border-border/50 pb-4 last:border-0">
                       <p className="text-xs font-semibold">{issue.title}</p>
@@ -493,7 +494,7 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
                 </div>
               )}
               <div className="space-y-3">
-                <h5 className="text-xs font-semibold">{language === "fr" ? "Contrôles détaillés" : "Detailed checks"}</h5>
+                <h5 className="text-xs font-semibold">{translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text055")}</h5>
                 <CheckList checks={analysis.content.checks} />
                 {analysis.technical.status === "VERIFIED" && <CheckList checks={analysis.technical.checks} />}
                 {analysis.jobMatch.requirements.map((requirement, index) => (
@@ -509,7 +510,7 @@ export function ResumeAtsPanel({ cvId, resume, pages, language, active, onNaviga
             <Button type="button" size="sm" variant="outline" className="h-8 gap-2 text-xs" disabled={busy || letterLoading}
               onClick={() => void run()}>
               {busy ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
-              {language === "fr" ? "Réanalyser le CV" : "Re-scan resume"}
+              {translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_panel.text056")}
             </Button>
           </div>
         </section>

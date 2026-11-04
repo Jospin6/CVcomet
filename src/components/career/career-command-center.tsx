@@ -1,4 +1,6 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
+import { getCentralCopy } from "@/lib/i18n/central-copy";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -43,44 +45,7 @@ export function useCareerPulse(enabled: boolean) {
   return { pulse, pending };
 }
 
-const copy = {
-  fr: {
-    eyebrow: "VOTRE ESPACE DE CARRIÈRE", title: "Votre prochain pas, en toute clarté.",
-    description: "CV, candidatures et préparation aux entretiens. Tous vos outils professionnels au même endroit.",
-    lead: "Career Agent", leadDescription: "Posez une question sur votre profil et reprenez vos missions privées.",
-    leadAction: "Ouvrir mon agent", quickTitle: "Que souhaitez-vous accomplir ?",
-    quickDescription: "Accédez directement au bon espace de travail.",
-    resume: "Créer ou améliorer mon CV", resumeDesc: "Rédiger, comparer et exporter",
-    letter: "Rédiger une lettre", letterDesc: "Personnaliser ma candidature",
-    match: "Analyser une offre", matchDesc: "Comprendre les exigences et les écarts",
-    packet: "Préparer une candidature", packetDesc: "Assembler mon dossier et le valider",
-    interview: "Préparer un entretien", interviewDesc: "Questions et feedback personnalisés",
-    pulse: "Mon activité", docs: "Documents CV", apps: "Candidatures actives", missions: "Missions affichées",
-    unavailable: "Indisponible", guest: "Connectez-vous pour voir votre activité.",
-    next: "Prochaine action conseillée", start: "Préparer un premier CV", nextCv: "Vous avez déjà un CV. Analysez sa pertinence pour une offre.",
-    nextApp: "Préparez un dossier de candidature à partir de votre CV.",
-    nextGuest: "Connectez-vous pour retrouver vos documents et missions.",
-    nextButton: "Continuer", privacy: "L’agent consulte uniquement les informations que vous êtes autorisé à partager.",
-  },
-  en: {
-    eyebrow: "YOUR CAREER WORKSPACE", title: "Your next move, made clearer.",
-    description: "Resumes, applications and interview preparation. Your career tools in one place.",
-    lead: "Career Agent", leadDescription: "Ask about your profile and resume your private missions.",
-    leadAction: "Open my agent", quickTitle: "What would you like to achieve?",
-    quickDescription: "Jump straight to the right workspace.",
-    resume: "Build or improve my resume", resumeDesc: "Write, review and export",
-    letter: "Write a cover letter", letterDesc: "Tailor my application",
-    match: "Analyze a job", matchDesc: "Understand requirements and gaps",
-    packet: "Prepare an application", packetDesc: "Assemble and approve a packet",
-    interview: "Practice an interview", interviewDesc: "Tailored questions and feedback",
-    pulse: "My activity", docs: "Resumes", apps: "Active applications", missions: "Missions shown",
-    unavailable: "Unavailable", guest: "Sign in to view your activity.",
-    next: "Suggested next step", start: "Prepare your first resume", nextCv: "You already have a resume. Check it against a job description.",
-    nextApp: "Prepare an application packet using your resume.",
-    nextGuest: "Sign in to access your documents and missions.",
-    nextButton: "Continue", privacy: "The agent only accesses information you're authorized to share.",
-  },
-} as const;
+const copy = getCentralCopy("careerCommandCenter");
 
 type IconComponent = typeof FileText;
 function ActionCard({ href, icon: Icon, title, description }: { href: string; icon: IconComponent; title: string; description: string }) {
@@ -151,9 +116,9 @@ function RecentApplications({ enabled }: { enabled: boolean }) {
     return () => controller.abort();
   }, [enabled]);
   return <section className="ux-surface overflow-hidden" aria-labelledby="recent-apps-title">
-    <div className="flex items-center justify-between gap-2 border-b px-4 py-3"><h2 id="recent-apps-title" className="text-sm font-semibold">{fr ? "Candidatures récentes" : "Recent applications"}</h2><Link className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline" href="/dashboard/applications">{fr ? "Tout voir" : "View all"}<ArrowRight className="size-3.5"/></Link></div>
-    {items === null ? <p className="px-4 py-6 text-xs text-muted-foreground">{fr ? "Données indisponibles" : "Data unavailable"}</p>
-      : items.length === 0 ? <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-6"><p className="text-sm text-muted-foreground">{fr ? "Aucune candidature enregistrée." : "No saved applications yet."}</p><Link className="text-xs font-semibold text-primary hover:underline" href="/dashboard/applications">{fr ? "Commencer" : "Get started"}</Link></div>
+    <div className="flex items-center justify-between gap-2 border-b px-4 py-3"><h2 id="recent-apps-title" className="text-sm font-semibold">{translateCentral(fr ? "fr" : "en", "uiText.components_career_career_command_center.text001")}</h2><Link className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline" href="/dashboard/applications">{translateCentral(fr ? "fr" : "en", "uiText.components_career_career_command_center.text002")}<ArrowRight className="size-3.5"/></Link></div>
+    {items === null ? <p className="px-4 py-6 text-xs text-muted-foreground">{translateCentral(fr ? "fr" : "en", "uiText.components_career_career_command_center.text003")}</p>
+      : items.length === 0 ? <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-6"><p className="text-sm text-muted-foreground">{translateCentral(fr ? "fr" : "en", "uiText.components_career_career_command_center.text004")}</p><Link className="text-xs font-semibold text-primary hover:underline" href="/dashboard/applications">{translateCentral(fr ? "fr" : "en", "uiText.components_career_career_command_center.text005")}</Link></div>
       : <div className="divide-y">{items.map(item => <Link key={item.id} href={`/dashboard/applications/${item.id}`} className="group flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-muted/30"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-xs font-semibold text-primary">{item.company.slice(0,1).toUpperCase()}</span><span className="min-w-0 flex-1"><span className="block truncate font-medium">{item.jobTitle}</span><span className="block truncate text-xs text-muted-foreground">{item.company}</span></span><ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"/></Link>)}</div>}
   </section>;
 }

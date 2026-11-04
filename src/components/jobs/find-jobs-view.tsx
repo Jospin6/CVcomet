@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useState } from "react";
 import {
@@ -200,15 +201,15 @@ export function JobResultRow({
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <Meta icon={Clock3}>
-            {published || (french ? "Date non précisée" : "Date not provided")}
+            {published || (translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text001"))}
           </Meta>
           {job.location && <Meta icon={MapPin}>{job.location}</Meta>}
           {job.contractType && <Meta icon={Clock3}>{job.contractType}</Meta>}
           {job.remote !== null && (
             <Meta icon={Monitor}>
               {job.remote
-                ? (french ? "À distance" : "Remote")
-                : (french ? "Sur site" : "On-site")}
+                ? (translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text002"))
+                : (translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text003"))}
             </Meta>
           )}
         </div>
@@ -216,9 +217,7 @@ export function JobResultRow({
 
       {job.match && job.match.score !== null && (
         <span
-          title={french
-            ? "Correspondance indicative, pas une probabilité d'embauche"
-            : "Estimated match, not a hiring probability"}
+          title={translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text004")}
           className="hidden shrink-0 rounded-full bg-primary/10 px-2 py-1 text-xs text-primary md:inline-flex"
         >
           {job.match.score}%
@@ -230,8 +229,8 @@ export function JobResultRow({
         onClick={() => onSave(job)}
         disabled={saving}
         aria-label={saved
-          ? (french ? "Retirer des favoris" : "Unsave job")
-          : (french ? "Enregistrer l'offre" : "Save job")}
+          ? (translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text005"))
+          : (translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text006"))}
         aria-pressed={saved}
         className={
           "flex size-10 shrink-0 items-center justify-center rounded-xl " +
@@ -385,14 +384,14 @@ export function JobDetailView({
           <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
             {job.location && <DetailTag icon={MapPin}>{job.location}</DetailTag>}
             <DetailTag icon={Clock3}>
-              {published || (french ? "Date non précisée" : "Date not provided")}
+              {published || (translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text007"))}
             </DetailTag>
             {job.contractType && <DetailTag icon={Clock3}>{job.contractType}</DetailTag>}
             {job.remote !== null && (
               <DetailTag icon={Monitor}>
                 {job.remote
-                  ? (french ? "À distance" : "Remote")
-                  : (french ? "Sur site" : "On-site")}
+                  ? (translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text008"))
+                  : (translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text009"))}
               </DetailTag>
             )}
             {job.seniority && (
@@ -403,7 +402,7 @@ export function JobDetailView({
           {job.match && (
             <div className="mt-5 rounded-xl border bg-muted/30 px-4 py-3 text-sm">
               <p className="font-medium">
-                {local.match}: {job.match.score === null ? (french ? "Non évaluée" : "Not evaluated") : `${job.match.score}%`}
+                {local.match}: {job.match.score === null ? (translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text010")) : `${job.match.score}%`}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {job.match.explanation}
@@ -489,7 +488,7 @@ export function JobDetailView({
             onClick={() => onPrepare(job, "workspace")}
           >
             <Bookmark className="size-3.5" />
-            {french ? "Voir le dossier de candidature" : "Open application workspace"}
+            {translateCentral(french ? "fr" : "en", "uiText.components_jobs_find_jobs_view.text011")}
           </button>
         </aside>
       </div>

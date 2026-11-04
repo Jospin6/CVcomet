@@ -1,5 +1,5 @@
 "use client";
-
+import { translateCentral } from "@/lib/i18n/central-copy";
 import { useEffect, useState } from "react";
 import { Mic, MicOff, PhoneOff, Radio, LoaderCircle } from "lucide-react";
 import {
@@ -47,23 +47,23 @@ function VoiceRoom({ language, onHangup }: {
         <h2 className="text-xl font-semibold">AI Screening Interview</h2>
         <p className="text-sm text-muted-foreground" role="status">
           {assistant.state === "speaking"
-            ? fr ? "Le recruteur parle" : "Recruiter speaking"
+            ? translateCentral(fr ? "fr" : "en", "uiText.components_interviews_screening_call.text001")
             : assistant.state === "thinking"
-              ? fr ? "Le recruteur réfléchit" : "Recruiter thinking"
+              ? translateCentral(fr ? "fr" : "en", "uiText.components_interviews_screening_call.text002")
               : assistant.state === "listening"
-                ? fr ? "Le recruteur vous écoute" : "Recruiter listening"
-                : fr ? "Connexion à l'entretien…" : "Connecting to interview…"}
+                ? translateCentral(fr ? "fr" : "en", "uiText.components_interviews_screening_call.text003")
+                : translateCentral(fr ? "fr" : "en", "uiText.components_interviews_screening_call.text004")}
         </p>
       </div>
 
       <div className="w-full max-w-md space-y-2 rounded-xl border bg-card p-4">
         <p className="text-xs font-medium text-muted-foreground">
-          {fr ? "Transcription en direct" : "Live transcript"}
+          {translateCentral(fr ? "fr" : "en", "uiText.components_interviews_screening_call.text005")}
         </p>
         <div className="max-h-48 min-h-24 space-y-2 overflow-y-auto" aria-live="polite">
           {transcripts.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              {fr ? "La conversation apparaîtra ici." : "Conversation will appear here."}
+              {translateCentral(fr ? "fr" : "en", "uiText.components_interviews_screening_call.text006")}
             </p>
           ) : transcripts.slice(-12).map((part, index) => (
             <p key={`${index}-${part.text.slice(0, 12)}`} className="text-sm leading-relaxed">
@@ -76,10 +76,10 @@ function VoiceRoom({ language, onHangup }: {
       <div className="flex items-center gap-3">
         <Button variant="outline" size="lg" disabled={pending} onClick={() => void switchMic()}>
           {pending ? <LoaderCircle className="animate-spin" /> : muted ? <MicOff /> : <Mic />}
-          {muted ? fr ? "Activer le micro" : "Unmute" : fr ? "Couper le micro" : "Mute"}
+          {muted ? translateCentral(fr ? "fr" : "en", "uiText.components_interviews_screening_call.text007") : translateCentral(fr ? "fr" : "en", "uiText.components_interviews_screening_call.text008")}
         </Button>
         <Button variant="destructive" size="lg" onClick={onHangup}>
-          <PhoneOff /> {fr ? "Terminer l'appel" : "End call"}
+          <PhoneOff /> {translateCentral(fr ? "fr" : "en", "uiText.components_interviews_screening_call.text009")}
         </Button>
       </div>
     </section>
@@ -114,7 +114,7 @@ export function ScreeningCall({ connection, language, onClosed }: {
         <div className="space-y-3 py-10 text-center">
           <p role="alert" className="text-sm text-destructive">{failed}</p>
           <Button variant="outline" onClick={() => void end()}>
-            {fr ? "Retour" : "Back"}
+            {translateCentral(fr ? "fr" : "en", "uiText.components_interviews_screening_call.text010")}
           </Button>
         </div>
       ) : (

@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -72,7 +73,7 @@ export function ResumeAtsJobPicker({ active, language, value, selected, onChange
         autoComplete="off"
         value={value}
         maxLength={200}
-        placeholder={language === "fr" ? "Ex. : Ingénieur IA" : "e.g. AI Engineer"}
+        placeholder={translateCentral(language === "fr" ? "fr" : "en", "uiText.components_resumes_resume_ats_job_picker.text001")}
         className="h-9 w-full rounded-md border-border/70 bg-background px-3 text-sm shadow-none"
         role="combobox"
         aria-autocomplete="list"

@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
@@ -54,10 +55,10 @@ export function CoverLetterEditor() {
   const { i18n } = useTranslation();
   const fr = i18n.resolvedLanguage?.startsWith("fr") ?? false;
   const c = resumeEditorCopy[fr ? "fr" : "en"];
-  const title = fr ? "Studio lettre de motivation" : "Cover letter studio";
-  const back = fr ? "Retour au CV" : "Back to resume";
-  const hint = fr ? "Cliquez sur un texte pour le modifier. Votre lettre est sauvegardée automatiquement." : "Click any text to edit it. Your letter saves automatically.";
-  const jobLabel = fr ? "Offre associée" : "Linked job";
+  const title = translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text001");
+  const back = translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text002");
+  const hint = translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text003");
+  const jobLabel = translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text004");
   const [letter, setLetter] = useState<LetterResponse | null>(null), [document, setDocument] = useState<CoverLetterDocument | null>(null);
   const ready = Boolean(document);
   const paperSize = resumePaperDimensions(document?.design.paper ?? "A4");
@@ -166,7 +167,7 @@ export function CoverLetterEditor() {
   const focusedText = exactSelectedText ?? document?.[selected] ?? "";
   const selectedFieldLabel = fieldNames[selected][fr ? 0 : 1];
   const cannotEditField = !(["introduction", "body", "conclusion"] as string[]).includes(selected)
-    ? (fr ? "Les informations d'identité sont protégées. Sélectionnez un paragraphe de la lettre." : "Identity fields are protected. Select a letter paragraph instead.")
+    ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text005"))
     : undefined;
 
   const runLetterAI = async (instruction: string, origin: StudioAIMode, displayInstruction: string, targetField?: string) => {
@@ -233,13 +234,13 @@ export function CoverLetterEditor() {
       }
       setPendingAI(null);
       setSelectionFeedback(action === "accept"
-        ? (fr ? "Modification appliquée à la lettre." : "Edit applied to your letter.")
-        : (fr ? "Proposition refusée." : "Suggestion discarded."));
+        ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text006"))
+        : (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text007")));
       setMessages(items => [...items, {
         role: "assistant",
         content: action === "accept"
-          ? (fr ? "Modifications approuvées et enregistrées." : "Changes approved and saved.")
-          : (fr ? "Proposition rejetée. La lettre reste inchangée." : "Proposal discarded. Your letter is unchanged."),
+          ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text008"))
+          : (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text009")),
       }]);
     } catch (cause) {
       if (token === generation.current) setError(cause instanceof Error && ["CONFLICT", "PROPOSAL_STALE"].includes(cause.message) ? cause.message : "AI");
@@ -265,18 +266,18 @@ export function CoverLetterEditor() {
     finally { setExporting(false); }
   };
 
-  if (!document || !letter) return <div className="border bg-card p-10 text-center"><p role={error ? "alert" : "status"} className="text-sm text-muted-foreground">{error ? (fr ? "Impossible d’ouvrir cette lettre." : "Unable to open this letter.") : c.loading}</p>{!error && <Loader2 className="mx-auto mt-4 size-5 animate-spin text-primary" />}{error && <Button className="mt-6" variant="outline" onClick={() => void load()}>{c.retry}</Button>}</div>;
+  if (!document || !letter) return <div className="border bg-card p-10 text-center"><p role={error ? "alert" : "status"} className="text-sm text-muted-foreground">{error ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text010")) : c.loading}</p>{!error && <Loader2 className="mx-auto mt-4 size-5 animate-spin text-primary" />}{error && <Button className="mt-6" variant="outline" onClick={() => void load()}>{c.retry}</Button>}</div>;
   const fieldLabel = (field: TextField) => fieldNames[field][fr ? 0 : 1];
   const editable = (field: TextField) => {
     const styles = document.design.fieldStyles[field];
     return <LetterField field={field} value={document[field]} label={fieldLabel(field)} selected={selected === field} preview={preview} disabled={chatting || Boolean(pendingAI)} style={{ fontWeight: styles?.bold ? 700 : undefined, fontStyle: styles?.italic ? "italic" : undefined, textDecoration: styles?.underline ? "underline" : undefined, textAlign: styles?.align }} onSelect={setSelected} onChange={onText} />;
   };
-  const errorText = error === "PROPOSAL_STALE" ? (fr ? "La proposition est périmée ou les faits confirmés ont changé. Rejetez-la puis demandez une nouvelle version." : "This proposal is stale or evidence has changed. Discard it and request a new draft.") : error === "CONFLICT" ? (fr ? "Cette lettre a été modifiée dans un autre onglet. Exportez votre version avant de recharger." : "This letter was edited in another tab. Export your version before reloading.") : error === "AI" ? c.chatError : error === "EXPORT" ? c.exportError : c.saveError;
+  const errorText = error === "PROPOSAL_STALE" ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text011")) : error === "CONFLICT" ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text012")) : error === "AI" ? c.chatError : error === "EXPORT" ? c.exportError : c.saveError;
 
   const aiReview = pendingAI ? (
 
-                <section className="studio-chat-review" aria-label={fr ? "Proposition IA" : "AI proposal"}>
-                  <h3 className="text-xs font-semibold">{fr ? "Modifications proposées" : "Proposed changes"}</h3>
+                <section className="studio-chat-review" aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text013")}>
+                  <h3 className="text-xs font-semibold">{translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text014")}</h3>
                   <div className="mt-3 max-h-60 space-y-2 overflow-y-auto">
                     {pendingAI.diff.map((change) => (
                       <div key={change.field} className="text-[11px]">
@@ -287,8 +288,8 @@ export function CoverLetterEditor() {
                     ))}
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    <Button type="button" variant="outline" size="sm" disabled={decidingAI} onClick={() => void decideAI("discard")}><X className="size-3" />{fr ? "Refuser" : "Discard"}</Button>
-                    <Button type="button" size="sm" disabled={decidingAI} onClick={() => void decideAI("accept")}><Check className="size-3" />{fr ? "Accepter" : "Approve"}</Button>
+                    <Button type="button" variant="outline" size="sm" disabled={decidingAI} onClick={() => void decideAI("discard")}><X className="size-3" />{translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text015")}</Button>
+                    <Button type="button" size="sm" disabled={decidingAI} onClick={() => void decideAI("accept")}><Check className="size-3" />{translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text016")}</Button>
                   </div>
                 </section>
 
@@ -298,7 +299,7 @@ export function CoverLetterEditor() {
     {applicationId && <div className="mb-2 text-xs"><Link className="text-primary underline" href={`/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents`}>← Retour au dossier de candidature</Link></div>}
     <header className="studio-header">
       <Button variant="ghost" size="icon" asChild><Link href={applicationId ? `/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents` : letter.cv ? `/dashboard/resumes/${letter.cv.id}` : "/dashboard/cover-letters"} aria-label={back}><ArrowLeft className="size-4" /></Link></Button>
-      <div><p className="text-[9px] font-semibold uppercase tracking-[.18em] text-primary">CVcomet / {title}</p><Input className="studio-document-name" aria-label={fieldLabel("positionTitle")} maxLength={300} value={document.positionTitle} placeholder={fr ? "Ma lettre de motivation" : "My cover letter"} disabled={chatting || Boolean(pendingAI)} onChange={event => onText("positionTitle", event.target.value)} /><p className="studio-save-status" role="status">{status === "saving" ? <Loader2 className="size-3 animate-spin" /> : status === "saved" ? <Check className="size-3 text-primary" /> : <span className="size-1.5 rounded-full bg-amber-500" />}{c[status === "error" ? "saveError" : status]}</p></div>
+      <div><p className="text-[9px] font-semibold uppercase tracking-[.18em] text-primary">CVcomet / {title}</p><Input className="studio-document-name" aria-label={fieldLabel("positionTitle")} maxLength={300} value={document.positionTitle} placeholder={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text017")} disabled={chatting || Boolean(pendingAI)} onChange={event => onText("positionTitle", event.target.value)} /><p className="studio-save-status" role="status">{status === "saving" ? <Loader2 className="size-3 animate-spin" /> : status === "saved" ? <Check className="size-3 text-primary" /> : <span className="size-1.5 rounded-full bg-amber-500" />}{c[status === "error" ? "saveError" : status]}</p></div>
       <div className="studio-header-actions"><Button variant="outline" asChild><Link href={applicationId ? `/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents` : letter.cv ? `/dashboard/resumes/${letter.cv.id}` : "/dashboard/cover-letters"}><ArrowLeft className="size-4" />{back}</Link></Button><Button variant="outline" disabled={status === "saving" || chatting || Boolean(pendingAI)} onClick={() => void save()}><Save className="size-4" />{c.save}</Button><Button disabled={exporting} onClick={() => void exportPDF()}>{exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}{exporting ? c.exporting : c.export}</Button></div>
     </header>
     {error && <p role="alert" className="mb-4 rounded-lg border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{errorText}</p>}
@@ -334,7 +335,7 @@ export function CoverLetterEditor() {
                 },
               }), "template")}
             />
-            <div><span className="studio-panel-label">{fr ? "Couleur de la lettre" : "Letter color"}</span><div className="flex flex-wrap items-center gap-3">{accents.map(color => <button key={color} type="button" className="studio-swatch" style={{ background: color }} aria-label={`${fr ? "Couleur" : "Color"} ${color}`} aria-pressed={document.design.accent === color} disabled={chatting || Boolean(pendingAI)} onClick={() => design("accent", color)} />)}<input type="color" value={document.design.accent} aria-label={fr ? "Couleur personnalisée" : "Custom color"} className="size-7 cursor-pointer rounded border-0 bg-transparent" disabled={chatting || Boolean(pendingAI)} onChange={event => design("accent", event.target.value)} /></div></div>
+            <div><span className="studio-panel-label">{translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text018")}</span><div className="flex flex-wrap items-center gap-3">{accents.map(color => <button key={color} type="button" className="studio-swatch" style={{ background: color }} aria-label={`${translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text019")} ${color}`} aria-pressed={document.design.accent === color} disabled={chatting || Boolean(pendingAI)} onClick={() => design("accent", color)} />)}<input type="color" value={document.design.accent} aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text020")} className="size-7 cursor-pointer rounded border-0 bg-transparent" disabled={chatting || Boolean(pendingAI)} onChange={event => design("accent", event.target.value)} /></div></div>
             <label className="block"><span className="studio-panel-label">{c.font}</span><select className="h-9 w-full rounded-md border bg-background px-3 text-xs" value={document.design.font} disabled={chatting || Boolean(pendingAI)} onChange={event => design("font", event.target.value as CoverLetterDesign["font"])}>{(["sans", "serif", "mono"] as const).map(font => <option key={font} value={font}>{c[font]}</option>)}</select></label>
             {([{ key: "fontSize", label: c.fontSize, min: 11, max: 16, step: .5 }, { key: "lineHeight", label: c.spacing, min: 1.2, max: 2, step: .05 }, { key: "padding", label: c.margins, min: 32, max: 80, step: 2 }] as const).map(({ key, label, min, max, step }) => <label key={key}><span className="studio-panel-label flex justify-between">{label}<span className="font-normal text-muted-foreground">{document.design[key].toFixed(key === "lineHeight" ? 2 : 0)}</span></span><input className="w-full accent-primary" type="range" min={min} max={max} step={step} aria-label={label} value={document.design[key]} disabled={chatting || Boolean(pendingAI)} onChange={event => design(key, Number(event.target.value))} /></label>)}
             <CareerMarketPanel
@@ -356,7 +357,7 @@ export function CoverLetterEditor() {
               <Sparkles className="size-3.5" />{c.ai}
             </Button>
           </>}
-          {tab === "sections" && <><div><h2 className="text-sm font-semibold">{c.sectionsTab}</h2><p className="mt-2 text-[11px] leading-5 text-muted-foreground">{fr ? "Sélectionnez le texte à modifier dans votre lettre." : "Select the text to edit in your letter."}</p></div><div>{(Object.keys(fieldNames) as TextField[]).map(field => <button type="button" key={field} className="studio-section-row w-full text-left" aria-pressed={selected === field} onClick={() => focusField(field)}><span className="flex-1 text-xs">{fieldLabel(field)}</span><AlignLeft className="size-3 text-muted-foreground" /></button>)}</div></>}
+          {tab === "sections" && <><div><h2 className="text-sm font-semibold">{c.sectionsTab}</h2><p className="mt-2 text-[11px] leading-5 text-muted-foreground">{translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text021")}</p></div><div>{(Object.keys(fieldNames) as TextField[]).map(field => <button type="button" key={field} className="studio-section-row w-full text-left" aria-pressed={selected === field} onClick={() => focusField(field)}><span className="flex-1 text-xs">{fieldLabel(field)}</span><AlignLeft className="size-3 text-muted-foreground" /></button>)}</div></>}
           {tab === "ai" && (
             <StudioAIModes
               mode={aiMode}
@@ -371,8 +372,8 @@ export function CoverLetterEditor() {
               busy={chatting}
               disabled={Boolean(pendingAI) || decidingAI}
               fr={fr}
-              error={error === "AI" ? (fr ? "Impossible de terminer la demande IA." : "Unable to complete the AI request.") : error === "PROPOSAL_STALE" ? (fr ? "Proposition expirée. Réessayez." : "Proposal expired. Please retry.") : undefined}
-              placeholder={fr ? "Demandez une modification…" : "Ask for a change…"}
+              error={error === "AI" ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text022")) : error === "PROPOSAL_STALE" ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text023")) : undefined}
+              placeholder={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text024")}
               suggestions={(fr ? [
                 { label: "Plus naturel", prompt: "Rends cette lettre plus naturelle et professionnelle sans ajouter de faits." },
                 { label: "Plus concis", prompt: "Raccourcis cette lettre en conservant les expériences réelles." },
@@ -395,13 +396,13 @@ export function CoverLetterEditor() {
                   busy={chatting}
                   disabled={Boolean(pendingAI) || decidingAI}
                   restriction={cannotEditField}
-                  feedback={selectionFeedback || (error === "AI" ? (fr ? "Impossible de modifier ce passage." : "Unable to edit this passage.") : undefined)}
+                  feedback={selectionFeedback || (error === "AI" ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text025")) : undefined)}
                   review={aiReview}
                 />
               }
             />
           )}
-          {tab === "job" && <><div><Briefcase className="mb-3 size-5 text-primary" /><h2 className="text-sm font-semibold">{jobLabel}</h2></div>{letter.job ? <div className="rounded-md border bg-muted/40 p-3"><p className="text-xs font-medium">{letter.job.title}</p><p className="mt-2 text-[11px] text-muted-foreground">{letter.job.company}</p><p className="mt-4 whitespace-pre-wrap text-[11px] leading-5 text-muted-foreground">{letter.job.description}</p></div> : <p className="text-xs text-muted-foreground">{fr ? "Aucune offre associée." : "No linked job posting."}</p>}<Button variant="outline" asChild><Link href={applicationId ? `/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents` : letter.cv ? `/dashboard/resumes/${letter.cv.id}` : "/dashboard/cover-letters"}>{back}</Link></Button></>}
+          {tab === "job" && <><div><Briefcase className="mb-3 size-5 text-primary" /><h2 className="text-sm font-semibold">{jobLabel}</h2></div>{letter.job ? <div className="rounded-md border bg-muted/40 p-3"><p className="text-xs font-medium">{letter.job.title}</p><p className="mt-2 text-[11px] text-muted-foreground">{letter.job.company}</p><p className="mt-4 whitespace-pre-wrap text-[11px] leading-5 text-muted-foreground">{letter.job.description}</p></div> : <p className="text-xs text-muted-foreground">{translateCentral(fr ? "fr" : "en", "uiText.components_resumes_cover_letter_studio.text026")}</p>}<Button variant="outline" asChild><Link href={applicationId ? `/dashboard/applications/${encodeURIComponent(applicationId)}?tab=documents` : letter.cv ? `/dashboard/resumes/${letter.cv.id}` : "/dashboard/cover-letters"}>{back}</Link></Button></>}
         </div>
       </aside>
       <section ref={viewport} className="studio-canvas-viewport" aria-label={title}>

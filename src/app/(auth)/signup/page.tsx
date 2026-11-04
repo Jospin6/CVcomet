@@ -14,15 +14,16 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
 import { authClient } from "@/lib/auth-client";
 
-const schema = z.object({
-  email: z.string().email("Invalid email"),
-  password: z.string().min(6, "Short password"),
+const createSchema = (t: (key: string) => string) => z.object({
+  email: z.string().email(t("auth.invalidEmail")),
+  password: z.string().min(6, t("auth.shortPassword")),
 });
 
-type signupFormData = z.infer<typeof schema>;
+type signupFormData = z.infer<ReturnType<typeof createSchema>>;
 
 export default function RegisterForm() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
+  const schema = createSchema(t);
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -45,7 +46,7 @@ export default function RegisterForm() {
       } else if (typeof error === "string") {
         setError(error);
       } else {
-        setError("Authentication failed");
+        setError(t("auth.failed"));
       }
     }
   };
@@ -53,7 +54,7 @@ export default function RegisterForm() {
   return (
     <div className="auth-card">
       <div className="py-4">
-        <p className="eyebrow mb-4">CVcomet / Your career workspace</p>
+        <p className="eyebrow mb-4">{t("auth.signupEyebrow")}</p>
         <h1 className="type-h1 mb-5">{t("shell.signupIntro")}</h1>
       </div>
       {error && <p role="alert" className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
@@ -81,7 +82,7 @@ export default function RegisterForm() {
       {process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true" && (
         <Button type="button" variant="outline" className="mt-4 w-full" onClick={async () => {
           const result = await authClient.signIn.social({ provider: "google", callbackURL: "/onboarding" });
-          if (result.error) setError(result.error.message || "Google sign-in failed");
+          if (result.error) setError(result.error.message || t("auth.googleFailed"));
         }}>Google</Button>
       )}
       <div className="mt-6 flex flex-wrap gap-y-2 text-sm justify-center">

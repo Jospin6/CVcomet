@@ -10,6 +10,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { translateCentral } from "@/lib/i18n/central-copy";
 import {
   ArrowUp,
   Check,
@@ -25,7 +26,6 @@ import {
 import { Button } from "@/components/ui/button";
 import CareerMemoryPanel from "@/components/career/CareerMemoryPanel";
 import CareerMissionProgress, { type MissionProgressEvent } from "@/components/career/CareerMissionProgress";
-import AssistantMarkdown from "@/components/career/AssistantMarkdown";
 
 // The existing mission and agent APIs remain the source of truth.
 // This page changes presentation and starts a saved chat on the first message.
@@ -71,16 +71,16 @@ type Detail = Mission & {
 type ApiEnvelope<T> = { data?: T; error?: { code: string } };
 
 const SPECIALIST_WORKSPACES = {
-  profile: { fr: "Profil", en: "Profile", path: "/dashboard/profile" },
-  resume: { fr: "CV", en: "Resume", path: "/dashboard/resumes" },
-  cover_letter: { fr: "Lettre de motivation", en: "Cover letter", path: "/dashboard/cover-letters" },
-  ats: { fr: "Analyse ATS", en: "ATS analysis", path: "/dashboard/ats" },
-  job_match: { fr: "Job Match", en: "Job Match", path: "/dashboard/job-match" },
-  job_discovery: { fr: "Offres pour moi", en: "Jobs for you", path: "/dashboard/find-jobs" },
-  career_map: { fr: "Career Map", en: "Career Map", path: "/dashboard/career-map" },
-  interview_text: { fr: "Entretien texte", en: "Text interview", path: "/dashboard/interviews" },
-  interview_voice: { fr: "Entretien vocal", en: "Voice interview", path: "/dashboard/interviews" },
-  application: { fr: "Candidatures", en: "Applications", path: "/dashboard/application-agent" },
+  profile: { path: "/dashboard/profile" },
+  resume: { path: "/dashboard/resumes" },
+  cover_letter: { path: "/dashboard/cover-letters" },
+  ats: { path: "/dashboard/ats" },
+  job_match: { path: "/dashboard/job-match" },
+  job_discovery: { path: "/dashboard/find-jobs" },
+  career_map: { path: "/dashboard/career-map" },
+  interview_text: { path: "/dashboard/interviews" },
+  interview_voice: { path: "/dashboard/interviews" },
+  application: { path: "/dashboard/application-agent" },
 } as const;
 type SpecialistChoice = "auto" | keyof typeof SPECIALIST_WORKSPACES;
 const MAX_FILES = 3;
@@ -105,7 +105,7 @@ function SelectedAttachment({ file, onRemove, disabled, french }: {
     {preview ? <span role="img" aria-label={file.name} className="size-8 shrink-0 rounded-md bg-cover bg-center"
       style={{ backgroundImage: `url("${preview}")` }} /> : <FileText className="size-4 shrink-0" />}
     <span className="min-w-0 truncate">{file.name}</span>
-    <button type="button" aria-label={`${french ? "Retirer" : "Remove"} ${file.name}`} disabled={disabled}
+    <button type="button" aria-label={`${translateCentral(french ? "fr" : "en", "assistant.removeAttachment")} ${file.name}`} disabled={disabled}
       onClick={onRemove} className="shrink-0 rounded p-0.5 hover:bg-muted">
       <X className="size-3.5" />
     </button>
@@ -164,7 +164,7 @@ function syncMissionUrl(id: string | null) {
   window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
 }
 
-function toMessages(runs: Run[]): Message[] {
+function toMessages(runs: Run[], language: "fr" | "en"): Message[] {
   return runs.flatMap((run): Message[] => [
     { role: "user", content: run.question, attachments: run.attachments },
     {
@@ -173,14 +173,14 @@ function toMessages(runs: Run[]): Message[] {
         run.status === "COMPLETED" && run.answer
           ? run.answer
           : run.status === "RUNNING"
-            ? "La réponse est encore en cours. Rechargez cette discussion."
-            : "Cette réponse n'a pas abouti. Vous pouvez réessayer.",
+            ? translateCentral(language, "assistant.pendingResponse")
+            : translateCentral(language, "assistant.failedResponse"),
     },
   ]);
 }
 
 export default function CareerAgentPage() {
-  const { i18n } = useTranslation();
+  const { i18n, t: tI18n } = useTranslation();
   const french = i18n.resolvedLanguage?.startsWith("fr") ?? false;
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -247,7 +247,7 @@ export default function CareerAgentPage() {
       })
       .catch(() => {
         if (!controller.signal.aborted) {
-          setError(french ? "Impossible d'ouvrir cette candidature." : "Unable to load this application.");
+          setError(tI18n("assistant.label001"));
         }
       });
     return () => controller.abort();
@@ -258,7 +258,7 @@ export default function CareerAgentPage() {
       const result = await api<{ items: Mission[] }>("/api/career/v1/missions?limit=30");
       setMissions(result.items);
     } catch {
-      setError(french ? "Impossible de charger les conversations." : "Unable to load conversations.");
+      setError(tI18n("assistant.label002"));
     }
   }, [french]);
 
@@ -279,7 +279,7 @@ export default function CareerAgentPage() {
       const current = await api<Detail>(`/api/career/v1/missions/${id}`);
       if (sequence !== requestSequence.current) return;
       setDetail(current);
-      setMessages(toMessages(current.runs));
+      setMessages(toMessages(current.runs, french ? "fr" : "en"));
       setOlderCursor(current.nextRunCursor);
       setProgressEvents([]);
       setProgressWarning(false);
@@ -338,7 +338,7 @@ export default function CareerAgentPage() {
       );
       if (sequence !== requestSequence.current) return;
       preservingOlderScroll.current = true;
-      setMessages((current) => [...toMessages(older.items), ...current]);
+      setMessages((current) => [...toMessages(older.items, french ? "fr" : "en"), ...current]);
       setOlderCursor(older.nextCursor);
       requestAnimationFrame(() => {
         if (container) container.scrollTop += container.scrollHeight - previousHeight;
@@ -355,7 +355,7 @@ export default function CareerAgentPage() {
     const next = [...files, ...Array.from(selected)];
     if (next.length > MAX_FILES || next.some(file => file.size > MAX_FILE_SIZE || file.size === 0) ||
       next.reduce((sum, file) => sum + file.size, 0) > MAX_UPLOAD_SIZE) {
-      setError(french ? "Maximum 3 fichiers, 5 Mo chacun et 12 Mo au total." : "Maximum 3 files, 5 MB each and 12 MB total.");
+      setError(tI18n("assistant.label003"));
       return;
     }
     setFiles(next);
@@ -369,7 +369,7 @@ export default function CareerAgentPage() {
       return;
     }
     if (pending || transcribing || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setVoiceError(french ? "Enregistrement vocal indisponible dans ce navigateur." : "Voice recording unavailable in this browser.");
+      setVoiceError(tI18n("assistant.label004"));
       return;
     }
     setVoiceError(null);
@@ -405,7 +405,7 @@ export default function CareerAgentPage() {
         if (recorder.state === "recording") recorder.stop();
       }, 45_000);
     } catch {
-      setVoiceError(french ? "Microphone refusé ou indisponible." : "Microphone permission denied or unavailable.");
+      setVoiceError(tI18n("assistant.label005"));
     }
   }
 
@@ -432,7 +432,7 @@ export default function CareerAgentPage() {
     event?.preventDefault();
     const sendingFiles = repeated?.attachments ?? files;
     const selectedSpecialist = repeated?.specialist ?? specialistChoice;
-    const question = (repeated?.question ?? message).trim() || (sendingFiles.length ? (french ? "Analyse ces fichiers et explique-moi les points essentiels." : "Analyze these files and explain the key points.") : "");
+    const question = (repeated?.question ?? message).trim() || (sendingFiles.length ? (tI18n("assistant.label006")) : "");
     if (
       pending || loading || creating ||
       question.length < 2 || question.length > 6000 ||
@@ -502,11 +502,11 @@ export default function CareerAgentPage() {
     } catch (cause) {
       const code = cause instanceof Error ? cause.message : "UNAVAILABLE";
       setError(code === "ASSISTANT_VISION_MODEL_REQUIRED" ?
-        (french ? "Le modèle IA actif ne prend pas en charge les images. Choisissez un modèle vision dans la configuration IA." : "The active AI model does not support images. Choose a vision model in AI settings.") :
+        (tI18n("assistant.label007")) :
         code === "MULTIMODAL_REQUIRES_GRAPH" ?
-          (french ? "Les pièces jointes nécessitent l'activation du moteur LangGraph." : "Attachments require the LangGraph engine to be enabled.") :
+          (tI18n("assistant.label008")) :
           code.startsWith("ASSISTANT_") ? code :
-          (french ? "La réponse n'a pas abouti. Vérifiez la conversation avant de réessayer." : "The response failed. Check the conversation before retrying."));
+          (tI18n("assistant.label009")));
       if (missionId) setRetry({ missionId, requestKey, question, attachments: sendingFiles, specialist: selectedSpecialist });
       else { setMessage(question); setFiles(sendingFiles); }
     } finally {
@@ -697,7 +697,7 @@ export default function CareerAgentPage() {
         />
       )}
       <aside
-        aria-label={french ? "Historique des discussions" : "Conversation history"}
+        aria-label={tI18n("assistant.label010")}
         className={`
           z-50 flex w-60 shrink-0 flex-col bg-muted/25 px-2 py-3
           lg:static lg:flex
@@ -714,7 +714,7 @@ export default function CareerAgentPage() {
             className="flex h-9 flex-1 items-center gap-2 rounded-lg px-2.5 text-left text-sm font-medium transition-colors hover:bg-muted disabled:opacity-50"
           >
             <Plus className="size-4" aria-hidden="true" />
-            {french ? "Nouvelle discussion" : "New chat"}
+            {tI18n("assistant.label011")}
           </button>
           <button
             type="button"
@@ -775,16 +775,16 @@ export default function CareerAgentPage() {
           </div>
           <div className="flex items-center gap-1">
             <button type="button" onClick={() => setMemoryOpen(true)}
-              aria-label={french ? "Gérer ma mémoire" : "Manage memory"}
+              aria-label={tI18n("assistant.label012")}
               className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
               <Brain className="size-4" aria-hidden="true" />
-              <span className="hidden sm:inline">{french ? "Mémoire" : "Memory"}</span>
+              <span className="hidden sm:inline">{tI18n("assistant.label013")}</span>
             </button>
           <button
             type="button"
             onClick={newChat}
             disabled={pending || creating}
-            aria-label={french ? "Nouvelle discussion" : "New chat"}
+            aria-label={tI18n("assistant.label014")}
             className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 lg:hidden"
           >
             <Plus className="size-5" />
@@ -803,7 +803,7 @@ export default function CareerAgentPage() {
             {isEmpty && (
               <div className="flex flex-1 items-center justify-center py-12">
                 <h1 className="text-center text-2xl font-medium tracking-tight sm:text-[30px]">
-                  {french ? "Comment puis-je vous aider ?" : "How can I help you?"}
+                  {tI18n("assistant.label015")}
                 </h1>
               </div>
             )}
@@ -842,15 +842,15 @@ export default function CareerAgentPage() {
                         </div>}
                       </div>
                     ) : (
-                      <div className="min-w-0 max-w-full break-words px-1 text-[14px] leading-7 text-foreground sm:text-[15px]">
-                        <AssistantMarkdown content={item.content} />
+                      <div className="min-w-0 max-w-full whitespace-pre-wrap break-words px-1 text-[14px] leading-7 text-foreground sm:text-[15px]">
+                        {item.content}
                         <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                           {workspaceFor(item.specialist) && <Link className="underline-offset-2 hover:underline" href={workspaceFor(item.specialist)!.path}>
-                            {french ? workspaceFor(item.specialist)!.fr : workspaceFor(item.specialist)!.en} <ChevronRight className="inline size-3" />
+                            {translateCentral(french ? "fr" : "en", `assistantSpecialists.${item.specialist}`)} <ChevronRight className="inline size-3" />
                           </Link>}
                           <button type="button" onClick={() => speak(item.content)} className="inline-flex items-center gap-1 hover:text-foreground"
-                            aria-label={french ? "Lire la réponse" : "Read response aloud"}>
-                            <Volume2 className="size-3.5" /> {french ? "Écouter" : "Listen"}
+                            aria-label={tI18n("assistant.label016")}>
+                            <Volume2 className="size-3.5" /> {tI18n("assistant.label017")}
                           </button>
                         </div>
                       </div>
@@ -871,7 +871,7 @@ export default function CareerAgentPage() {
             {appContext && (draftFromChat || draftProposal) && (
               <div className="mb-6 space-y-3 rounded-2xl bg-muted/40 p-4">
                 <p className="text-sm font-medium">
-                  {french ? "Modification à vérifier" : "Review document changes"}
+                  {tI18n("assistant.label018")}
                 </p>
                 {!draftProposal && (
                   <div className="space-y-3">
@@ -996,18 +996,18 @@ export default function CareerAgentPage() {
               </div>
             )}
             <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-              <label htmlFor="career-specialist" className="sr-only">{french ? "Agent spécialisé" : "Specialist agent"}</label>
+              <label htmlFor="career-specialist" className="sr-only">{tI18n("assistant.label019")}</label>
               <select id="career-specialist" value={specialistChoice}
                 onChange={e => setSpecialistChoice(e.target.value as SpecialistChoice)}
                 disabled={pending || tracking?.active}
                 className="max-w-48 truncate rounded-lg border border-border/70 bg-background px-2.5 py-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <option value="auto">{french ? "Tous les agents · Auto" : "All agents · Auto"}</option>
+                <option value="auto">{tI18n("assistant.label020")}</option>
                 {Object.entries(SPECIALIST_WORKSPACES).map(([id, workspace]) =>
-                  <option key={id} value={id}>{french ? workspace.fr : workspace.en}</option>)}
+                  <option key={id} value={id}>{translateCentral(french ? "fr" : "en", `assistantSpecialists.${id}`)}</option>)}
               </select>
               {workspaceFor(specialistChoice) && <Link href={workspaceFor(specialistChoice)!.path}
                 className="inline-flex items-center gap-0.5 hover:underline">
-                {french ? "Ouvrir le workflow" : "Open workflow"} <ChevronRight className="size-3" />
+                {tI18n("assistant.label021")} <ChevronRight className="size-3" />
               </Link>}
             </div>
             {files.length > 0 && <div aria-label="Fichiers à envoyer" className="mb-2 flex flex-wrap gap-2">
@@ -1020,7 +1020,7 @@ export default function CareerAgentPage() {
               className="rounded-[24px] border border-border/80 bg-card px-3 py-3 shadow-sm focus-within:border-ring/50 sm:px-4"
             >
               <label htmlFor="career-assistant-message" className="sr-only">
-                {french ? "Votre message" : "Your message"}
+                {tI18n("assistant.label022")}
               </label>
               <textarea
                 ref={promptRef}
@@ -1031,32 +1031,32 @@ export default function CareerAgentPage() {
                 onKeyDown={onComposerKeyDown}
                 disabled={pending || tracking?.active || loading || creating || detail?.status === "ARCHIVED"}
                 maxLength={6000}
-                placeholder={french ? "Écrire à CVComet…" : "Message CVComet…"}
+                placeholder={tI18n("assistant.label023")}
                 className="block min-h-[28px] w-full resize-none overflow-y-auto bg-transparent text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-50 sm:text-[15px]"
               />
               <div className="mt-2 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1">
                   <input ref={fileInputRef} type="file" multiple className="sr-only"
                     accept=".png,.jpg,.jpeg,.webp,.pdf,.docx,.txt,image/png,image/jpeg,image/webp,application/pdf"
-                    onChange={event => addFiles(event.target.files)} aria-label={french ? "Joindre des fichiers" : "Attach files"}/>
+                    onChange={event => addFiles(event.target.files)} aria-label={tI18n("assistant.label024")}/>
                   <button type="button" disabled={pending || files.length >= MAX_FILES}
-                    onClick={() => fileInputRef.current?.click()} title={french ? "Ajouter des images ou documents" : "Attach images or documents"}
-                    aria-label={french ? "Joindre" : "Attach"} className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40">
+                    onClick={() => fileInputRef.current?.click()} title={tI18n("assistant.label025")}
+                    aria-label={tI18n("assistant.label026")} className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40">
                     <Paperclip className="size-4" />
                   </button>
                   <button type="button" disabled={pending || transcribing}
                     onClick={() => void toggleRecorder()}
-                    title={recording ? (french ? "Arrêter l'enregistrement" : "Stop recording") : (french ? "Dicter un message" : "Dictate message")}
+                    title={recording ? (tI18n("assistant.label027")) : (tI18n("assistant.label028"))}
                     aria-label={recording ? "Arrêter" : "Microphone"}
                     className={`rounded-lg p-2 ${recording ? "bg-destructive/10 text-destructive" : "text-muted-foreground hover:bg-muted hover:text-foreground"} disabled:opacity-40`}>
                     {transcribing ? <LoaderCircle className="size-4 animate-spin" /> : recording ? <Square className="size-4" /> : <Mic className="size-4" />}
                   </button>
-                  {recording && <span className="text-xs text-destructive">{french ? "Enregistrement…" : "Recording…"}</span>}
+                  {recording && <span className="text-xs text-destructive">{tI18n("assistant.label029")}</span>}
                 </div>
                 <button
                   type="submit"
                   disabled={!canSend}
-                  aria-label={french ? "Envoyer" : "Send"}
+                  aria-label={tI18n("assistant.label030")}
                   className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {pending ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}

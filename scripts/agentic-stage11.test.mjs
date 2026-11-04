@@ -43,9 +43,9 @@ test('stage11: no fictitious offers, no heuristic match %, no write tool',()=>{
  assert.match(discovery,/getJobsPool/);
  assert.match(discovery,/validExternalJob\(job\)/);
  assert.match(discovery,/u\.protocol === "https:"/);
- assert.match(ranking,/\.filter\(item => item\.match\.relevant\)/);
+ assert.match(ranking,/\.filter\(item => item\.match\.relevant\s*\|\|/);
  assert.match(ranking,/match: _heuristic/);
- assert.match(match,/Promise\.allSettled/);
+ assert.match(match,/Promise\.all\(/);
  assert.match(match,/unresolvedDiscoveryMatch/);
  assert.doesNotMatch(match,/\.create\(|\.update\(|\.delete\(|generateObject/);
 });

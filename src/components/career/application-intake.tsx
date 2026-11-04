@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import { getCentralCopy } from "@/lib/i18n/central-copy";
 import { ArrowRight, Check, LoaderCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JobAnalysisForm, jobRequest, useJobAnalysisForm } from "@/components/career/job-analysis-form";
@@ -11,36 +12,12 @@ type AnalyzedJob = {
   job: { id: string; title: string; company: string | null; location: string | null };
 };
 
-const copy = {
-  fr: {
-    question: "Quelle offre d’emploi souhaitez-vous préparer ?",
-    hint: "Ajoutez l’URL, le texte ou un document. Votre profil professionnel sera utilisé automatiquement.",
-    analyze: "Analyser cette offre",
-    review: "Vérifiez l’offre détectée",
-    create: "Créer ma candidature",
-    creating: "Création…",
-    existing: "Cette candidature existe déjà. Ouverture du dossier…",
-    close: "Fermer",
-    failed: "Impossible de créer ce dossier. Réessayez.",
-  },
-  en: {
-    question: "Which job would you like to prepare for?",
-    hint: "Add a URL, the text, or a document. Your career profile will be used automatically.",
-    analyze: "Analyze this job",
-    review: "Review the detected job",
-    create: "Create my application",
-    creating: "Creating…",
-    existing: "This application already exists. Opening its workspace…",
-    close: "Close",
-    failed: "We could not create this workspace. Please try again.",
-  },
-} as const;
 
 export function ApplicationIntake({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const { i18n } = useTranslation();
   const language = i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en";
-  const c = copy[language];
+  const c = getCentralCopy("applicationIntake")[language];
   const [job, setJob] = useState<AnalyzedJob | null>(null);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
@@ -53,7 +30,7 @@ export function ApplicationIntake({ onClose }: { onClose: () => void }) {
 
   const create = async () => {
     if (!job || creating) return;
-    if (!form.cvId) { setError(language === "fr" ? "Sélectionnez un CV pour cette candidature." : "Select a resume for this application."); return; }
+    if (!form.cvId) { setError(c.selectResume); return; }
     setCreating(true); setError("");
     try {
       const response = await fetch("/api/applications", {

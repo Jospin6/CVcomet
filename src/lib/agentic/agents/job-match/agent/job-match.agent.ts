@@ -30,6 +30,7 @@ export async function runJobMatchAgent(options: {
     runId: randomUUID(), agentId: "job-match",
     access: { kind: "authenticated", actorId: options.actorId },
   };
+  let lastStep = "compile";
   const state = await runAgentGraph<Partial<typeof JobMatchAgentState.State>, typeof JobMatchAgentState.State>({
     identity,
     input: { input },
@@ -37,6 +38,16 @@ export async function runJobMatchAgent(options: {
     signal: options.signal,
     timeoutMs: 55_000,
     recursionLimit: 14,
+    onEvent: event => {
+      if (event.kind === "step.started" && event.step) lastStep = event.step;
+      if (event.kind === "step.failed") {
+        // Structured, privacy-preserving diagnostics only.
+        console.warn("Job Match step failed", { step: event.step, code: event.code });
+      }
+      if (event.kind === "run.failed" && lastStep === "compile") {
+        console.warn("Job Match graph could not start", { code: event.code });
+      }
+    },
   });
   if (!state.verified || !state.result) throw new AgenticError("AGENT_RUN_FAILED", 502);
   return state.result;

@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -86,12 +87,12 @@ export function JobPreferencesFields({ value, onChange }: Props) {
   return (
     <div className="max-w-2xl space-y-7">
       <h2 className="text-base font-semibold">
-        {french ? "Préférences d'emploi" : "Job Preferences"}
+        {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text001")}
       </h2>
 
       <div className="space-y-2">
         <label htmlFor="profile-job-industry" className={labelClass}>
-          {french ? "Secteur d'activité" : "Industry"}
+          {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text002")}
         </label>
         <select
           id="profile-job-industry"
@@ -99,7 +100,7 @@ export function JobPreferencesFields({ value, onChange }: Props) {
           onChange={(event) => change("industry", event.target.value)}
           className={fieldClass}
         >
-          <option value="">{french ? "Choisir un secteur" : "Any industry"}</option>
+          <option value="">{translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text003")}</option>
           {industries.map((industry) => (
             <option key={industry} value={industry}>{industry}</option>
           ))}
@@ -108,7 +109,7 @@ export function JobPreferencesFields({ value, onChange }: Props) {
 
       <fieldset className="space-y-3">
         <legend className={labelClass}>
-          {french ? "Niveau d'expérience" : "Seniority"}
+          {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text004")}
         </legend>
         <div className="flex flex-wrap gap-x-6 gap-y-3">
           {seniorityOptions.map(([key, en, fr]) => (
@@ -131,14 +132,14 @@ export function JobPreferencesFields({ value, onChange }: Props) {
               onChange={() => change("seniority", "")}
               className="size-4 accent-primary"
             />
-            <span className="text-xs">{french ? "Tous" : "Any"}</span>
+            <span className="text-xs">{translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text005")}</span>
           </label>
         </div>
       </fieldset>
 
       <div className="relative space-y-2">
         <label id="residence-label" className={labelClass}>
-          {french ? "Pays de résidence" : "Area of residence"}
+          {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text006")}
         </label>
         <button
           type="button"
@@ -148,7 +149,7 @@ export function JobPreferencesFields({ value, onChange }: Props) {
           onClick={() => setCountryOpen((open) => !open)}
           className={fieldClass + " flex items-center justify-between text-left"}
         >
-          <span>{selectedCountry?.name || (french ? "Choisir un pays" : "Select country")}</span>
+          <span>{selectedCountry?.name || (translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text007"))}</span>
           <ChevronDown className="size-4 text-muted-foreground" />
         </button>
         {countryOpen && (
@@ -160,7 +161,7 @@ export function JobPreferencesFields({ value, onChange }: Props) {
               <Search className="absolute left-2 top-2.5 size-4 text-muted-foreground" />
               <Input
                 autoFocus
-                aria-label={french ? "Rechercher un pays" : "Search countries"}
+                aria-label={translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text008")}
                 value={countrySearch}
                 onChange={(event) => setCountrySearch(event.target.value)}
                 className="h-9 pl-8"
@@ -172,7 +173,7 @@ export function JobPreferencesFields({ value, onChange }: Props) {
                 className="w-full rounded px-2 py-2 text-left text-sm hover:bg-muted"
                 onClick={() => { change("residenceCountry", ""); setCountryOpen(false); }}
               >
-                {french ? "Non précisé" : "Not specified"}
+                {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text009")}
               </button>
               {filteredCountries.map((country) => (
                 <button
@@ -191,7 +192,7 @@ export function JobPreferencesFields({ value, onChange }: Props) {
               ))}
               {!filteredCountries.length && (
                 <p className="p-2 text-xs text-muted-foreground">
-                  {french ? "Aucun pays trouvé" : "No country found"}
+                  {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text010")}
                 </p>
               )}
             </div>
@@ -201,7 +202,7 @@ export function JobPreferencesFields({ value, onChange }: Props) {
 
       <fieldset className="space-y-3">
         <legend className={labelClass}>
-          {french ? "Type d'emploi" : "Employment type"}
+          {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text011")}
         </legend>
         <div className="flex flex-wrap gap-x-5 gap-y-3">
           {employmentOptions.map(([key, en, fr]) => (
@@ -225,7 +226,7 @@ export function JobPreferencesFields({ value, onChange }: Props) {
 
       <fieldset className="space-y-3">
         <legend className={labelClass}>
-          {french ? "Période salariale" : "Salary rate"}
+          {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text012")}
         </legend>
         <div className="flex flex-wrap gap-6">
           {salaryRates.map(([key, en, fr]) => (
@@ -245,7 +246,7 @@ export function JobPreferencesFields({ value, onChange }: Props) {
 
       <div className="space-y-2">
         <label htmlFor="profile-salary-min" className={labelClass}>
-          {french ? "Salaire minimum" : "Minimum salary"}
+          {translateCentral(french ? "fr" : "en", "uiText.components_career_profile_job_preferences_fields.text013")}
         </label>
         <div className="relative">
           <Input

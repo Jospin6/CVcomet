@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -65,14 +66,7 @@ type ApplicationDetail = Application & {
 
 type Mode = "basic" | "personalized";
 const levels = ["Junior", "Mid", "Senior"] as const;
-const screeningDimensions: Record<string, { fr: string; en: string }> = {
-  cvConsistency: { fr: "Cohérence avec le CV", en: "CV consistency" },
-  jobRelevance: { fr: "Pertinence pour le poste", en: "Job relevance" },
-  communication: { fr: "Communication", en: "Communication" },
-  motivation: { fr: "Motivation", en: "Motivation" },
-  experience: { fr: "Expérience", en: "Experience" },
-  professionalism: { fr: "Professionnalisme", en: "Professionalism" },
-};
+const screeningDimensionKeys = ["cvConsistency", "jobRelevance", "communication", "motivation", "experience", "professionalism"] as const;
 
 async function jsonRequest<T>(url: string, method = "GET", body?: unknown): Promise<T> {
   const result = await fetch(url, {
@@ -91,7 +85,7 @@ async function jsonRequest<T>(url: string, method = "GET", body?: unknown): Prom
 }
 
 export default function InterviewsPage() {
-  const { i18n } = useTranslation();
+  const { i18n, t: tI18n } = useTranslation();
   const language: "fr" | "en" = i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en";
   const fr = language === "fr";
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -266,13 +260,13 @@ export default function InterviewsPage() {
 
   const header = (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <h1 className="text-xl font-semibold">{fr ? "Entretiens" : "Job Interviews"}</h1>
+      <h1 className="text-xl font-semibold">{translateCentral(fr ? "fr" : "en", "uiText.app_dashboard_interviews_page.text001")}</h1>
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => setDialog("screening")}>
           <Phone className="size-4" /> AI Screening Call
         </Button>
         <Button size="sm" onClick={() => { setError(""); setDialog("questions"); }}>
-          <Plus className="size-4" /> {fr ? "Créer" : "Create New"}
+          <Plus className="size-4" /> {translateCentral(fr ? "fr" : "en", "uiText.app_dashboard_interviews_page.text002")}
         </Button>
       </div>
     </div>
@@ -285,14 +279,13 @@ export default function InterviewsPage() {
   const isPrepared = current?.status === "PREPARATION";
   const isActive = current?.status === "ACTIVE";
   const readyToFinish = current?.status === "READY_TO_FINISH";
-  const t = (en: string, french: string) => fr ? french : en;
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 pb-10">
       {current || connection ? (
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={goBack} disabled={Boolean(connection)}>
-            <ArrowLeft className="size-4" /> {t("All interviews", "Tous les entretiens")}
+            <ArrowLeft className="size-4" /> {tI18n("interviews.label001")}
           </Button>
           <span className="min-w-0 truncate text-sm font-medium">{current?.title || "AI Screening Interview"}</span>
         </div>
@@ -313,9 +306,9 @@ export default function InterviewsPage() {
       ) : endingId ? (
         <section className="rounded-xl border p-8 text-center">
           <LoaderCircle className="mx-auto mb-3 size-6 animate-spin text-primary" />
-          <p className="text-sm">{t("Preparing your screening report…", "Préparation de votre rapport d'entretien…")}</p>
+          <p className="text-sm">{tI18n("interviews.label002")}</p>
           <Button variant="outline" className="mt-4" onClick={() => void loadSessions()}>
-            {t("Refresh", "Actualiser")}
+            {tI18n("interviews.label003")}
           </Button>
         </section>
       ) : current ? (
@@ -329,11 +322,11 @@ export default function InterviewsPage() {
             </div>
             {isPrepared ? (
               <Button disabled={busy} onClick={() => void startPrepared(current)}>
-                <Play className="size-4" /> {t("Start practice", "Commencer")}
+                <Play className="size-4" /> {tI18n("interviews.label004")}
               </Button>
             ) : (isActive || readyToFinish) && (
               <Button variant="outline" disabled={busy} onClick={() => void finish()}>
-                {t("Finish", "Terminer")}
+                {tI18n("interviews.label005")}
               </Button>
             )}
           </div>
@@ -366,7 +359,7 @@ export default function InterviewsPage() {
               {isActive && (
                 <div className="space-y-2">
                   <label htmlFor="interview-answer" className="text-sm font-medium">
-                    {t("Your answer", "Votre réponse")}
+                    {tI18n("interviews.label006")}
                   </label>
                   <Textarea
                     id="interview-answer"
@@ -386,10 +379,10 @@ export default function InterviewsPage() {
                         window.speechSynthesis.speak(voice);
                       }
                     }}>
-                      <Volume2 className="size-4" /> {t("Listen", "Écouter")}
+                      <Volume2 className="size-4" /> {tI18n("interviews.label007")}
                     </Button>
                     <Button size="sm" disabled={!answer.trim() || busy} onClick={() => void send()}>
-                      <Send className="size-4" /> {t("Submit", "Envoyer")}
+                      <Send className="size-4" /> {tI18n("interviews.label008")}
                     </Button>
                   </div>
                 </div>
@@ -404,20 +397,20 @@ export default function InterviewsPage() {
                   <p className="text-3xl font-semibold tabular-nums">
                     {typeof current.overallScore === "number" ? `${current.overallScore}/100` : "—"}
                   </p>
-                  <p className="text-xs text-muted-foreground">{t("Practice score", "Score d'entraînement")}</p>
+                  <p className="text-xs text-muted-foreground">{tI18n("interviews.label009")}</p>
                 </div>
                 <p className="max-w-xl text-sm text-muted-foreground">
-                  {report.summary || t("No evaluation was available.", "Évaluation indisponible.")}
+                  {report.summary || tI18n("interviews.label010")}
                 </p>
               </div>
               {report.kind === "AI_SCREENING" && report.dimensions && (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {Object.entries(screeningDimensions).map(([key, names]) => {
+                  {screeningDimensionKeys.map((key) => {
                     const value = report.dimensions?.[key];
                     return (
                       <div key={key} className="space-y-2 rounded-lg border p-3">
                         <div className="flex justify-between text-sm">
-                          <span>{names[language]}</span>
+                          <span>{tI18n(`interviewDimensions.${key}`)}</span>
                           <span className="tabular-nums">{typeof value === "number" ? `${value}/100` : "—"}</span>
                         </div>
                         <div className="h-1.5 overflow-hidden rounded-full bg-muted">
@@ -431,21 +424,21 @@ export default function InterviewsPage() {
               {report.kind === "AI_SCREENING" && (
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="rounded-xl bg-emerald-500/10 p-4">
-                    <p className="mb-2 text-sm font-semibold">{t("Strengths", "Points forts")}</p>
+                    <p className="mb-2 text-sm font-semibold">{tI18n("interviews.label011")}</p>
                     {report.strengths?.map((item, i) => <p key={i} className="mb-2 text-sm">{item}</p>)}
                   </div>
                   <div className="rounded-xl bg-red-500/10 p-4">
-                    <p className="mb-2 text-sm font-semibold">{t("To improve", "À améliorer")}</p>
+                    <p className="mb-2 text-sm font-semibold">{tI18n("interviews.label012")}</p>
                     {report.improvements?.map((item, i) => <p key={i} className="mb-2 text-sm">{item}</p>)}
                   </div>
                 </div>
               )}
               {report.kind === "AI_SCREENING" && Array.isArray(report.evidence) && report.evidence.length > 0 && (
                 <div className="space-y-2 rounded-xl border p-4">
-                  <p className="text-sm font-semibold">{t("Evidence from your answers", "Extraits de vos réponses")}</p>
+                  <p className="text-sm font-semibold">{tI18n("interviews.label013")}</p>
                   {report.evidence.slice(0, 6).map((item, index) => (
                     <p key={index} className="text-sm text-muted-foreground">
-                      <span className="font-medium">{screeningDimensions[item.dimension]?.[language] ?? item.dimension}:</span>{" "}
+                      <span className="font-medium">{screeningDimensionKeys.includes(item.dimension as typeof screeningDimensionKeys[number]) ? tI18n(`interviewDimensions.${item.dimension}`) : item.dimension}:</span>{" "}
                       <span className="italic">“{item.quote}”</span>
                     </p>
                   ))}
@@ -453,11 +446,11 @@ export default function InterviewsPage() {
               )}
               {report.recommendedAction && <p className="rounded-lg border p-3 text-sm">{report.recommendedAction}</p>}
               <p className="text-xs text-muted-foreground">
-                {t("Educational feedback only, not a prediction of hiring.", "Retour pédagogique uniquement, pas une prédiction d'embauche.")}
+                {tI18n("interviews.label014")}
               </p>
             </div>
           )}
-          {["VOICE_ENDING", "VOICE_EVALUATING"].includes(current.status) && <p className="text-sm text-muted-foreground">{t("Report pending.", "Rapport en préparation.")}</p>}
+          {["VOICE_ENDING", "VOICE_EVALUATING"].includes(current.status) && <p className="text-sm text-muted-foreground">{tI18n("interviews.label015")}</p>}
         </div>
       ) : (
         <div className="rounded-2xl bg-muted/25 p-5 sm:p-7">
@@ -466,7 +459,7 @@ export default function InterviewsPage() {
               className="flex min-h-44 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-primary/55 text-sm text-primary transition hover:bg-primary/5"
               onClick={() => setDialog("questions")}
             >
-              <Plus className="size-6" /> {t("New Interview", "Nouvel entretien")}
+              <Plus className="size-6" /> {tI18n("interviews.label016")}
             </button>
             {sessions.map(item => (
               <div key={item.id} className="relative flex min-h-44 flex-col justify-between rounded-xl border bg-card p-4">
@@ -481,7 +474,7 @@ export default function InterviewsPage() {
                     ? <Phone className="size-6 text-primary" />
                     : <ClipboardList className="size-6 text-primary" />}
                   <div className="relative">
-                    <button type="button" aria-label={t("More actions", "Autres actions")}
+                    <button type="button" aria-label={tI18n("interviews.label017")}
                       onClick={() => setShowActions(showActions === item.id ? null : item.id)}
                       className="rounded-md p-1 hover:bg-muted">
                       <MoreHorizontal className="size-4" />
@@ -489,7 +482,7 @@ export default function InterviewsPage() {
                     {showActions === item.id && (
                       <div className="absolute bottom-full right-0 z-10 min-w-28 rounded-md border bg-popover p-1 shadow-lg">
                         <Button variant="ghost" size="sm" onClick={() => void deleteSession(item.id)} disabled={busy}>
-                          <Trash2 className="size-4" /> {t("Delete", "Supprimer")}
+                          <Trash2 className="size-4" /> {tI18n("interviews.label018")}
                         </Button>
                       </div>
                     )}
@@ -504,9 +497,9 @@ export default function InterviewsPage() {
       <Dialog open={dialog === "questions"} onOpenChange={open => !open && setDialog(null)}>
         <DialogContent className="max-w-[460px] gap-4 p-5 sm:p-6">
           <DialogHeader>
-            <DialogTitle>{t("Job Interview Questions", "Questions d'entretien")}</DialogTitle>
+            <DialogTitle>{tI18n("interviews.label019")}</DialogTitle>
             <DialogDescription className="sr-only">
-              {t("Prepare 20 interview questions.", "Préparer 20 questions d'entretien.")}
+              {tI18n("interviews.label020")}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 rounded-lg border p-1" role="tablist" aria-label="Interview mode">
@@ -520,14 +513,14 @@ export default function InterviewsPage() {
           </div>
           <div className="space-y-3">
             <div className="space-y-1">
-              <label htmlFor="interview-role" className="text-xs font-medium">{t("Job title", "Métier")}</label>
+              <label htmlFor="interview-role" className="text-xs font-medium">{tI18n("interviews.label021")}</label>
               <Input id="interview-role" maxLength={160} value={role}
                 onChange={event => setRole(event.target.value)}
-                placeholder={t("e.g. Software Engineer", "Ex. Développeur logiciel")}
+                placeholder={tI18n("interviews.label022")}
                 disabled={mode === "personalized" && Boolean(applicationId)} />
             </div>
             <div className="space-y-2">
-              <span className="text-xs font-medium">{t("Seniority", "Niveau")}</span>
+              <span className="text-xs font-medium">{tI18n("interviews.label023")}</span>
               <div className="grid grid-cols-3 overflow-hidden rounded-lg border">
                 {levels.map(item => (
                   <button key={item} type="button" onClick={() => setLevel(item)}
@@ -543,20 +536,20 @@ export default function InterviewsPage() {
             <div className="space-y-3 border-t pt-3">
               <div className="space-y-1">
                 <label htmlFor="personalized-application" className="text-xs font-medium">
-                  {t("Application (optional)", "Candidature (facultative)")}
+                  {tI18n("interviews.label024")}
                 </label>
                 <select id="personalized-application" value={applicationId}
                   onChange={event => {
                     setApplicationId(event.target.value);
                     if (!event.target.value) { setCvId(""); setDescription(""); }
                   }} className="h-9 w-full rounded-md border bg-background px-2 text-sm">
-                  <option value="">{t("No application", "Sans candidature")}</option>
+                  <option value="">{tI18n("interviews.label025")}</option>
                   {applications.map(item => <option key={item.id} value={item.id}>
                     {item.jobTitle} · {item.company}
                   </option>)}
                 </select>
               </div>
-              <p className="text-xs font-medium">{t("Select a resume", "Choisir un CV")}</p>
+              <p className="text-xs font-medium">{tI18n("interviews.label026")}</p>
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {resumes.map(item => (
                   <button key={item.id} type="button" disabled={Boolean(applicationId)}
@@ -571,14 +564,14 @@ export default function InterviewsPage() {
                 ))}
                 {resumes.length === 0 && (
                   <Link href="/dashboard/resumes" className="flex h-28 items-center rounded-lg border border-dashed p-3 text-xs">
-                    <FileText className="mr-2 size-4" /> {t("Create a resume", "Créer un CV")}
+                    <FileText className="mr-2 size-4" /> {tI18n("interviews.label027")}
                   </Link>
                 )}
               </div>
               {!applicationId && (
                 <div className="space-y-1">
                   <label htmlFor="personalized-job" className="text-xs font-medium">
-                    {t("Job description (optional)", "Description du poste (facultative)")}
+                    {tI18n("interviews.label028")}
                   </label>
                   <Textarea id="personalized-job" value={description}
                     onChange={event => setDescription(event.target.value)}
@@ -586,16 +579,16 @@ export default function InterviewsPage() {
                 </div>
               )}
               {applicationId && selectedDetail && !selectedDetail.cvId && (
-                <p className="text-xs text-destructive">{t("Attach a resume to this application first.", "Associez d'abord un CV à cette candidature.")}</p>
+                <p className="text-xs text-destructive">{tI18n("interviews.label029")}</p>
               )}
             </div>
           )}
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-muted-foreground">20 {t("questions", "questions")}</span>
+            <span className="text-xs text-muted-foreground">20 {tI18n("interviews.label030")}</span>
             <Button disabled={busy || role.trim().length < 2 || (mode === "personalized" && !cvId)}
               onClick={() => void prepare()}>
               {busy && <LoaderCircle className="size-4 animate-spin" />}
-              {t("Generate with AI", "Générer avec l'IA")}
+              {tI18n("interviews.label031")}
             </Button>
           </div>
         </DialogContent>
@@ -606,7 +599,7 @@ export default function InterviewsPage() {
           <DialogHeader>
             <DialogTitle>AI Screening Interview</DialogTitle>
             <DialogDescription>
-              {t("Choose an application with a resume and job posting.", "Choisissez une candidature avec un CV et une offre.")}
+              {tI18n("interviews.label032")}
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-52 space-y-2 overflow-y-auto">
@@ -623,29 +616,26 @@ export default function InterviewsPage() {
               </button>
             ))}
             {applications.length === 0 && <p className="text-sm text-muted-foreground">
-              {t("No applications yet.", "Aucune candidature enregistrée.")}
+              {tI18n("interviews.label033")}
             </p>}
           </div>
           {applicationId && selectedDetail && (
             <p className="text-xs text-muted-foreground">
               {selectedDetail.cvId && selectedDetail.job?.description?.trim()
-                ? t("Resume and job posting ready.", "CV et description de poste disponibles.")
-                : t("This application needs a resume and job description.", "Cette candidature nécessite un CV et une description de poste.")}
+                ? tI18n("interviews.label034")
+                : tI18n("interviews.label035")}
             </p>
           )}
           <label className="flex items-start gap-2 text-xs leading-relaxed">
             <input type="checkbox" className="mt-0.5 accent-primary" checked={consent}
               onChange={event => setConsent(event.target.checked)} />
-            {t(
-              "I agree to the voice interview and saving its text transcript and coaching report. CVComet does not store audio recordings.",
-              "J'accepte l'entretien vocal ainsi que l'enregistrement de sa transcription et du rapport pédagogique. CVComet ne conserve pas l'audio.",
-            )}
+            {tI18n("interviews.label036")}
           </label>
           <div className="flex justify-end">
             <Button disabled={busy || !consent || !selectedDetail?.cvId || !selectedDetail?.job?.description?.trim()}
               onClick={() => void createScreening()}>
               {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Mic className="size-4" />}
-              {t("Start call", "Démarrer l'appel")}
+              {tI18n("interviews.label037")}
             </Button>
           </div>
         </DialogContent>

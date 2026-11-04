@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import {
   documentLanguages,
@@ -25,9 +26,9 @@ export function CareerMarketPanel({
   onLanguage: (value: DocumentLanguage) => void;
 }) {
   return (
-    <section className="space-y-3" aria-label={fr ? "Pays de candidature" : "Target country"}>
+    <section className="space-y-3" aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_career_market_panel.text001")}>
       <label className="block">
-        <span className="studio-panel-label">{fr ? "Pays cible" : "Target country"}</span>
+        <span className="studio-panel-label">{translateCentral(fr ? "fr" : "en", "uiText.components_resumes_career_market_panel.text002")}</span>
         <select
           className="h-9 w-full rounded-md border bg-background px-2 text-xs"
           value={country}
@@ -43,7 +44,7 @@ export function CareerMarketPanel({
       </label>
       <label className="block">
         <span className="studio-panel-label">
-          {fr ? "Langue du document" : "Document language"}
+          {translateCentral(fr ? "fr" : "en", "uiText.components_resumes_career_market_panel.text003")}
         </span>
         <select
           className="h-9 w-full rounded-md border bg-background px-2 text-xs"
@@ -53,7 +54,7 @@ export function CareerMarketPanel({
         >
           {documentLanguages.map((value) => (
             <option key={value} value={value}>
-              {value === "auto" ? (fr ? "Recommandée" : "Recommended")
+              {value === "auto" ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_career_market_panel.text004"))
                 : value === "fr" ? "Français"
                 : value === "de" ? "Deutsch" : "English"}
             </option>

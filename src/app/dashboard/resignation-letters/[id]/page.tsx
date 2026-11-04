@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Download, LoaderCircle, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,11 +31,11 @@ type EditableField =
   | "letterDate";
 
 const fields = [
-  ["title", "Document name"],
-  ["recipient", "Recipient"],
-  ["company", "Company"],
-  ["subject", "Subject"],
-  ["signature", "Your name / signature"],
+  "title",
+  "recipient",
+  "company",
+  "subject",
+  "signature",
 ] as const;
 
 function textOf(letter: Letter) {
@@ -53,6 +54,7 @@ function textOf(letter: Letter) {
 
 export default function ResignationLetterEditor() {
   const params = useParams<{ id: string }>();
+  const { t } = useTranslation();
   const [letter, setLetter] = useState<Letter | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -66,12 +68,12 @@ export default function ResignationLetterEditor() {
       cache: "no-store",
     })
       .then(async (response) => {
-        if (!response.ok) throw new Error("Unable to open this letter.");
+        if (!response.ok) throw new Error("openFailed");
         return response.json() as Promise<Letter>;
       })
       .then((data) => { if (alive) setLetter(data); })
       .catch((cause) => {
-        if (alive) setError(cause instanceof Error ? cause.message : "Load failed");
+        if (alive) setError(cause instanceof Error ? cause.message : "loadFailed");
       })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
@@ -108,14 +110,14 @@ export default function ResignationLetterEditor() {
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error === "CONFLICT_OR_NOT_FOUND"
-          ? "This letter was edited elsewhere. Reload before saving."
-          : "Unable to save your changes.");
+          ? "conflict"
+          : "saveFailed");
       }
       setLetter(await response.json() as Letter);
       setDirty(false);
-      setSuccess("Saved");
+      setSuccess("saved");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Save failed");
+      setError(cause instanceof Error ? cause.message : "saveFailed");
     } finally {
       setSaving(false);
     }
@@ -138,40 +140,40 @@ export default function ResignationLetterEditor() {
         href="/dashboard/resumes?tab=resignations"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> Documents
+        <ArrowLeft className="size-4" /> {t("resignation.documents")}
       </Link>
       {loading ? (
         <div role="status" className="flex items-center gap-2 text-sm">
-          <LoaderCircle className="size-4 animate-spin" /> Loading…
+          <LoaderCircle className="size-4 animate-spin" /> {t("resignation.loading")}
         </div>
       ) : !letter ? (
-        <p role="alert" className="text-sm text-destructive">{error || "Document not found"}</p>
+        <p role="alert" className="text-sm text-destructive">{t(`resignation.${error || "notFound"}`)}</p>
       ) : (
         <>
           <header className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="text-xl font-semibold">Resignation letter</h1>
+              <h1 className="text-xl font-semibold">{t("resignation.title")}</h1>
               <p className="text-xs text-muted-foreground">
-                {dirty ? "Unsaved changes" : "Your document is saved"}
+                {t(dirty ? "resignation.unsaved" : "resignation.allSaved")}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={download}>
-                <Download className="size-4" /> Download text
+                <Download className="size-4" /> {t("resignation.download")}
               </Button>
               <Button size="sm" onClick={() => void save()} disabled={!dirty || saving}>
                 {saving ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
-                Save
+                {t("resignation.save")}
               </Button>
             </div>
           </header>
-          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-          {success && <p role="status" className="text-xs text-primary">{success}</p>}
+          {error && <p role="alert" className="text-sm text-destructive">{t(`resignation.${error}`)}</p>}
+          {success && <p role="status" className="text-xs text-primary">{t(`resignation.${success}`)}</p>}
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)]">
             <section className="space-y-4 rounded-xl border bg-card p-5">
-              {fields.map(([field, title]) => (
+              {fields.map((field) => (
                 <label key={field} className="block space-y-1.5 text-xs font-medium">
-                  <span>{title}</span>
+                  <span>{t(`resignation.fields.${field}`)}</span>
                   <Input
                     className="h-9"
                     disabled={saving}
@@ -182,7 +184,7 @@ export default function ResignationLetterEditor() {
                 </label>
               ))}
               <label className="block space-y-1.5 text-xs font-medium">
-                <span>Date</span>
+                <span>{t("resignation.date")}</span>
                 <Input
                   type="date"
                   className="h-9"
@@ -192,7 +194,7 @@ export default function ResignationLetterEditor() {
                 />
               </label>
               <label className="block space-y-1.5 text-xs font-medium">
-                <span>Letter content</span>
+                <span>{t("resignation.content")}</span>
                 <Textarea
                   value={letter.body}
                   className="min-h-32 resize-y"
@@ -200,11 +202,11 @@ export default function ResignationLetterEditor() {
                   rows={7}
                   maxLength={20000}
                   onChange={(event) => update("body", event.target.value)}
-                  placeholder="Write your letter here."
+                  placeholder={t("resignation.placeholder")}
                 />
               </label>
             </section>
-            <section className="rounded-xl border bg-muted/30 p-4" aria-label="Letter preview">
+            <section className="rounded-xl border bg-muted/30 p-4" aria-label={t("resignation.preview")}>
               <div className="mx-auto min-h-[480px] w-full max-w-[380px] rounded-sm bg-white p-8 text-xs leading-6 text-slate-900 shadow-sm">
                 <p className="mb-6 text-right">{letter.letterDate.slice(0, 10)}</p>
                 <p className="whitespace-pre-wrap">{[letter.recipient, letter.company].filter(Boolean).join("\n")}</p>

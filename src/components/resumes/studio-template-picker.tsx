@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useMemo, useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
@@ -48,7 +49,7 @@ export function StudioTemplatePicker({
   const visible = expanded ? ordered.slice(0, limit) : ordered.slice(0, 3);
 
   return (
-    <section aria-label={fr ? "Modèles du document" : "Document layouts"}>
+    <section aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_template_picker.text001")}>
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="text-xs font-semibold">Layout</h3>
         <button
@@ -57,7 +58,7 @@ export function StudioTemplatePicker({
           aria-expanded={expanded}
           onClick={() => setExpanded((value) => !value)}
         >
-          {expanded ? (fr ? "Réduire" : "See less") : (fr ? "Voir plus" : "See more")}
+          {expanded ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_template_picker.text002")) : (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_template_picker.text003"))}
           <ChevronRight className={`size-3 transition-transform ${expanded ? "rotate-90" : ""}`} />
         </button>
       </div>
@@ -67,7 +68,7 @@ export function StudioTemplatePicker({
             type="button"
             key={template.id}
             className="studio-gallery-item"
-            aria-label={`${fr ? "Aperçu" : "Preview"}: ${template.name}`}
+            aria-label={`${translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_template_picker.text004")}: ${template.name}`}
             aria-current={selectedId === template.id ? "true" : undefined}
             onClick={() => setInspected(template)}
           >
@@ -89,7 +90,7 @@ export function StudioTemplatePicker({
           className="mt-3 w-full text-xs"
           onClick={() => setLimit((count) => Math.min(count + 12, ordered.length))}
         >
-          {fr ? "Plus de modèles" : "Load more"}
+          {translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_template_picker.text005")}
         </Button>
       )}
       <Dialog open={Boolean(inspected)} onOpenChange={(open) => { if (!open) setInspected(null); }}>
@@ -112,8 +113,8 @@ export function StudioTemplatePicker({
                   }}
                 >
                   {selectedId === inspected.id
-                    ? (fr ? "Modèle utilisé" : "Current template")
-                    : (fr ? "Utiliser ce modèle" : "Use this template")}
+                    ? (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_template_picker.text006"))
+                    : (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_template_picker.text007"))}
                 </Button>
               </div>
             </>

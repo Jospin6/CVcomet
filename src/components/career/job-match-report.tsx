@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useState, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
@@ -114,9 +115,9 @@ export function JobMatchReport({
     document.getElementById(`job-match-tab-${nav[next].value}`)?.focus();
   };
   const areas = [
-    [fr ? "Compétences essentielles" : "Essential skills", match.components.essentialSkills],
-    [fr ? "Compétences souhaitées" : "Desirable skills", match.components.desirableSkills],
-    [fr ? "Expérience" : "Experience", match.components.experience],
+    [translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text001"), match.components.essentialSkills],
+    [translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text002"), match.components.desirableSkills],
+    [translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text003"), match.components.experience],
     [fr ? "Qualifications" : "Qualifications", match.components.qualifications],
   ] as const;
 
@@ -124,7 +125,7 @@ export function JobMatchReport({
     <div className="space-y-5">
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-xl font-semibold">{analysis.title || (fr ? "Poste analysé" : "Analyzed role")}</h2>
+          <h2 className="text-xl font-semibold">{analysis.title || (translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text004"))}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {[analysis.company, analysis.location].filter(Boolean).join(" · ")}
           </p>
@@ -133,13 +134,13 @@ export function JobMatchReport({
           <Button variant="outline" size="sm" asChild>
             <Link href={`/dashboard/resumes/${cvId}`}>
               <FilePenLine className="size-4" />
-              {fr ? "Mon CV" : "My resume"}
+              {translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text005")}
             </Link>
           </Button>
         )}
       </section>
 
-      <div className="flex gap-1 overflow-x-auto border-b" role="tablist" aria-label={fr ? "Résultats d’analyse" : "Analysis results"}>
+      <div className="flex gap-1 overflow-x-auto border-b" role="tablist" aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text006")}>
         {nav.map((item, index) => (
           <button
             key={item.value}
@@ -176,7 +177,7 @@ export function JobMatchReport({
                 )}
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p className="font-medium text-foreground">
-                    {match.overallScore === null ? labels.notRated : `${match.evaluatedCount}/${match.totalCount} ${fr ? "critères évalués" : "requirements assessed"}`}
+                    {match.overallScore === null ? labels.notRated : `${match.evaluatedCount}/${match.totalCount} ${translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text007")}`}
                   </p>
                   <p className="text-xs leading-5">{labels.explained}</p>
                 </div>
@@ -249,8 +250,8 @@ export function JobMatchReport({
           <p className="text-xs text-muted-foreground">{labels.actual}</p>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={onImprove} disabled={busy}><Sparkles className="size-4" />{labels.improveResume}</Button>
-            <Button size="sm" variant="outline" onClick={onTailor} disabled={busy}><FilePenLine className="size-4" />{fr ? "Adapter à l’offre" : "Tailor to this job"}</Button>
-            {cvId && <Button size="sm" variant="ghost" asChild><Link href={`/dashboard/resumes/${cvId}`}>{fr ? "Éditer manuellement" : "Edit manually"}</Link></Button>}
+            <Button size="sm" variant="outline" onClick={onTailor} disabled={busy}><FilePenLine className="size-4" />{translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text008")}</Button>
+            {cvId && <Button size="sm" variant="ghost" asChild><Link href={`/dashboard/resumes/${cvId}`}>{translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text009")}</Link></Button>}
           </div>
           {proposalContent}
           {!improvements.length && <div className="rounded-lg border p-4 text-sm text-muted-foreground">{labels.noIssue}</div>}
@@ -268,14 +269,14 @@ export function JobMatchReport({
                     <div className={isVerify ? "rounded-lg bg-amber-500/10 p-3" : issueStyle}>
                       <p className={`mb-1 text-xs font-semibold ${isVerify ? "text-amber-700 dark:text-amber-300" : "text-red-700 dark:text-red-300"}`}>{labels.current}</p>
                       <p className="text-sm leading-6">{item.status === "PARTIAL"
-                        ? (fr ? "Preuve incomplète dans le CV." : "Incomplete evidence in the resume.")
+                        ? (translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text010"))
                         : isVerify
-                          ? (fr ? "Preuve à confirmer manuellement." : "Evidence needs manual review.")
+                          ? (translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text011"))
                           : labels.none}</p>
                     </div>
                     <div className={fixStyle}>
                       <p className="mb-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{labels.next}</p>
-                      <p className="text-sm leading-6">{action?.nextStep || (fr ? "Ajoutez uniquement un exemple réel et vérifiable." : "Add only a genuine, verifiable example.")}</p>
+                      <p className="text-sm leading-6">{action?.nextStep || (translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text012"))}</p>
                     </div>
                   </div>
                   <details className="mt-3 text-xs">
@@ -308,7 +309,7 @@ export function JobMatchReport({
               {(Object.keys(statuses) as RequirementStatus[]).map(value => <option value={value} key={value}>{statuses[value]}</option>)}
             </select>
           </div>
-          {!visibleRequirements.length && <p className="text-sm text-muted-foreground">{fr ? "Aucun résultat pour ces filtres." : "No requirements match these filters."}</p>}
+          {!visibleRequirements.length && <p className="text-sm text-muted-foreground">{translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text013")}</p>}
           <div className="divide-y rounded-xl border">
             {visibleRequirements.map(item => (
               <details key={item.id} className="group px-4 py-3">
@@ -343,13 +344,11 @@ export function JobMatchReport({
             <div className="rounded-xl border p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-semibold">{fr ? "Plan de préparation du CV" : "Resume preparation plan"}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{fr
-                    ? "Actions fondées sur des preuves, non appliquées automatiquement."
-                    : "Evidence-based suggestions, never applied automatically."}</p>
+                  <h3 className="text-sm font-semibold">{translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text014")}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text015")}</p>
                 </div>
                 <Button size="sm" variant="outline" disabled={busy} onClick={onTailor}>
-                  <FilePenLine className="size-4" /> {fr ? "Préparer une proposition" : "Prepare a proposal"}
+                  <FilePenLine className="size-4" /> {translateCentral(fr ? "fr" : "en", "uiText.components_career_job_match_report.text016")}
                 </Button>
               </div>
               <div className="divide-y">

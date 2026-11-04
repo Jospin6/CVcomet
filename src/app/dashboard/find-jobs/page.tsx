@@ -1,5 +1,6 @@
 "use client";
 
+import { getCentralCopy, translateCentral } from "@/lib/i18n/central-copy";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import {
   FindJob,
   JobDetailView,
+  CompanyLogo,
   JobResultRow,
   PrepareAction,
 } from "@/components/jobs/find-jobs-view";
@@ -116,84 +118,7 @@ function toJob(item: SavedJob): FindJob {
     attribution: item.sourceName || "Original source",
   };
 }
-
-function getLabels(french: boolean) {
-  return french
-    ? {
-        forYou: "Pour vous",
-        all: "Toutes les offres",
-        saved: "Enregistrées",
-        title: "Trouvons votre prochain poste",
-        placeholder: "Intitulé de poste, compétence ou entreprise",
-        search: "Rechercher",
-        country: "Tous les pays",
-        jobType: "Tout type de contrat",
-        workplace: "Tous les lieux de travail",
-        filters: "Tous les filtres",
-        sort: "Date de publication",
-        newest: "Plus récentes d’abord",
-        oldest: "Plus anciennes d’abord",
-        noCountry: "Aucun pays indiqué dans ces offres",
-        limited: "Certains résultats ne sont pas encore chargés.",
-        sourcesWarning: "Certaines offres sont temporairement indisponibles.",
-        reset: "Réinitialiser",
-        apply: "Appliquer les filtres",
-        results: "Offres d'emploi",
-        loading: "Chargement des offres…",
-        empty: "Aucune offre ne correspond à cette recherche.",
-        emptyHelp: "Essayez un autre mot-clé ou retirez un filtre.",
-        previous: "Précédente",
-        next: "Suivante",
-        remote: "À distance",
-        onsite: "Sur site",
-        fullTime: "Temps plein",
-        partTime: "Temps partiel",
-        contract: "Contrat / freelance",
-        internship: "Stage",
-        saveError: "Impossible de modifier vos offres enregistrées.",
-        loadError: "Impossible de récupérer les offres. Réessayez.",
-        trackingError: "Impossible de préparer cette candidature.",
-        recommendations: "Sélectionnées d'après votre profil de carrière.",
-        matchNotice: "Les correspondances sont indicatives, pas des probabilités d'embauche.",
-      }
-    : {
-        forYou: "Jobs for You",
-        all: "All Jobs",
-        saved: "Saved Jobs",
-        title: "Let's find your next role",
-        placeholder: "Enter job title or keyword",
-        search: "Search",
-        country: "Any Country",
-        jobType: "Any Job Type",
-        workplace: "Any Workplace",
-        filters: "All Filters",
-        sort: "Publication date",
-        newest: "Newest first",
-        oldest: "Oldest first",
-        noCountry: "No country specified in these offers",
-        limited: "Some results have not been loaded yet.",
-        sourcesWarning: "Some jobs are temporarily unavailable.",
-        reset: "Reset filters",
-        apply: "Apply filters",
-        results: "Job openings",
-        loading: "Loading jobs…",
-        empty: "No matching jobs found.",
-        emptyHelp: "Try another keyword or remove a filter.",
-        previous: "Previous",
-        next: "Next",
-        remote: "Remote",
-        onsite: "On-site",
-        fullTime: "Full-time",
-        partTime: "Part-time",
-        contract: "Contract / freelance",
-        internship: "Internship",
-        saveError: "Could not update saved jobs.",
-        loadError: "Could not load jobs. Please try again.",
-        trackingError: "Could not prepare this application.",
-        recommendations: "Selected using your career profile.",
-        matchNotice: "Match indicators are not hiring probabilities.",
-      };
-}
+function getLabels(french: boolean) { return getCentralCopy("findJobs")[french ? "fr" : "en"]; }
 
 export default function FindJobs() {
   const router = useRouter();
@@ -504,17 +429,17 @@ export default function FindJobs() {
           onSave={(job) => void toggleSave(job)}
           onPrepare={(job, action) => void prepare(job, action)}
         />
-        {pendingPrepare && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-label={french ? "Associer un CV" : "Link a resume"}>
+        {pendingPrepare && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-label={translateCentral(french ? "fr" : "en", "uiText.app_dashboard_find_jobs_page.text001")}>
           <div className="w-full max-w-sm space-y-4 rounded-xl border bg-background p-5 shadow-xl">
-            <h2 className="text-sm font-semibold">{french ? "Sélectionnez le CV de cette candidature" : "Choose the resume for this application"}</h2>
+            <h2 className="text-sm font-semibold">{translateCentral(french ? "fr" : "en", "uiText.app_dashboard_find_jobs_page.text002")}</h2>
             {availableResumes.length ? <select className="h-10 w-full rounded-md border bg-background px-2 text-sm" value={chosenResume} onChange={event => setChosenResume(event.target.value)}>
-              <option value="">{french ? "Choisir un CV" : "Choose a resume"}</option>
+              <option value="">{translateCentral(french ? "fr" : "en", "uiText.app_dashboard_find_jobs_page.text003")}</option>
               {availableResumes.map(cv => <option key={cv.id} value={cv.id}>{cv.title || "Resume"}</option>)}
-            </select> : <p className="text-xs text-muted-foreground">{french ? "Créez d'abord un CV dans Documents." : "Create a resume in Documents first."}</p>}
+            </select> : <p className="text-xs text-muted-foreground">{translateCentral(french ? "fr" : "en", "uiText.app_dashboard_find_jobs_page.text004")}</p>}
             <div className="flex justify-end gap-2">
-              <Button size="sm" variant="outline" onClick={() => setPendingPrepare(null)}>{french ? "Annuler" : "Cancel"}</Button>
+              <Button size="sm" variant="outline" onClick={() => setPendingPrepare(null)}>{translateCentral(french ? "fr" : "en", "uiText.app_dashboard_find_jobs_page.text005")}</Button>
               <Button size="sm" disabled={!chosenResume || preparing} onClick={() => void prepare(pendingPrepare.job, pendingPrepare.action, chosenResume)}>
-                {french ? "Continuer" : "Continue"}
+                {translateCentral(french ? "fr" : "en", "uiText.app_dashboard_find_jobs_page.text006")}
               </Button>
             </div>
           </div>
@@ -626,7 +551,7 @@ export default function FindJobs() {
             <button
               type="button"
               onClick={() => { setQ(""); searchFor(""); }}
-              aria-label={french ? "Effacer" : "Clear search"}
+              aria-label={translateCentral(french ? "fr" : "en", "uiText.app_dashboard_find_jobs_page.text007")}
               className="text-muted-foreground hover:text-foreground"
             >
               <X className="size-4" />
@@ -756,6 +681,56 @@ export default function FindJobs() {
           </div>
         )}
       </section>
+
+      {/* All suggestions come from real analyzed offers, not hardcoded lists. */}
+      {tab !== "saved" && data.companies.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-sm font-medium">{c.companies}</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {data.companies.map((company) => (
+              <button
+                key={company.name}
+                type="button"
+                onClick={() => searchFor(company.name)}
+                className={
+                  "flex min-h-24 min-w-28 shrink-0 flex-col items-center " +
+                  "justify-center gap-2 rounded-2xl border bg-card p-3 " +
+                  "text-sm transition-colors hover:border-primary/30"
+                }
+              >
+                <CompanyLogo
+                  name={company.name}
+                  logoUrl={company.logoUrl}
+                />
+                <span className="max-w-28 truncate">{company.name}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {tab !== "saved" && data.positions.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium">{c.trending}</h2>
+          <div className="flex flex-wrap gap-2">
+            {data.positions.map((role) => (
+              <button
+                key={role.title}
+                type="button"
+                onClick={() => searchFor(role.title)}
+                className={
+                  "inline-flex items-center gap-2 rounded-xl border bg-card " +
+                  "px-3 py-2 text-xs font-medium transition-colors " +
+                  "hover:border-primary/30 hover:bg-muted/20 sm:text-sm"
+                }
+              >
+                <BriefcaseBusiness className="size-4 text-primary" />
+                {role.title}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Search results: compact horizontal rows, not image-led cards. */}
       <section ref={resultsRef} id="job-results" className="scroll-mt-6 space-y-4">

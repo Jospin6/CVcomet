@@ -320,12 +320,19 @@ export async function POST(req: Request) {
     const fingerprint = createHash("sha256").update(JSON.stringify({
       version: 12, actor: user.id, cvId: cv.id, revision: cv.revision,
       resume, preferences, language: input.language,
+      // Stable ordering avoids charging again when providers return the same
+      // jobs in a different order on the next request.
       listings: pool.jobs.map(job => [job.id, job.sourceUrl, job.publishedAt,
-        createHash("sha256").update(job.description).digest("hex")]),
+        createHash("sha256").update(job.description).digest("hex")])
+        .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
     })).digest("hex");
 
     const previous = cache.get(fingerprint);
-    if (previous && previous.expiresAt > Date.now()) {
+    // A complete response can be served directly. A partial response only
+    // supplies previously verified matches; explicit retries evaluate the rest.
+    if (previous && previous.expiresAt > Date.now() &&
+        previous.result.verifiedCount === previous.result.deepMatchCount &&
+        !previous.result.warningCode) {
       return NextResponse.json({
         ...previous.result,
         warningCode: previous.result.warningCode || preferenceWarning,
@@ -337,19 +344,33 @@ export async function POST(req: Request) {
       actorId: user.id,
       input: { resume, preferences, language: input.language },
       signal: req.signal,
-      deps: { discover: async () => pool },
+      deps: {
+        discover: async () => pool,
+        // Fingerprint includes authenticated user, CV revision, preferences,
+        // full normalized resume, and each source job description hash.
+        // Never accept cached scores or job IDs from the HTTP request body.
+        previousVerifiedMatches: new Map(
+          previous && previous.expiresAt > Date.now()
+            ? previous.result.jobs
+              .filter(job => Number.isInteger(job.match.score) && job.match.score !== null)
+              .map(job => [job.id, job.match] as const)
+            : [],
+        ),
+      },
     });
 
-    // Only successful verified deep matches are cached; partial outages remain
-    // retryable without showing old results as fresh verified scores.
-    if (result.deepMatchCount > 0 &&
-        result.verifiedCount === result.deepMatchCount && !result.warningCode) {
-      for (const [key, entry] of cache) {
-        if (entry.expiresAt <= Date.now()) cache.delete(key);
-      }
-      if (cache.size >= 100) cache.delete(cache.keys().next().value!);
-      cache.set(fingerprint, { expiresAt: Date.now() + 10 * 60_000, result });
+    // Cache even partial results briefly so a user-initiated retry only
+    // processes failed offers. Never serve incomplete results as a final hit.
+    // In-process cache is an optimization, not durable across server instances.
+    for (const [key, entry] of cache) {
+      if (entry.expiresAt <= Date.now()) cache.delete(key);
     }
+    if (cache.size >= 100) cache.delete(cache.keys().next().value!);
+    const complete = result.deepMatchCount === result.verifiedCount && !result.warningCode;
+    cache.set(fingerprint, {
+      expiresAt: Date.now() + (complete ? 10 : 3) * 60_000,
+      result,
+    });
 
     return NextResponse.json({
       ...result,

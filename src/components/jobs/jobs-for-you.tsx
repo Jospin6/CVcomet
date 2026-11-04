@@ -1,11 +1,14 @@
 "use client";
 
+
+import { getCentralCopy } from "@/lib/i18n/central-copy";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   BriefcaseBusiness,
   Check,
+  ChevronLeft,
   ChevronRight,
   Clock3,
   Eye,
@@ -20,7 +23,6 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AtsResumePreview, type AtsResumeRecord } from "@/components/resumes/ats-resume-preview";
 import {
   Dialog,
   DialogContent,
@@ -57,7 +59,6 @@ type MatchJob = Omit<FindJob, "match"> & {
     missing: string[];
     explanation: string;
   };
-  outsidePreferences?: boolean;
 };
 
 type Props = {
@@ -88,110 +89,7 @@ const workplaceOptions = [
   ["hybrid", "Hybrid", "Hybride"],
   ["remote", "Remote", "À distance"],
 ] as const;
-
-function getWords(french: boolean) {
-  return french ? {
-    myResume: "Mon CV",
-    edited: "Modifié le",
-    choose: "Changer de CV",
-    preview: "Aperçu du CV",
-    prefs: "Préférences de correspondance",
-    adjust: "Ajuster les préférences",
-    matchFor: "Rechercher des offres pour",
-    find: "Analyser mon CV et trouver des offres",
-    analyzing: "L'IA compare votre CV aux offres…",
-    top: "Vos 5 meilleures correspondances",
-    none: "Aucune offre suffisamment proche du CV parmi les annonces disponibles.",
-    noSources: "Aucune offre n’a pu être chargée. Réessayez dans un moment.",
-    outsideTag: "Hors filtres",
-    noResume: "Créez ou importez puis convertissez un CV pour obtenir des correspondances personnalisées.",
-    error: "Impossible de terminer la recherche. Veuillez réessayer.",
-    retry: "Relancer l’analyse",
-    select: "Sélectionnez un CV à analyser",
-    keyword: "Intitulé de poste",
-    keywordPlaceholder: "Métier ou mot-clé (optionnel)",
-    country: "Pays",
-    countryHint: "Seuls les pays présents dans les offres sont proposés.",
-    countrySearch: "Chercher un pays",
-    date: "Date de publication",
-    any: "Sans limite",
-    day: "Dernières 24 h",
-    week: "7 derniers jours",
-    month: "30 derniers jours",
-    type: "Type de contrat",
-    level: "Niveau d'expérience",
-    salary: "Salaire annuel minimum (USD)",
-    salaryHint: "Les offres sans salaire annuel USD vérifiable sont exclues si ce filtre est actif.",
-    workplace: "Mode de travail",
-    visa: "Parrainage de visa",
-    visaHint: "Uniquement les offres indiquant explicitement un parrainage",
-    reset: "Réinitialiser",
-    update: "Appliquer et analyser",
-    save: "Enregistrer",
-    saved: "Enregistrée",
-    score: "Correspondance du CV",
-    unverified: "Non évaluée",
-    why: "Détails de la correspondance",
-    demonstrated: "Exigences démontrées",
-    missing: "Éléments non démontrés",
-    result: "Offres examinées",
-    page: "Page",
-    textPreview: "Aperçu du contenu (pas le rendu PDF définitif)",
-    noCountries: "Aucun pays identifié dans les offres",
-    profileOnly: "Le score est calculé exclusivement à partir du CV sélectionné.",
-    verifiedCoverage: "Offres analysées en profondeur",
-  } : {
-    myResume: "My Resume",
-    edited: "Last edited",
-    choose: "Change Resume",
-    preview: "Resume preview",
-    prefs: "Matching Preferences",
-    adjust: "Adjust Preferences",
-    matchFor: "Finding matches for",
-    find: "Analyze my resume and find jobs",
-    analyzing: "AI is comparing your resume with job requirements…",
-    top: "Your Top 5 Matches",
-    none: "No sufficiently resume-relevant openings were found in the current listings.",
-    noSources: "No job listings could be loaded. Try again shortly.",
-    outsideTag: "Outside filters",
-    noResume: "Create or import and convert an editable resume to get personalized matches.",
-    error: "Unable to finish this search. Please try again.",
-    retry: "Retry match analysis",
-    select: "Select a resume to analyze",
-    keyword: "Job title",
-    keywordPlaceholder: "Role or keyword (optional)",
-    country: "Country",
-    countryHint: "Only countries found in available job postings are shown.",
-    countrySearch: "Search countries",
-    date: "Posted within",
-    any: "Any time",
-    day: "Past 24 hours",
-    week: "Past week",
-    month: "Past month",
-    type: "Job type",
-    level: "Seniority level",
-    salary: "Min. annual salary (USD)",
-    salaryHint: "Jobs without verified annual USD salaries are excluded when this filter is set.",
-    workplace: "Workplace",
-    visa: "Visa sponsorship",
-    visaHint: "Only jobs that explicitly state visa sponsorship",
-    reset: "Reset All",
-    update: "Apply and match",
-    save: "Save",
-    saved: "Saved",
-    score: "Resume match",
-    unverified: "Not evaluated",
-    why: "Why this match?",
-    demonstrated: "Demonstrated requirements",
-    missing: "Not evidenced in the resume",
-    result: "Jobs considered",
-    page: "Page",
-    textPreview: "Content preview (not the final PDF layout)",
-    noCountries: "No job countries identified",
-    profileOnly: "Match scores use only the selected resume.",
-    verifiedCoverage: "Deeply analyzed offers",
-  };
-}
+function getWords(french: boolean) { return getCentralCopy("jobsForYou")[french ? "fr" : "en"]; }
 
 type MatchWarningCode = string | null | undefined;
 
@@ -255,21 +153,81 @@ function ResumePreview({ resume, french, open, onOpenChange }: {
   onOpenChange: (value: boolean) => void;
 }) {
   const words = getWords(french);
+  const [page, setPage] = useState(0);
+  useEffect(() => setPage(0), [resume?.id, open]);
   if (!resume) return null;
+  const pages = [
+    <div key="work" className="space-y-4">
+      {resume.summary.length > 0 && (
+        <section><h4 className="border-b pb-1 font-semibold">Profile</h4>
+          {resume.summary.map((text, i) =>
+            <p className="mt-2" key={i}>{text}</p>)}</section>
+      )}
+      {!!resume.experiences?.length && (
+        <section className="space-y-3">
+          <h4 className="border-b pb-1 font-semibold">Work Experience</h4>
+          {resume.experiences.map((work, i) => (
+            <div key={i}>
+              <strong>{work.title}</strong>
+              <p>{work.company} · {work.start} – {work.end}</p>
+              {work.description?.map((line, j) =>
+                <p key={j}>• {line}</p>)}
+            </div>
+          ))}
+        </section>
+      )}
+    </div>,
+    <div key="other" className="space-y-4">
+      {!!resume.skills?.length && (
+        <section><h4 className="border-b pb-1 font-semibold">Skills</h4>
+          {resume.skills.flatMap(Object.values).filter(Boolean).map((text, i) =>
+            <p key={i}>{text}</p>)}</section>
+      )}
+      {!!resume.educations?.length && (
+        <section><h4 className="border-b pb-1 font-semibold">Education</h4>
+          {resume.educations.map((entry, i) =>
+            <p key={i}>{entry.degree} — {entry.school}</p>)}</section>
+      )}
+      {!!resume.projects?.length && (
+        <section><h4 className="border-b pb-1 font-semibold">Projects</h4>
+          {resume.projects.map((entry, i) =>
+            <p key={i}><strong>{entry.title}</strong> {entry.description}</p>)}</section>
+      )}
+      {!!resume.certifications?.length && (
+        <section><h4 className="border-b pb-1 font-semibold">Certifications</h4>
+          {resume.certifications.map((entry, i) =>
+            <p key={i}>{entry.title} — {entry.issuer}</p>)}</section>
+      )}
+    </div>,
+  ];
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95dvh] overflow-hidden sm:max-w-[950px]">
+      <DialogContent className="max-h-[95dvh] max-w-[550px] overflow-hidden p-4">
         <DialogHeader>
           <DialogTitle>{words.preview}</DialogTitle>
-          <DialogDescription>{resume.title || words.myResume}</DialogDescription>
+          <DialogDescription>{words.textPreview}</DialogDescription>
         </DialogHeader>
-        <div className="min-h-0 overflow-y-auto">
-          <AtsResumePreview
-            record={resume as unknown as AtsResumeRecord}
-            language={french ? "fr" : "en"}
-            large
-          />
+        <div className="relative flex items-center justify-center gap-2">
+          <Button
+            variant="outline" size="icon" aria-label="Previous page"
+            disabled={page === 0} onClick={() => setPage(page - 1)}
+          ><ChevronLeft /></Button>
+          <div className="h-[65dvh] w-full max-w-[400px] overflow-auto bg-white px-7 py-8 text-[11px] leading-relaxed text-neutral-950 shadow-sm sm:px-9">
+            <h3 className="text-lg font-bold">
+              {resume.contact?.name || resume.title}
+            </h3>
+            {resume.contact?.email && <p>{resume.contact.email}</p>}
+            <div className="mt-4 space-y-3">{pages[page]}</div>
+          </div>
+          <Button
+            variant="outline" size="icon" aria-label="Next page"
+            disabled={page === pages.length - 1}
+            onClick={() => setPage(page + 1)}
+          ><ChevronRight /></Button>
         </div>
+        <p className="text-center text-sm text-muted-foreground">
+          {words.page} {page + 1}/{pages.length}
+        </p>
       </DialogContent>
     </Dialog>
   );
@@ -302,7 +260,6 @@ export function JobsForYou({
   const [considered, setConsidered] = useState(0);
   const [verifiedCount, setVerifiedCount] = useState(0);
   const [deepMatchCount, setDeepMatchCount] = useState(0);
-  const [emptyReason, setEmptyReason] = useState<string | null>(null);
   const firstMatchStarted = useRef(false);
   const [explained, setExplained] = useState<string | null>(null);
 
@@ -373,16 +330,15 @@ export function JobsForYou({
         totalConsidered?: number;
         countries?: Country[];
         warningCode?: string | null;
+        matchingStatus?: string;
         verifiedCount?: number;
         deepMatchCount?: number;
-        reason?: string;
       };
       if (requestId !== requestSequence.current) return;
       setJobs(data.jobs || []);
       setConsidered(data.totalConsidered || 0);
       setVerifiedCount(data.verifiedCount || 0);
       setDeepMatchCount(data.deepMatchCount || 0);
-      setEmptyReason(data.reason || null);
       if (data.countries) setCountries(data.countries);
       setPrefs(next);
       setDraft(next);
@@ -390,6 +346,9 @@ export function JobsForYou({
       setDrawer(false);
       if (data.warningCode) {
         setWarning(matchErrorMessage(data.warningCode, french));
+      } else if (data.matchingStatus === "unavailable" ||
+        (data.matchingStatus === "partial" && (data.verifiedCount || 0) < (data.deepMatchCount || 0))) {
+        setWarning(getWords(french).unscored);
       }
     } catch (reason) {
       if (requestId !== requestSequence.current) return;
@@ -429,19 +388,19 @@ export function JobsForYou({
           disabled={!selected}
           onClick={() => setPreview(true)}
           aria-label={c.preview}
-          className="group relative h-[140px] w-[105px] shrink-0 overflow-hidden rounded-md border bg-white text-left shadow-sm transition-shadow hover:shadow-md disabled:opacity-50"
+          className="group flex h-[140px] w-[105px] shrink-0 flex-col overflow-hidden rounded border bg-white p-3 text-left text-[5px] leading-snug text-neutral-900 shadow-sm disabled:opacity-50"
         >
-          {selected && (
-            <div className="pointer-events-none h-full w-full overflow-hidden">
-              <AtsResumePreview
-                record={selected as unknown as AtsResumeRecord}
-                language={french ? "fr" : "en"}
-              />
-            </div>
-          )}
-          <span className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-            <Eye aria-hidden="true" className="size-5 text-white" />
+          <span className="text-[8px] font-bold">
+            {selected?.contact?.name || selected?.title || "Resume"}
           </span>
+          <span className="my-2 h-px w-full bg-neutral-300" />
+          {selected?.summary.map((line, i) => (
+            <span key={i} className="line-clamp-3">{line}</span>
+          ))}
+          <span className="mt-2 font-bold">Experience</span>
+          {selected?.experiences?.slice(0, 2).map((exp, i) =>
+            <span key={i}>{exp.title} · {exp.company}</span>)}
+          <Eye className="mt-auto size-4 self-center text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100" />
         </button>
 
         <div className="min-w-0 flex-1 space-y-2">
@@ -542,9 +501,9 @@ export function JobsForYou({
         {pending && <div role="status" className="flex items-center justify-center gap-2 rounded-xl border bg-card px-5 py-10 text-sm text-muted-foreground">
           <LoaderCircle className="size-5 animate-spin" /> {c.analyzing}
         </div>}
-        {hasResults && !jobs.length && !pending && (
+        {hasResults && !jobs.length && (
           <div className="rounded-xl bg-muted p-7 text-center text-sm">
-            <p>{emptyReason === "NO_JOBS_AVAILABLE" ? c.noSources : c.none}</p>
+            <p>{c.none}</p>
             <Button variant="outline" size="sm" className="mt-4" onClick={() => setDrawer(true)}>
               {c.adjust}
             </Button>
@@ -583,12 +542,8 @@ export function JobsForYou({
                 </div>
               </button>
               <div className="flex shrink-0 flex-col items-stretch gap-2">
-                {job.outsidePreferences && (
-                  <span className="text-center text-[11px] text-muted-foreground">
-                    {c.outsideTag}
-                  </span>
-                )}
                 <span
+                  title={c.indicative}
                   className="rounded-lg bg-primary/10 px-3 py-1 text-center text-xs font-semibold text-primary"
                 >
                   {job.match.score !== null
@@ -641,68 +596,45 @@ export function JobsForYou({
             )}
           </article>
         ))}
+        {hasResults && !!jobs.length && (
+          <p className="text-xs text-muted-foreground">
+            {c.indicative} {c.openToApply}
+          </p>
+        )}
       </section>
 
       {/* Resume picker: only editable CVs belong to the score source. */}
       <Dialog open={picker} onOpenChange={setPicker}>
-        <DialogContent className="max-h-[90dvh] overflow-hidden sm:max-w-[780px]">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{c.select}</DialogTitle>
             <DialogDescription>{c.profileOnly}</DialogDescription>
           </DialogHeader>
-          <div className="min-h-0 max-h-[66dvh] overflow-y-auto pr-1">
-            {resumes.length === 0 && (
-              <p className="py-10 text-center text-sm text-muted-foreground">{c.noResume}</p>
-            )}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-              {resumes.map((resume) => {
-                const active = resume.id === prefs.cvId;
-                return (
-                  <button
-                    type="button"
-                    key={resume.id}
-                    aria-pressed={active}
-                    aria-label={`${resume.title || c.myResume}${active ? (french ? " — sélectionné" : " — selected") : ""}`}
-                    onClick={() => {
-                      const next = { ...prefs, cvId: resume.id };
-                      // Only the chosen resume is sent to the matching agent.
-                      requestSequence.current++;
-                      setPrefs(next);
-                      setDraft(next);
-                      setJobs([]);
-                      setHasResults(false);
-                      setPicker(false);
-                      void runMatch(next);
-                    }}
-                    className={`group relative min-w-0 overflow-hidden rounded-xl border bg-card text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 hover:border-primary/60 ${
-                      active ? "border-primary ring-1 ring-primary" : "border-border"
-                    }`}
-                  >
-                    <div className="relative flex h-[230px] items-start justify-center overflow-hidden border-b bg-muted/30 p-2 sm:h-[240px]">
-                      <div className="pointer-events-none h-full w-[150px] max-w-full overflow-hidden rounded-t-sm border border-neutral-200 bg-white shadow-sm">
-                        <AtsResumePreview
-                          record={resume as unknown as AtsResumeRecord}
-                          language={french ? "fr" : "en"}
-                        />
-                      </div>
-                      {active && (
-                        <span className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground" aria-hidden="true">
-                          <Check className="size-4" />
-                        </span>
-                      )}
-                    </div>
-                    <div className="space-y-1 px-3 py-2.5">
-                      <p className="truncate text-sm font-medium" title={resume.title || c.myResume}>
-                        {resume.title || c.myResume}
-                      </p>
-                      <p className={`truncate text-xs ${active ? "text-primary" : "text-muted-foreground"}`}>
-                        {active ? (french ? "CV sélectionné" : "Selected resume") : resume.contact?.name || (french ? "Cliquez pour sélectionner" : "Click to select")}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="max-h-[55dvh] space-y-2 overflow-y-auto">
+            {resumes.map((resume) => (
+              <button
+                type="button" key={resume.id}
+                onClick={() => {
+                  const next = { ...prefs, cvId: resume.id };
+                  // Clear results from another CV before requesting a new match.
+                  requestSequence.current++;
+                  setPrefs(next);
+                  setDraft(next);
+                  setJobs([]);
+                  setHasResults(false);
+                  setPicker(false);
+                  void runMatch(next);
+                }}
+                className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left hover:bg-muted ${
+                  resume.id === prefs.cvId ? "border-primary" : ""}`}
+              >
+                <FileText className="size-5 shrink-0 text-primary" />
+                <span className="min-w-0 flex-1 truncate text-sm">
+                  {resume.title || c.myResume}
+                </span>
+                {resume.id === prefs.cvId && <Check className="size-4 text-primary" />}
+              </button>
+            ))}
           </div>
         </DialogContent>
       </Dialog>

@@ -15,13 +15,14 @@ import { useTranslation } from 'react-i18next';
 import { safeRedirectPath } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 
-const schema = z.object({
-  email: z.string().email("Invalide email"),
-  password: z.string().min(6, "Short password"),
+const createSchema = (t: (key: string) => string) => z.object({
+  email: z.string().email(t("auth.invalidEmail")),
+  password: z.string().min(6, t("auth.shortPassword")),
 });
 
 export default function Login() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
+  const schema = createSchema(t);
   const router = useRouter();
   const {
     register,
@@ -45,7 +46,7 @@ export default function Login() {
       } else if (typeof error === "string") {
         setError(error);
       } else {
-        setError("Authentication failed");
+        setError(t("auth.failed"));
       }
     }
   };
@@ -53,7 +54,7 @@ export default function Login() {
   return (
     <div className="auth-card">
       <div className="py-4">
-        <p className="eyebrow mb-4">CVcomet / Welcome back</p>
+        <p className="eyebrow mb-4">{t("auth.loginEyebrow")}</p>
         <h1 className="type-h1 mb-5">{t("shell.loginIntro")}</h1>
       </div>
       {error && <p role="alert" className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
@@ -81,7 +82,7 @@ export default function Login() {
       {process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true" && (
         <Button type="button" variant="outline" className="mt-4 w-full" onClick={async () => {
           const result = await authClient.signIn.social({ provider: "google", callbackURL: safeRedirectPath(new URLSearchParams(window.location.search).get("redirect")) });
-          if (result.error) setError(result.error.message || "Google sign-in failed");
+          if (result.error) setError(result.error.message || t("auth.googleFailed"));
         }}>Google</Button>
       )}
       <div className="mt-6 flex flex-wrap gap-y-2 text-sm justify-center">

@@ -53,8 +53,15 @@ export async function analyzeJobDescription(description: string, hints?: { title
         previous = object;
         return validateJobAnalysis(object, description);
       } catch (error) {
-        const correctable = error instanceof ProfileError && ["AI_INVALID_RESPONSE", "AI_UNSUPPORTED_EVIDENCE"].includes(error.code) || error instanceof Error && error.name === "AI_NoObjectGeneratedError";
-        if (attempt > 0 || abortSignal.aborted || !correctable) throw error;
+        const correctable = (error instanceof ProfileError && ["AI_INVALID_RESPONSE", "AI_UNSUPPORTED_EVIDENCE"].includes(error.code)) ||
+          (error instanceof Error && ["AI_NoObjectGeneratedError", "AI_TypeValidationError", "AI_JSONParseError", "ZodError"].includes(error.name));
+        if (attempt > 0 || abortSignal.aborted || !correctable) {
+          // A schema mismatch is a model-format problem, not a general outage.
+          if (error instanceof Error && ["ZodError", "AI_TypeValidationError", "AI_JSONParseError", "AI_NoObjectGeneratedError"].includes(error.name)) {
+            throw new ProfileError(502, "AI_INVALID_RESPONSE");
+          }
+          throw error;
+        }
         const failure = error as { code?: string; text?: string };
         correction = {
           reason: failure.code === "AI_UNSUPPORTED_EVIDENCE"

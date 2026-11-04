@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { translateCentral, getCentralCopy } from "@/lib/i18n/central-copy";
 import {
   RotateCcw,
   ArrowLeft,
@@ -72,8 +73,6 @@ type ToolLink = {
   id: string;
   icon: LucideIcon;
   href: string | null;
-  title: [string, string];
-  description: [string, string];
 };
 
 const sections: SectionId[] = [
@@ -90,99 +89,99 @@ const tools: ToolLink[] = [
     id: "linkedin",
     icon: Linkedin,
     href: "/dashboard/resumes",
-    title: ["Import LinkedIn", "LinkedIn Import"],
-    description: ["Importer les données de son profil", "Import your profile"],
+    
+    
   },
   {
     id: "pdf",
     icon: Upload,
     href: "/dashboard/resumes",
-    title: ["Import PDF", "PDF Import"],
-    description: ["Importer et modifier un ancien CV", "Import and edit a resume"],
+    
+    
   },
   {
     id: "resume",
     icon: FileText,
     href: "/dashboard/resumes",
-    title: ["Créateur de CV", "Resume Builder"],
-    description: ["Créer et modifier un CV", "Create and edit a resume"],
+    
+    
   },
   {
     id: "letter",
     icon: Mail,
     href: "/dashboard/cover-letters",
-    title: ["Lettres de motivation", "Cover Letter Builder"],
-    description: ["Adapter sa lettre à une offre", "Tailor a letter to a job"],
+    
+    
   },
   {
     id: "website",
     icon: Globe,
     href: "/dashboard/profile",
-    title: ["Profil public", "Personal Website"],
-    description: ["Gérer sa présence professionnelle", "Manage your public profile"],
+    
+    
   },
   {
     id: "ats",
     icon: TrendingUp,
     href: "/dashboard/resumes",
-    title: ["Analyse de CV", "Resume Analysis"],
-    description: ["Comprendre les points à améliorer", "Find ways to improve"],
+    
+    
   },
   {
     id: "examples",
     icon: LayoutGrid,
     href: "/templates",
-    title: ["Modèles de CV", "Resume Examples"],
-    description: ["Explorer les modèles disponibles", "Explore resume templates"],
+    
+    
   },
   {
     id: "feedback",
     icon: FileSearch,
     href: "/dashboard/resumes",
-    title: ["Avis sur mon CV", "Resume Feedback"],
-    description: ["Obtenir des conseils d'amélioration", "Get improvement feedback"],
+    
+    
   },
   {
     id: "career",
     icon: Map,
     href: "/dashboard/career-map",
-    title: ["Carte de carrière", "Career Map"],
-    description: ["Explorer les prochaines étapes", "Explore your next career steps"],
+    
+    
   },
   {
     id: "questions",
     icon: Mic,
     href: "/dashboard/interviews",
-    title: ["Questions d'entretien", "Interview Questions"],
-    description: ["S'entraîner pour les entretiens", "Practice interview answers"],
+    
+    
   },
   {
     id: "jobs",
     icon: BriefcaseBusiness,
     href: "/dashboard/find-jobs",
-    title: ["Offres d'emploi", "Find Jobs"],
-    description: ["Trouver des offres adaptées", "Discover matching jobs"],
+    
+    
   },
   {
     id: "agent",
     icon: Sparkles,
     href: "/dashboard/assistant",
-    title: ["Career Agent", "Career Agent"],
-    description: ["Un assistant pour votre carrière", "Your career assistant"],
+    
+    
   },
   {
     id: "tracking",
     icon: FileCheck2,
     href: "/dashboard/applications",
-    title: ["Mes candidatures", "Applications"],
-    description: ["Suivre mes candidatures", "Track your applications"],
+    
+    
   },
   {
     id: "benefits",
     icon: ShieldCheck,
     href: "/upgrade",
-    title: ["Formules et avantages", "Plans & Benefits"],
-    description: ["Découvrir les fonctionnalités Pro", "Explore Pro features"],
+    
+    
   },
 ];
 
@@ -191,106 +190,33 @@ const guides = [
     id: "ats",
     icon: FileSearch,
     href: "/dashboard/resumes",
-    fr: "Vérifier son CV avant de postuler",
-    en: "Check your resume before applying",
+    
+    
   },
   {
     id: "job",
     icon: BriefcaseBusiness,
     href: "/dashboard/find-jobs",
-    fr: "Trouver une offre qui vous correspond",
-    en: "Find a job that matches your profile",
+    
+    
   },
   {
     id: "followup",
     icon: Mail,
     href: "/dashboard/applications",
-    fr: "Organiser ses candidatures et relances",
-    en: "Organize applications and follow-ups",
+    
+    
   },
   {
     id: "interview",
     icon: MessageSquareText,
     href: "/dashboard/interviews",
-    fr: "Se préparer aux questions d'entretien",
-    en: "Prepare for interview questions",
+    
+    
   },
 ];
 
-const copy = {
-  fr: {
-    welcome: "Bon retour",
-    upgrade: "Passer à Pro",
-    documents: "Documents",
-    website: "Mon site web",
-    websiteType: "Site personnel",
-    lastEdited: "Dernières créations",
-    create: "Créer",
-    newResume: "Nouveau CV",
-    newLetter: "Lettre de motivation",
-    importResume: "Importer un CV",
-    documentsEmpty: "Vos CV et documents apparaîtront ici.",
-    documentsError: "Impossible de charger les documents.",
-    retry: "Réessayer",
-    jobs: "Offres d'emploi",
-    noJobs: "Aucune offre recommandée pour le moment.",
-    map: "Carte de carrière",
-    exploreMap: "Explorer ma carte",
-    mapExplore: "Visualisez les prochaines étapes de votre carrière",
-    interviews: "Entretiens",
-    startInterview: "Préparer un entretien",
-    noInterviews: "Aucun entretien préparé pour le moment.",
-    tips: "Conseils et guides",
-    guidesCaption: "Pour avancer dans votre recherche",
-    allTools: "Tous les outils",
-    edit: "Modifier la disposition",
-    done: "Terminé",
-    reset: "Réinitialiser",
-    visibleSections: "Sections visibles",
-    visibleTools: "Outils visibles",
-    notAvailable: "Bientôt",
-    viewMore: "Voir tout",
-    scrollLeft: "Voir les outils précédents",
-    scrollRight: "Voir les outils suivants",
-    openSection: "Ouvrir",
-  },
-  en: {
-    welcome: "Welcome back",
-    upgrade: "Upgrade Now",
-    documents: "Documents",
-    website: "My Website",
-    websiteType: "Website",
-    lastEdited: "Last edited",
-    create: "Create New",
-    newResume: "New resume",
-    newLetter: "Cover letter",
-    importResume: "Import resume",
-    documentsEmpty: "Your resumes and documents will appear here.",
-    documentsError: "Could not load documents.",
-    retry: "Try again",
-    jobs: "Job Openings",
-    noJobs: "No recommended jobs to show right now.",
-    map: "Career Map",
-    exploreMap: "Explore Your Map",
-    mapExplore: "Explore the next steps in your career",
-    interviews: "Interviews",
-    startInterview: "Prepare an interview",
-    noInterviews: "No interview sessions yet.",
-    tips: "Tips and Guides",
-    guidesCaption: "Practical career resources",
-    allTools: "All Tools",
-    edit: "Edit Layout",
-    done: "Done",
-    reset: "Reset",
-    visibleSections: "Visible sections",
-    visibleTools: "Visible tools",
-    notAvailable: "Coming soon",
-    viewMore: "View all",
-    scrollLeft: "Previous tools",
-    scrollRight: "Next tools",
-    openSection: "Open",
-  },
-} as const;
+const copy = getCentralCopy("home");
 
 const panelStyle = "min-w-0 rounded-2xl border border-border/50 bg-card";
 const panelTitle = "text-sm font-semibold tracking-tight sm:text-base";
@@ -825,7 +751,7 @@ function TipsPanel({ locale }: { locale: Locale }) {
                 <Icon className="size-9 text-primary/75" aria-hidden="true" />
               </div>
               <p className="mt-2 text-xs font-medium leading-5 group-hover:text-primary">
-                {french ? guide.fr : guide.en}
+                {translateCentral(locale, `homeGuides.${guide.id}`)}
               </p>
             </Link>
           );
@@ -847,7 +773,6 @@ function ToolsPanel({
   const c = copy[locale];
   const track = useRef<HTMLDivElement>(null);
   const selected = tools.filter((tool) => visibleTools.includes(tool.id));
-  const translatedIndex = locale === "fr" ? 0 : 1;
 
   const scroll = (direction: -1 | 1) => {
     track.current?.scrollBy({ left: 380 * direction, behavior: "smooth" });
@@ -890,10 +815,10 @@ function ToolsPanel({
                 <Icon className="size-9 text-primary/80" aria-hidden="true" />
               </span>
               <span className="mt-4 block text-xs font-semibold text-primary">
-                {tool.title[translatedIndex]}
+                {translateCentral(locale, `homeTools.${tool.id}.title`)}
               </span>
               <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                {tool.description[translatedIndex]}
+                {translateCentral(locale, `homeTools.${tool.id}.description`)}
               </span>
               {!tool.href && (
                 <span className="mt-2 inline-flex text-[10px] text-muted-foreground">
@@ -1119,7 +1044,7 @@ export default function Overview() {
                     }
                   >
                     {checked && <Check className="size-3" />}
-                    {tool.title[locale === "fr" ? 0 : 1]}
+                    {translateCentral(locale, `homeTools.${tool.id}.title`)}
                   </button>
                 );
               })}

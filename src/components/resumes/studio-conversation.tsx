@@ -1,4 +1,5 @@
 "use client";
+import { translateCentral } from "@/lib/i18n/central-copy";
 
 import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
 import { ArrowUp, Loader2 } from "lucide-react";
@@ -51,12 +52,12 @@ export function StudioConversation({
   }, [value]);
 
   return (
-    <div className="studio-chat" aria-label={fr ? "Assistant de document" : "Document assistant"}>
+    <div className="studio-chat" aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_conversation.text001")}>
       <div ref={messagesRef} className="studio-chat-messages" role="log" aria-live="polite" aria-relevant="additions text">
         {messages.length === 0 && !review && (
           <div className="studio-chat-welcome">
             <p className="text-sm font-medium">
-              {fr ? "Que souhaitez-vous modifier ?" : "What would you like to change?"}
+              {translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_conversation.text002")}
             </p>
           </div>
         )}
@@ -76,7 +77,7 @@ export function StudioConversation({
         {busy && (
           <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground">
             <Loader2 className="size-3.5 animate-spin" />
-            {fr ? "L'assistant prépare sa réponse…" : "Preparing a response…"}
+            {translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_conversation.text003")}
           </p>
         )}
         {review}
@@ -103,8 +104,8 @@ export function StudioConversation({
             ref={inputRef}
             rows={1}
             maxLength={4000}
-            aria-label={fr ? "Message à l'IA" : "Message the AI"}
-            placeholder={placeholder || (fr ? "Demandez une modification…" : "Ask for a change…")}
+            aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_conversation.text004")}
+            placeholder={placeholder || (translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_conversation.text005"))}
             value={value}
             onChange={(event) => onChange(event.target.value)}
             onKeyDown={(event) => {
@@ -118,7 +119,7 @@ export function StudioConversation({
           <button
             type="submit"
             className="studio-chat-send"
-            aria-label={fr ? "Envoyer" : "Send"}
+            aria-label={translateCentral(fr ? "fr" : "en", "uiText.components_resumes_studio_conversation.text006")}
             disabled={!value.trim() || busy || disabled}
           >
             {busy ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}
