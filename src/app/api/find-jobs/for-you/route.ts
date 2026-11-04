@@ -18,11 +18,23 @@ import {
 import type { MatchingPreferences } from "@/lib/find-jobs/for-you";
 import type { JobDiscoveryResult } from "@/lib/agentic/agents/job-discovery/agent/state";
 import { runJobDiscoveryAgent } from "@/lib/agentic/agents/job-discovery/agent/job-discovery.agent";
+import { candidateFromResume } from "@/lib/agentic/agents/job-discovery/tools/context.tool";
+import { strictDiscoveryFilter } from "@/lib/agentic/agents/job-discovery/tools/filter.tool";
+import { shortlistRelevantJobs, DISCOVERY_RESULTS_LIMIT } from "@/lib/agentic/agents/job-discovery/tools/rank.tool";
 import { defaultJobPreferences, jobPreferencesSchema } from "@/lib/career-profile/schema";
 import { residenceCountries } from "@/lib/career-profile/countries";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+// Lets operators confirm that the current API deployment is running this fix.
+// No user, database or credential information is included in this marker.
+const responseHeaders = {
+  "Cache-Control": "private, no-store",
+  "X-CVComet-JobsForYou-Version": "preferences-reconciled-v2",
+};
+
+const PREFERENCES_NOT_PERSISTED = "PREFERENCES_NOT_PERSISTED";
 
 const inputSchema = z.object({
   preferences: matchingPreferencesSchema,
@@ -124,13 +136,24 @@ async function defaultsFromCareerProfile(
   };
 }
 
+/** Only safe database error codes go to logs; never log queries or filters. */
+function preferenceErrorCode(error: unknown): string {
+  if (!error || typeof error !== "object") return "UNKNOWN";
+  const failure = error as { code?: unknown; meta?: { code?: unknown } };
+  if (typeof failure.code !== "string") return "UNKNOWN";
+  if (failure.code === "P2010" && typeof failure.meta?.code === "string") {
+    return `P2010/${failure.meta.code}`;
+  }
+  return failure.code;
+}
+
 /** Prisma reports missing relations/columns differently for model and raw SQL. */
 function isPreferenceSchemaError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const failure = error as { code?: unknown; meta?: { code?: unknown } };
   return failure.code === "P2021" || failure.code === "P2022" ||
     (failure.code === "P2010" &&
-      (failure.meta?.code === "42P01" || failure.meta?.code === "42703"));
+      (["42P01", "42703", "42P10"].includes(String(failure.meta?.code))));
 }
 
 /** SQL parameters are bound by Prisma; the table/column identifiers are static. */
@@ -200,15 +223,20 @@ export async function GET() {
       const parsed = matchingPreferencesSchema.safeParse(saved?.filters);
       return NextResponse.json({
         preferences: parsed.success ? parsed.data : profileDefaults,
-      }, { headers: { "Cache-Control": "no-store" } });
+      }, { headers: responseHeaders });
     } catch (error) {
       if (!isPreferenceSchemaError(error)) throw error;
-      // The table/columns are missing from the connected database, not merely
-      // from the generated Prisma client. Return safe defaults, not a fake save.
+      // The on-disk migration history can be up to date while the live
+      // database schema has drifted (or the web app targets another branch).
+      // Continue with defaults; never claim that `migrate deploy` was omitted.
+      console.warn("Jobs for You preferences unavailable", {
+        operation: "read",
+        code: preferenceErrorCode(error),
+      });
       return NextResponse.json({
         preferences: profileDefaults,
-        warningCode: "PRISMA_MIGRATION_REQUIRED",
-      }, { headers: { "Cache-Control": "no-store" } });
+        warningCode: PREFERENCES_NOT_PERSISTED,
+      }, { headers: responseHeaders });
     }
   } catch (error) {
     return profileErrorResponse(error);
@@ -238,24 +266,59 @@ export async function POST(req: Request) {
       throw new ProfileError(422, "RESUME_CONTENT_TOO_SHORT");
     }
 
-    // Store only the current actor's selection; missing optional migration does
-    // not make genuine job listings inaccessible.
+    // Store only the current actor's selection; optional preference storage
+    // must not prevent genuine job discovery.
     let preferenceWarning: string | null = null;
     if (input.save) {
       try {
         await savePreference(user.id, preferences);
       } catch (error) {
         if (!isPreferenceSchemaError(error)) throw error;
-        // Only a database schema failure should trigger this warning.
-        preferenceWarning = "PRISMA_MIGRATION_REQUIRED";
+        // The search must still work even if optional preference persistence
+        // cannot be used. Diagnose storage drift instead of blaming migrations.
+        console.warn("Jobs for You preferences unavailable", {
+          operation: "write",
+          code: preferenceErrorCode(error),
+        });
+        preferenceWarning = PREFERENCES_NOT_PERSISTED;
       }
     }
 
     // The real provider data is fetched first; cache invalidates on edited
     // job text, not just a coincidentally unchanged description length.
-    const pool = await getJobsPool("");
+    let pool = await getJobsPool("");
+    // A general feed often omits relevant postings. Search the actual role
+    // from the selected CV (or the user-entered role) when the initial feed
+    // yields too few CV-relevant offers inside the chosen preferences.
+    const candidate = candidateFromResume(resume, preferences);
+    const eligible = strictDiscoveryFilter(pool.jobs, preferences).filtered;
+    const initialRelevant = shortlistRelevantJobs(eligible, candidate);
+    const resumeRole = resume.experiences.find(item => item.title.trim())?.title ||
+      (/^(?:my resume|cv|resume|curriculum vitae)$/i.test(resume.title.trim()) ? "" : resume.title);
+    const roleQuery = (resumeRole || preferences.title)
+      .replace(/\s+/g, " ").trim().slice(0, 80);
+    if (initialRelevant.length < DISCOVERY_RESULTS_LIMIT &&
+        roleQuery.length >= 3 && !/^(?:my resume|cv|resume|curriculum vitae)$/i.test(roleQuery)) {
+      try {
+        const targeted = await getJobsPool(roleQuery);
+        const seen = new Set<string>();
+        pool = {
+          jobs: [...targeted.jobs, ...pool.jobs].filter(job => {
+            const key = job.sourceUrl.trim().toLowerCase();
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          }),
+          warnings: [...new Set([...targeted.warnings, ...pool.warnings])],
+          limited: targeted.limited || pool.limited,
+        };
+      } catch {
+        // Do not make the primary discovery fail when a supplemental source
+        // temporarily fails. Never fabricate an offer or its source URL.
+      }
+    }
     const fingerprint = createHash("sha256").update(JSON.stringify({
-      version: 11, actor: user.id, cvId: cv.id, revision: cv.revision,
+      version: 12, actor: user.id, cvId: cv.id, revision: cv.revision,
       resume, preferences, language: input.language,
       listings: pool.jobs.map(job => [job.id, job.sourceUrl, job.publishedAt,
         createHash("sha256").update(job.description).digest("hex")]),
@@ -267,7 +330,7 @@ export async function POST(req: Request) {
         ...previous.result,
         warningCode: previous.result.warningCode || preferenceWarning,
         cached: true,
-      }, { headers: { "Cache-Control": "private, no-store" } });
+      }, { headers: responseHeaders });
     }
 
     const result = await runJobDiscoveryAgent({
@@ -291,7 +354,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ...result,
       warningCode: result.warningCode || preferenceWarning,
-    }, { headers: { "Cache-Control": "private, no-store" } });
+    }, { headers: responseHeaders });
   } catch (error) {
     return profileErrorResponse(error);
   }

@@ -9,12 +9,17 @@ export function assembleDiscoveryNode(state: typeof JobDiscoveryState.State) {
   return { result: {
     jobs: [...state.checked].sort((a, b) => (b.match.score ?? -1) - (a.match.score ?? -1)),
     countries: state.countries,
-    totalConsidered: state.filtered.length,
+    totalConsidered: (state.pool?.jobs?.length ?? 0),
     warnings: state.pool.warnings,
     verifiedCount: checked,
     deepMatchCount: eligible,
     matchingStatus,
     warningCode: state.warningCode ?? null,
-    ...(count === 0 ? { reason: "NO_MATCHING_OFFERS" as const } : {}),
+    outsideFilters: state.outsideFilters === true,
+    ...(count === 0 ? { reason: !state.pool.jobs
+      ? "NO_MATCHING_OFFERS" as const
+      : state.pool.jobs.length === 0
+        ? "NO_JOBS_AVAILABLE" as const
+        : "NO_RELEVANT_JOBS" as const } : {}),
   } };
 }

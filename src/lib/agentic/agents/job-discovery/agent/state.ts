@@ -16,7 +16,11 @@ export type DiscoveryMatch = Readonly<{
   missing: string[];
   explanation: string;
 }>;
-export type DiscoveryJob = Omit<UnifiedJob, "match"> & { match: DiscoveryMatch };
+export type DiscoveryJob = Omit<UnifiedJob, "match"> & {
+  match: DiscoveryMatch;
+  /** Job is CV-relevant but fails one or more selected preferences. */
+  outsidePreferences?: boolean;
+};
 export type JobDiscoveryResult = Readonly<{
   jobs: DiscoveryJob[];
   countries: CountryFacet[];
@@ -26,7 +30,8 @@ export type JobDiscoveryResult = Readonly<{
   deepMatchCount: number;
   warnings: string[];
   warningCode: string | null;
-  reason?: "NO_MATCHING_OFFERS";
+  reason?: "NO_MATCHING_OFFERS" | "NO_RELEVANT_JOBS" | "NO_JOBS_AVAILABLE";
+  outsideFilters: boolean;
 }>;
 export const JobDiscoveryState = Annotation.Root({
   input: Annotation<JobDiscoveryInput>,
@@ -35,6 +40,7 @@ export const JobDiscoveryState = Annotation.Root({
   filtered: Annotation<UnifiedJob[]>,
   countries: Annotation<CountryFacet[]>,
   shortlist: Annotation<UnifiedJob[]>,
+  outsideFilters: Annotation<boolean>,
   checked: Annotation<DiscoveryJob[]>,
   warningCode: Annotation<string | null>,
   verifiedCount: Annotation<number>,

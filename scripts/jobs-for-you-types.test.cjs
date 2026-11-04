@@ -29,9 +29,10 @@ function typeDeclaration(file, name) {
   return alias.getText(ast);
 }
 
-test('work dates, nullable AI scores and Prisma delegate compile', () => {
+test('work dates, nullable AI scores and preference Prisma delegate compile', () => {
   const ui = files[0];
   const api = files[1];
+  assert.match(fs.readFileSync(path.join(root, api), 'utf8'), /import type \{ JobDiscoveryResult \}/);
   const definitions = [
     'type SavedResume = { experiences?: { title: string; company: string; description?: string[] }[]; title: string; id: string; };',
     'type FindJob = { id: string; match?: { score: number | null; matched: string[]; missing: string[]; explanation: string }; };',
@@ -39,17 +40,16 @@ test('work dates, nullable AI scores and Prisma delegate compile', () => {
     'type MatchingPreferences = { cvId: string | null; countries: string[] };',
     typeDeclaration(ui, 'FullResume'),
     typeDeclaration(ui, 'MatchJob'),
-    typeDeclaration(api, 'Recommendation'),
     typeDeclaration(api, 'PreferenceStore'),
     `declare const fullResume: FullResume;
      const work = fullResume.experiences?.[0];
      const start: string | undefined = work?.start;
      const end: string | undefined = work?.end;
-     const scores = new Map<string, Recommendation['match']>();
+     const scores = new Map<string, MatchJob['match']>();
      const nullableMatch = {score: null, matched: [], missing: [], explanation: ''};
      scores.set('sample', nullableMatch);
      const ranked: MatchJob['match'] = nullableMatch;
-     const verified: Recommendation['match'] = nullableMatch;
+     const verified: MatchJob['match'] = nullableMatch;
      declare const store: PreferenceStore;
      store.findUnique({where: {userId: 'abc'}});
      store.upsert({where: {userId:'abc'}, create:{userId:'abc', filters:{cvId:null,countries:[]}}, update:{filters:{cvId:null,countries:[]}}});

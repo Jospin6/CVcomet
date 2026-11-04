@@ -7,15 +7,19 @@ export type CandidatePreferences = {
   experiences?: Array<{ title?: string; description?: string }>;
 };
 const stop = new Set("and the for with from de des les une un pour dans sur chez avec en et du la le des senior junior remote job position emploi travail engineer developer software specialist manager analyst officer specialist remote fulltime full time".split(" "));
-const words = (value: string) => new Set(value.toLowerCase().split(/[^\p{L}\p{N}+#.]+/u).filter(x => x.length > 2));
-const meaningful = (value: string) => [...words(value)].filter(t => !stop.has(t) && t.length >= 3);
+const shortSkillTokens = new Set(["ai", "ml", "ux", "ui", "qa"]);
+const words = (value: string) => new Set(value.toLowerCase()
+  .split(/[^\p{L}\p{N}+#.]+/u)
+  .filter(x => x.length > 2 || shortSkillTokens.has(x)));
+const meaningful = (value: string) => [...words(value)]
+  .filter(t => !stop.has(t) && (t.length >= 3 || shortSkillTokens.has(t)));
 const groups: string[][] = [
-  ["software", "developer", "développeur", "engineer", "ingénieur", "backend", "frontend", "fullstack", "programmer", "typescript", "javascript", "react", "node"],
+  ["software", "developer", "développeur", "backend", "frontend", "fullstack", "programmer", "typescript", "javascript", "react", "node"],
   ["support", "customer", "service", "client", "assistance", "helpdesk"],
   ["marketing", "growth", "seo", "acquisition", "commercial", "sales", "vente"],
   ["finance", "accounting", "comptabilité", "comptable", "audit", "accountant"],
   ["design", "designer", "ux", "ui", "figma", "graphique"],
-  ["data", "analyst", "analytics", "scientist", "machine", "intelligence", "statistiques"],
+  ["data", "analyst", "analytics", "scientist", "machine", "learning", "artificial", "intelligence", "ai", "ml", "llm", "nlp", "pytorch", "tensorflow", "statistiques"],
   ["health", "medical", "nurse", "infirmier", "clinique", "hospital"],
   ["education", "teacher", "professeur", "teaching", "formateur", "enseignement"],
 ];

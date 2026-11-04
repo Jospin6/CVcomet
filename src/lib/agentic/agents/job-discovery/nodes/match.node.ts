@@ -9,7 +9,11 @@ import { DEEP_MATCH_LIMIT } from "../tools/rank.tool";
 export function createMatchJobsNode(deps: JobDiscoveryDependencies, scope: ExecutionScope) {
   return async (state: typeof JobDiscoveryState.State) => {
     const { language, resume } = state.input;
-    const unresolved = state.shortlist.map(job => ({ ...job, match: unresolvedDiscoveryMatch(language) }));
+    const unresolved = state.shortlist.map(job => ({
+      ...job,
+      outsidePreferences: state.outsideFilters === true,
+      match: unresolvedDiscoveryMatch(language),
+    }));
     const eligible = state.shortlist.slice(0, DEEP_MATCH_LIMIT)
       .filter(canAnalyzeVacancy);
     if (!eligible.length) return { checked: unresolved, warningCode: null, verifiedCount: 0, deepMatchCount: 0 };

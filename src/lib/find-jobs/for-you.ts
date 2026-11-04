@@ -62,8 +62,13 @@ export function matchesPreferences(
   if (prefs.countries.length &&
     !countryCodesForJob(job).some((code) => prefs.countries.includes(code))) {
     // Jobs explicitly open to everyone need not name a single country.
-    if (!(job.eligibleCountries || []).some((country) =>
-      /^(worldwide|global|anywhere)$/i.test(country.trim()))) return false;
+    const restricted = job.eligibleCountries || [];
+    // Explicit eligibility restrictions override a marketing-style global
+    // location string. Remote alone does not imply worldwide eligibility.
+    const worldwide = restricted.some((country) =>
+      /^(worldwide|global|anywhere)$/i.test(country.trim())) ||
+      (restricted.length === 0 && /\b(worldwide|global|anywhere)\b/i.test(job.location || ""));
+    if (!worldwide) return false;
   }
 
   const maxAge = {
