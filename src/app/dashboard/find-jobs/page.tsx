@@ -127,7 +127,7 @@ export default function FindJobs() {
   const french = i18n.resolvedLanguage?.startsWith("fr") ?? false;
   const c = getLabels(french);
   const resultsRef = useRef<HTMLElement>(null);
-  const [tab, setTab] = useState<Tab>("recommended");
+  const [tab, setTab] = useState<Tab>("all");
   const [q, setQ] = useState("");
   const [term, setTerm] = useState("");
   const [country, setCountry] = useState("");
