@@ -77,7 +77,7 @@ export function TemplateGallery() {
     );
   }
 
-  async function useTemplate() {
+  async function handleUseTemplate() {
     if (!selected || creating) return;
 
     if (selected.type === "COVER_LETTER") {
@@ -245,7 +245,7 @@ export function TemplateGallery() {
               <aside className="border-t p-5 lg:border-l lg:border-t-0">
                 <Button
                   className="w-full"
-                  onClick={() => void useTemplate()}
+                  onClick={() => void handleUseTemplate()}
                   disabled={creating}
                 >
                   {creating ? (

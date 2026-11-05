@@ -942,7 +942,7 @@ export default function CareerAgentPage() {
                             onChange={(event) => setDraftReviewed(event.target.checked)}
                             className="mt-0.5"
                           />
-                          J'ai relu les changements et vérifié qu'aucun fait n'est inventé.
+                          J&apos;ai relu les changements et vérifié qu&apos;aucun fait n&apos;est inventé.
                         </label>
                         <div className="flex flex-wrap gap-2">
                           <Button size="sm" disabled={!draftReviewed || draftBusy} onClick={() => void decideDraft("accept")}>

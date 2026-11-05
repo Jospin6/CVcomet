@@ -57,11 +57,11 @@ export function CoverLettersPage() {
       <label className="grid gap-2 text-sm font-medium">CV de référence (obligatoire)
         <select className="h-10 rounded-md border bg-background px-3" disabled={loading} value={cvId} onChange={e => setCvId(e.target.value)}><option value="">Choisir un CV</option>{choices.resumes.map(x => <option value={x.id} key={x.id}>{x.title || "CV sans titre"}</option>)}</select>
       </label>
-      <label className="grid gap-2 text-sm font-medium">Offre d'emploi
+      <label className="grid gap-2 text-sm font-medium">Offre d&apos;emploi
         <select className="h-10 rounded-md border bg-background px-3" disabled={loading} value={jobId} onChange={e => setJobId(e.target.value)}><option value="">Aucune offre sélectionnée</option>{choices.jobs.map(x => <option value={x.id} key={x.id}>{x.title}{x.company ? ` — ${x.company}` : ""}</option>)}</select>
       </label>
       {error && <p role="alert" className="text-sm text-destructive sm:col-span-2">{error}</p>}
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2"><Button disabled={!validCv || !validJob || loading || busy} onClick={() => void create()}>{busy ? <Loader2 className="size-4 animate-spin"/> : <Mail className="size-4"/>}Créer et ouvrir la lettre</Button><Button variant="outline" asChild><Link href="/dashboard/resumes"><FileText className="size-4"/> Mes CV</Link></Button></div>
-    </section><p className="text-xs text-muted-foreground">Les textes ne sont pas inventés : le brouillon est vide tant que vous ne le rédigez pas ou ne validez pas une proposition IA dans l'éditeur.</p>
+    </section><p className="text-xs text-muted-foreground">Les textes ne sont pas inventés : le brouillon est vide tant que vous ne le rédigez pas ou ne validez pas une proposition IA dans l&apos;éditeur.</p>
   </main>;
 }
