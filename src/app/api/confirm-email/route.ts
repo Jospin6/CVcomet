@@ -9,14 +9,20 @@ import {
 import { confirmEmailVerification } from "@/lib/auth/email-verification-service";
 
 export async function POST(request: Request) {
-  let payload: { email?: unknown; code?: unknown } | null;
+  let payload: unknown;
   try {
     payload = await profileJson(request, 4096);
   } catch {
     return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
-  const email = normalizeVerificationEmail(payload?.email);
-  const code = payload?.code;
+
+  // Le JSON reçu est non fiable : vérifier sa forme avant d'accéder aux champs.
+  if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
+    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+  }
+
+  const email = normalizeVerificationEmail("email" in payload ? payload.email : undefined);
+  const code = "code" in payload ? payload.code : undefined;
   if (!email || !isValidVerificationCode(code)) {
     return NextResponse.json({ error: "Code invalide ou expiré" }, { status: 400 });
   }
