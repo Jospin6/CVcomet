@@ -46,7 +46,7 @@ export function formattedPrice(price: ReturnType<typeof publicPrice>, locale = "
   if (!price) return null;
   try {
     const fmt = new Intl.NumberFormat(locale, { style: "currency", currency: price.currency });
-    const digits = fmt.resolvedOptions().maximumFractionDigits;
+    const digits = fmt.resolvedOptions().maximumFractionDigits ?? 2;
     return fmt.format(price.amountMinor / 10 ** digits);
   } catch { return null; }
 }

@@ -1,4 +1,4 @@
-import "server-only";
+import  "server-only";
 import { existsSync } from "node:fs";
 import { chromium, type Browser } from "playwright";
 import { JobScrapeError } from "./job-scrape-error";

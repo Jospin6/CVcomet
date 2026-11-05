@@ -24,7 +24,15 @@ export async function createMemoryPreference(actorId: string, input: MemoryPrefe
   ensureActor(actorId);
   const value = validate(input);
   try {
-    return await prisma.careerAgentMemory.create({ data: { userId: actorId, ...value }, select: publicFields });
+    return await prisma.careerAgentMemory.create({
+      data: {
+        userId: actorId,
+        key: value.key,
+        value: value.value,
+        allowedAgents: [...value.allowedAgents],
+      },
+      select: publicFields,
+    });
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "P2002")
       throw new CareerContractError(409, "MEMORY_ALREADY_EXISTS");

@@ -25,11 +25,20 @@ export async function generateLetterEdit(identity: AgentRunIdentity, input: Lett
     throw new AgenticError("AGENT_ACCESS_DENIED", 403);
   }
   if (signal.aborted) throw new AgenticError("AGENT_CANCELLED", 499);
-  const model = provider ?? (await import("../../../core/models/cvcomet-ai-sdk")).cvcometAgentModel.object;
   const optInMemory = provider ? [] : (await (await import("@/lib/agentic/memory/agent/memory.agent"))
     .runCareerMemoryAgent({ actorId: identity.access.actorId, agentId: "cover_letter", signal })).preferences;
-  return letterEditOutputSchema.parse(await model(identity, {
-    feature: "COVER_LETTER", system: letterEditSystemPrompt(input),
-    prompt: letterEditUserPrompt(input, optInMemory), maxTokens: 4500,
-  }, letterEditOutputSchema, signal));
+  const request = {
+    feature: "COVER_LETTER" as const,
+    system: letterEditSystemPrompt(input),
+    prompt: letterEditUserPrompt(input, optInMemory),
+    maxTokens: 4500,
+  };
+  // Keep the injected model's specific Zod signature separate from the
+  // gateway's generic object method to preserve TypeScript inference.
+  const response = provider
+    ? await provider(identity, request, letterEditOutputSchema, signal)
+    : await (await import("../../../core/models/cvcomet-ai-sdk")).cvcometAgentModel.object(
+      identity, request, letterEditOutputSchema, signal,
+    );
+  return letterEditOutputSchema.parse(response);
 }
