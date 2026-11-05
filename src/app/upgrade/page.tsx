@@ -16,7 +16,8 @@ type Plan = {
 function money(p: NonNullable<Plan["price"]>) {
   try {
     const fmt = new Intl.NumberFormat("en", { currency: p.currency, style: "currency" });
-    return fmt.format(p.amountMinor / 10 ** fmt.resolvedOptions().maximumFractionDigits);
+    const fractionDigits = fmt.resolvedOptions().maximumFractionDigits ?? 2;
+    return fmt.format(p.amountMinor / 10 ** fractionDigits);
   } catch { return null; }
 }
 export default function Upgrade() {
