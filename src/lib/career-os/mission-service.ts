@@ -118,7 +118,7 @@ async function claimMissionRun(actor: MissionOwner, missionId: string, requestKe
   const now = new Date();
   const leaseToken = randomUUID();
   const leaseUntil = new Date(now.getTime() + MISSION_LEASE_MS);
-  return prisma.$transaction(async tx => {
+  return prisma.$transaction(async (tx): Promise<Claim> => {
     const mission = await tx.careerMission.findFirst({ where: { id: missionId, userId: actor.id } });
     if (!mission) throw notFound();
     if (mission.status !== "ACTIVE") throw new CareerContractError(409, "MISSION_ARCHIVED");
