@@ -102,4 +102,6 @@ export default defineAgent({
 cli.runApp(new WorkerOptions({
   agent: fileURLToPath(import.meta.url),
   agentName: 'cvcomet-screening',
+  host: '127.0.0.1',
+  port: 18081,
 }));
