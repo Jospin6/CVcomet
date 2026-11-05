@@ -3,7 +3,11 @@ import type { ZodType } from "zod";
 import { getAIModel } from "../../../ai/model";
 import { reserveAIQuota } from "../../../ai/quota-service";
 import { AgenticError } from "../errors.ts";
-import { createAgentModelGateway } from "./model-gateway.ts";
+import {
+  createAgentModelGateway,
+  type StructuredSchema,
+  type ValidatedAgentModelRequest,
+} from "./model-gateway.ts";
 
 /**
  * Production port to CVComet's EXISTING active provider and quota service.
@@ -19,7 +23,12 @@ export const cvcometAgentModel = createAgentModelGateway<LanguageModel>({
     });
     return response.text;
   },
-  async generateObject<T>(model: LanguageModel, request, schema, signal) {
+  async generateObject<T>(
+    model: LanguageModel,
+    request: ValidatedAgentModelRequest,
+    schema: StructuredSchema<T>,
+    signal: AbortSignal,
+  ) {
     // All actual CVComet structured agents must use Zod (not an arbitrary parser).
     if (!("safeParse" in schema) || typeof schema.safeParse !== "function") {
       throw new AgenticError("AGENT_MODEL_INPUT_INVALID", 400);
