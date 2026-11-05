@@ -1352,7 +1352,20 @@
     "label034": "Resume and job posting ready.",
     "label035": "This application needs a resume and job description.",
     "label036": "I agree to the voice interview and saving its text transcript and coaching report. CVComet does not store audio recordings.",
-    "label037": "Start call"
+    "label037": "Start call",
+    "finishVoiceCall": "Hang up",
+    "finishAndReport": "Finish & report",
+    "voiceCallHint": "Hang up stops the call without a report. Finish & report evaluates an interview only if real answers were recorded.",
+    "voiceConnectionFailed": "The call could not connect. It has been cancelled; no report was generated.",
+    "voiceDisconnected": "The connection was lost. The call was stopped without a report.",
+    "voiceCallCancelled": "This call was cancelled or did not connect. No report was generated.",
+    "finishVoiceCallAgain": "Retry ending call",
+    "finishVoiceCallFirst": "End the voice call before deleting this interview.",
+    "voiceCallActive": "This voice call is still active. End it here, even if you closed the call window.",
+    "voiceCallEnding": "Call finished. A report is generated only if there were enough answers.",
+    "voiceCallEvaluating": "An interview report is being evaluated. You can leave this page.",
+    "voiceEndRequestFailed": "Could not end the call. Check your connection and try again.",
+    "voiceReportDelayed": "The screening report is still processing. Check the saved interview again later."
   },
   "interviewDimensions": {
     "cvConsistency": "CV consistency",

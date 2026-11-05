@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft, BriefcaseBusiness, Check, ClipboardList, FileText,
-  LoaderCircle, Mic, MoreHorizontal, Phone, Play, Plus,
+  LoaderCircle, Mic, MoreHorizontal, Phone, PhoneOff, Play, Plus,
   Send, Trash2, Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,16 @@ type Mode = "basic" | "personalized";
 const levels = ["Junior", "Mid", "Senior"] as const;
 const screeningDimensionKeys = ["cvConsistency", "jobRelevance", "communication", "motivation", "experience", "professionalism"] as const;
 
+// Match the API's 30-minute protection: a stale, unrecoverable call remains
+// removable without letting an active recording be deleted prematurely.
+function voiceDeletionLocked(session: Session): boolean {
+  if (session.configuration?.mode !== "AI_SCREENING_VOICE" ||
+      !["VOICE_ACTIVE", "VOICE_ENDING", "VOICE_EVALUATING"].includes(session.status)) return false;
+  if (!session.createdAt) return true;
+  const created = Date.parse(session.createdAt);
+  return !Number.isFinite(created) || created > Date.now() - 30 * 60_000;
+}
+
 async function jsonRequest<T>(url: string, method = "GET", body?: unknown): Promise<T> {
   const result = await fetch(url, {
     method,
@@ -101,7 +111,6 @@ export default function InterviewsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedDetail, setSelectedDetail] = useState<ApplicationDetail | null>(null);
   const [connection, setConnection] = useState<VoiceConnection | null>(null);
-  const [endingId, setEndingId] = useState("");
   const [consent, setConsent] = useState(false);
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(false);
@@ -153,38 +162,15 @@ export default function InterviewsPage() {
     return () => controller.abort();
   }, [applicationId]);
 
-  useEffect(() => {
-    if (!endingId) return;
-    let cancelled = false;
-    let attempts = 0;
-    const timer = setInterval(() => {
-      attempts += 1;
-      void jsonRequest<Session>(`/api/interviews/${encodeURIComponent(endingId)}`)
-        .then(value => {
-          if (cancelled) return;
-          if (["COMPLETED", "VOICE_UNGRADED", "VOICE_UNAVAILABLE"].includes(value.status)) {
-            setCurrent(value);
-            setEndingId("");
-            void loadSessions();
-          }
-        }).catch(() => {/* Allow the user to retry manually. */});
-      if (attempts >= 24) {
-        clearInterval(timer);
-        if (!cancelled) {
-          setEndingId("");
-          setError("Report still processing. Open the saved interview later to check its status.");
-          void loadSessions();
-        }
-      }
-    }, 3500);
-    return () => { cancelled = true; clearInterval(timer); };
-  }, [endingId, loadSessions]);
-
   const execute = async (task: () => Promise<void>) => {
     setBusy(true);
     setError("");
     try { await task(); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : "REQUEST_FAILED"); }
+    catch (reason) {
+      const code = reason instanceof Error ? reason.message : "REQUEST_FAILED";
+      setError(code === "FINISH_VOICE_CALL_FIRST"
+        ? tI18n("interviews.finishVoiceCallFirst") : code);
+    }
     finally { setBusy(false); }
   };
 
@@ -226,16 +212,72 @@ export default function InterviewsPage() {
     void loadSessions();
   });
 
+  // Cancel immediately, not "finish -> wait for report". Also works for calls
+  // left active by a page refresh, network failure, or an old deployment.
+  const endVoiceCall = (id: string) => execute(async () => {
+    await jsonRequest(`/api/interviews/screening/${encodeURIComponent(id)}/end`, "POST", {
+      action: "cancel",
+    });
+    setCurrent(null);
+    setShowActions(null);
+    await loadSessions();
+  });
+
+  const cancelLiveCall = (id: string, reason: "hangup" | "error" | "disconnected") => {
+    // Unmount LiveKit without waiting for the network or for the AI worker.
+    setConnection(null);
+    setCurrent(null);
+    setError(reason === "error" ? tI18n("interviews.voiceConnectionFailed")
+      : reason === "disconnected" ? tI18n("interviews.voiceDisconnected") : "");
+    setSessions(items => items.map(item => item.id === id
+      ? { ...item, status: "VOICE_CANCELLED", report: null, overallScore: null } : item));
+    void jsonRequest(`/api/interviews/screening/${encodeURIComponent(id)}/end`, "POST", {
+      action: "cancel",
+    }).then(() => loadSessions()).catch(() => {
+      setError(tI18n("interviews.voiceEndRequestFailed"));
+      void loadSessions();
+    });
+  };
+
+  const finishLiveCall = async (id: string) => {
+    try {
+      // Server changes ACTIVE -> ENDING before disconnecting the LiveKit room.
+      // Only this explicit action can result in a saved screening report.
+      await jsonRequest(`/api/interviews/screening/${encodeURIComponent(id)}/end`, "POST", {
+        action: "finish",
+      });
+    } catch {
+      // If requesting the report failed, never keep an active call around.
+      await jsonRequest(`/api/interviews/screening/${encodeURIComponent(id)}/end`, "POST", {
+        action: "cancel",
+      }).catch(() => undefined);
+      setError(tI18n("interviews.voiceEndRequestFailed"));
+    } finally {
+      setConnection(null);
+      setCurrent(null);
+      void loadSessions();
+    }
+  };
+
   const createScreening = () => execute(async () => {
     const response = await jsonRequest<VoiceConnection>("/api/interviews/screening/start", "POST", {
       applicationId, language, consent,
     });
     setDialog(null);
+    setCurrent(null);
     setConnection(response);
   });
 
   const deleteSession = (id: string) => execute(async () => {
-    await jsonRequest(`/api/interviews/${id}`, "DELETE");
+    const saved = sessions.find(item => item.id === id);
+    if (saved && voiceDeletionLocked(saved)) {
+      // Don't offer a delete action that the API correctly rejects.
+      setCurrent(await jsonRequest<Session>(`/api/interviews/${encodeURIComponent(id)}`));
+      setShowActions(null);
+      setError(tI18n("interviews.finishVoiceCallFirst"));
+      return;
+    }
+    await jsonRequest(`/api/interviews/${encodeURIComponent(id)}`, "DELETE");
     if (current?.id === id) setCurrent(null);
     setShowActions(null);
     await loadSessions();
@@ -252,6 +294,7 @@ export default function InterviewsPage() {
     });
   };
   const goBack = () => {
+    if (connection) { cancelLiveCall(connection.sessionId, "hangup"); return; }
     setCurrent(null);
     setAnswer("");
     setError("");
@@ -279,12 +322,13 @@ export default function InterviewsPage() {
   const isPrepared = current?.status === "PREPARATION";
   const isActive = current?.status === "ACTIVE";
   const readyToFinish = current?.status === "READY_TO_FINISH";
+  const voiceCanEnd = isVoice && ["VOICE_ACTIVE", "VOICE_ENDING", "VOICE_EVALUATING"].includes(current?.status ?? "");
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 pb-10">
       {current || connection ? (
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={goBack} disabled={Boolean(connection)}>
+          <Button variant="ghost" size="sm" onClick={goBack}>
             <ArrowLeft className="size-4" /> {tI18n("interviews.label001")}
           </Button>
           <span className="min-w-0 truncate text-sm font-medium">{current?.title || "AI Screening Interview"}</span>
@@ -297,20 +341,9 @@ export default function InterviewsPage() {
         <ScreeningCall
           language={language}
           connection={connection}
-          onClosed={(id) => {
-            setConnection(null);
-            setEndingId(id);
-            void loadSessions();
-          }}
+          onCancel={cancelLiveCall}
+          onFinish={finishLiveCall}
         />
-      ) : endingId ? (
-        <section className="rounded-xl border p-8 text-center">
-          <LoaderCircle className="mx-auto mb-3 size-6 animate-spin text-primary" />
-          <p className="text-sm">{tI18n("interviews.label002")}</p>
-          <Button variant="outline" className="mt-4" onClick={() => void loadSessions()}>
-            {tI18n("interviews.label003")}
-          </Button>
-        </section>
       ) : current ? (
         <div className="space-y-5 rounded-2xl border bg-card p-5">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-4">
@@ -323,6 +356,11 @@ export default function InterviewsPage() {
             {isPrepared ? (
               <Button disabled={busy} onClick={() => void startPrepared(current)}>
                 <Play className="size-4" /> {tI18n("interviews.label004")}
+              </Button>
+            ) : voiceCanEnd ? (
+              <Button variant="destructive" disabled={busy} onClick={() => void endVoiceCall(current.id)}>
+                {busy ? <LoaderCircle className="size-4 animate-spin" /> : <PhoneOff className="size-4" />}
+                {tI18n("interviews.finishVoiceCall")}
               </Button>
             ) : (isActive || readyToFinish) && (
               <Button variant="outline" disabled={busy} onClick={() => void finish()}>
@@ -450,7 +488,18 @@ export default function InterviewsPage() {
               </p>
             </div>
           )}
-          {["VOICE_ENDING", "VOICE_EVALUATING"].includes(current.status) && <p className="text-sm text-muted-foreground">{tI18n("interviews.label015")}</p>}
+          {isVoice && ["VOICE_CANCELLED", "VOICE_UNAVAILABLE"].includes(current.status) && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {tI18n("interviews.voiceCallCancelled")}
+            </p>
+          )}
+          {isVoice && ["VOICE_ACTIVE", "VOICE_ENDING", "VOICE_EVALUATING"].includes(current.status) && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {tI18n(current.status === "VOICE_ACTIVE" ? "interviews.voiceCallActive"
+                : current.status === "VOICE_ENDING" ? "interviews.voiceCallEnding"
+                : "interviews.voiceCallEvaluating")}
+            </p>
+          )}
         </div>
       ) : (
         <div className="rounded-2xl bg-muted/25 p-5 sm:p-7">
@@ -473,6 +522,14 @@ export default function InterviewsPage() {
                   {item.configuration?.mode === "AI_SCREENING_VOICE"
                     ? <Phone className="size-6 text-primary" />
                     : <ClipboardList className="size-6 text-primary" />}
+                  {item.configuration?.mode === "AI_SCREENING_VOICE" &&
+                    ["VOICE_ACTIVE", "VOICE_ENDING", "VOICE_EVALUATING"].includes(item.status) && (
+                    <Button variant="outline" size="sm" disabled={busy}
+                      onClick={() => void endVoiceCall(item.id)}>
+                      <PhoneOff className="size-4" />
+                      {tI18n("interviews.finishVoiceCall")}
+                    </Button>
+                  )}
                   <div className="relative">
                     <button type="button" aria-label={tI18n("interviews.label017")}
                       onClick={() => setShowActions(showActions === item.id ? null : item.id)}
@@ -481,7 +538,8 @@ export default function InterviewsPage() {
                     </button>
                     {showActions === item.id && (
                       <div className="absolute bottom-full right-0 z-10 min-w-28 rounded-md border bg-popover p-1 shadow-lg">
-                        <Button variant="ghost" size="sm" onClick={() => void deleteSession(item.id)} disabled={busy}>
+                        <Button variant="ghost" size="sm" onClick={() => void deleteSession(item.id)}
+                          disabled={busy || voiceDeletionLocked(item)}>
                           <Trash2 className="size-4" /> {tI18n("interviews.label018")}
                         </Button>
                       </div>

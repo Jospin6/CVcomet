@@ -43,7 +43,8 @@ async function finishWithRetry(payload) {
 
 export default defineAgent({
   entry: async (ctx) => {
-    const roomName = ctx.room.name;
+    // The RTC room is not connected yet; read the authoritative dispatch room.
+    const roomName = ctx.job.room.name;
     const sessionId = roomName?.match(/^cvcomet-screening-([0-9a-f-]{36})$/i)?.[1];
     if (!sessionId) throw new Error('Unexpected LiveKit room');
 

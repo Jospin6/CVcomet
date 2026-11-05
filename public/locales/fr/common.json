@@ -1352,7 +1352,20 @@
     "label034": "CV et description de poste disponibles.",
     "label035": "Cette candidature nécessite un CV et une description de poste.",
     "label036": "J'accepte l'entretien vocal ainsi que l'enregistrement de sa transcription et du rapport pédagogique. CVComet ne conserve pas l'audio.",
-    "label037": "Démarrer l'appel"
+    "label037": "Démarrer l'appel",
+    "finishVoiceCall": "Raccrocher",
+    "finishAndReport": "Terminer et évaluer",
+    "voiceCallHint": "Raccrocher arrête l’appel sans rapport. Terminer et évaluer demande un rapport seulement si de vraies réponses ont été recueillies.",
+    "voiceConnectionFailed": "La connexion a échoué. L’appel a été annulé sans générer de rapport.",
+    "voiceDisconnected": "La connexion a été interrompue. L’appel a été arrêté sans rapport.",
+    "voiceCallCancelled": "Cet appel a été annulé ou n’a pas pu démarrer. Aucun rapport n’a été généré.",
+    "finishVoiceCallAgain": "Réessayer de terminer l’appel",
+    "finishVoiceCallFirst": "Terminez l’appel vocal avant de supprimer cet entretien.",
+    "voiceCallActive": "Cet appel vocal est encore actif. Tu peux le terminer ici, même après avoir fermé sa fenêtre.",
+    "voiceCallEnding": "Appel terminé. Un rapport sera généré uniquement avec assez de réponses.",
+    "voiceCallEvaluating": "Le rapport d’entretien est en cours d’évaluation. Vous pouvez quitter cette page.",
+    "voiceEndRequestFailed": "Impossible de terminer l’appel. Vérifiez votre connexion et réessayez.",
+    "voiceReportDelayed": "Le rapport est encore en préparation. Revenez consulter cet entretien plus tard."
   },
   "interviewDimensions": {
     "cvConsistency": "Cohérence avec le CV",

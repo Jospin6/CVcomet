@@ -131,12 +131,47 @@ export async function completeScreening(raw: unknown) {
   if (!cfg?.consent || cfg.roomName !== input.roomName) {
     throw new ProfileError(403, "SCREENING_ROOM_MISMATCH");
   }
-  if (session.status === "COMPLETED" || session.status === "VOICE_UNGRADED") {
-    return { status: session.status };
+  // A worker may close because the browser never joined, the microphone failed,
+  // the user hung up, or the network disconnected. None of those is permission
+  // to generate a report. Only an explicit finish action sets VOICE_ENDING.
+  let status = session.status;
+  if (session.status === "VOICE_ACTIVE") {
+    const cancelled = await prisma.interviewSession.updateMany({
+      where: { id: session.id, status: "VOICE_ACTIVE" },
+      data: { status: "VOICE_CANCELLED" },
+    });
+    if (cancelled.count === 1) return { status: "cancelled" };
+    // The user may have clicked "Finish & report" at the same instant the
+    // worker disconnected. Re-read the winning transition before deciding.
+    const current = await prisma.interviewSession.findUnique({
+      where: { id: session.id }, select: { status: true },
+    });
+    status = current?.status ?? "VOICE_CANCELLED";
   }
+  if (status === "VOICE_CANCELLED" || status === "VOICE_UNAVAILABLE") {
+    return { status: "cancelled" };
+  }
+  if (status === "COMPLETED" || status === "VOICE_UNGRADED") {
+    return { status };
+  }
+  if (status === "VOICE_EVALUATING") return { status: "processing" };
+  if (status !== "VOICE_ENDING") {
+    throw new ProfileError(409, "SCREENING_NOT_ACTIVE");
+  }
+
+  // No interview actually happened: do not create an ungraded report either.
+  // This also handles a failed or very short call explicitly marked as finished.
+  if (countUsableAnswers(input.turns) < 2) {
+    await prisma.interviewSession.updateMany({
+      where: { id: session.id, status: "VOICE_ENDING" },
+      data: { status: "VOICE_CANCELLED" },
+    });
+    return { status: "cancelled" };
+  }
+
   // Durable claim BEFORE model/quota calls. Concurrent callbacks never pay twice.
   const claimedEvaluation = await prisma.interviewSession.updateMany({
-    where: { id: session.id, status: { in: ["VOICE_ACTIVE", "VOICE_ENDING"] } },
+    where: { id: session.id, status: "VOICE_ENDING" },
     data: { status: "VOICE_EVALUATING" },
   });
   if (claimedEvaluation.count !== 1) {
@@ -145,6 +180,7 @@ export async function completeScreening(raw: unknown) {
     });
     if (current?.status === "VOICE_EVALUATING") return { status: "processing" };
     if (current?.status === "COMPLETED" || current?.status === "VOICE_UNGRADED") return { status: current.status };
+    if (current?.status === "VOICE_CANCELLED") return { status: "cancelled" };
     throw new ProfileError(409, "SCREENING_NOT_ACTIVE");
   }
 
